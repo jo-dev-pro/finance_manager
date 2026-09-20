@@ -1,0 +1,32 @@
+
+
+
+bank - 보유 금융상품(holding product)
+     - 연금 - 운용 상품별 수익률
+
+stock - 계좌원장(account) 
+      - 보유 종목(holding item)
+      - 거래 등록 -> 거래 등록시 보유 종목과 account update
+      - 조회 - 거래내역
+            - 종목별 수익률
+            - 계좌 수익률
+            - 과거 종목 수익률     
+
+csv - 월별 입력 자료 upload
+    - 주식 거래 내역 upload
+
+setting - media
+
+setting - db 등록 - 금융기관명(financial name)
+                 - 금융기관 종류(financial category - 은행,증권)
+                 - 금융상품 종류(product type - 입출금, 예금 irp, 연금저축)
+                 
+                 - 증권 - 종목명(item name - 종목명, 거래소코드)
+                 - 증권 - 거래구분(transaction type - 매수,매도,증자)
+
+                 - 공통 - 월별자료 등록(monthly data entry)
+                   은행 잔액, 연금은 입력 화면 만들어야 함
+                   
+                   주식 보유종목명, 보유수량은 거래내역에서 읽어봐서 db에 넣을수 있게 만들었음(monthly stock settlement) 
+                   현재가(단가)를 불러와서 계산하여 금액으로 넣어야 하는 것 만들어야 함(stock current price)
+                    * 주식은 버튼으로 처리 가능

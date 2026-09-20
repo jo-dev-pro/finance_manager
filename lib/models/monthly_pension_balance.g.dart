@@ -1,0 +1,36 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'monthly_pension_balance.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_$MonthlyPensionBalanceImpl _$$MonthlyPensionBalanceImplFromJson(
+  Map<String, dynamic> json,
+) => _$MonthlyPensionBalanceImpl(
+  id: json['id'] as String?,
+  yearMonth: json['year_month'] as String,
+  financialInstitution: json['financial_institution'] as String?,
+  accountName: json['account_name'] as String,
+  productName: json['product_name'] as String?,
+  evaluationAmount: (json['evaluation_amount'] as num?)?.toDouble() ?? 0.0,
+  createdAt:
+      json['created_at'] == null
+          ? null
+          : DateTime.parse(json['created_at'] as String),
+);
+
+Map<String, dynamic> _$$MonthlyPensionBalanceImplToJson(
+  _$MonthlyPensionBalanceImpl instance,
+) => <String, dynamic>{
+  if (instance.id case final value?) 'id': value,
+  'year_month': instance.yearMonth,
+  if (instance.financialInstitution case final value?)
+    'financial_institution': value,
+  'account_name': instance.accountName,
+  if (instance.productName case final value?) 'product_name': value,
+  'evaluation_amount': instance.evaluationAmount,
+  if (instance.createdAt?.toIso8601String() case final value?)
+    'created_at': value,
+};
