@@ -5,7 +5,6 @@ part 'monthly_pension_balance.g.dart';
 
 @freezed
 class MonthlyPensionBalance with _$MonthlyPensionBalance {
-  @JsonSerializable(includeIfNull: false)
   const factory MonthlyPensionBalance({
     String? id,
     @JsonKey(name: 'year_month') required String yearMonth,

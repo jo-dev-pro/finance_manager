@@ -5,8 +5,6 @@ part 'pension_transaction.g.dart';
 
 @freezed
 class PensionTransaction with _$PensionTransaction {
-  // includeIfNull: false 옵션을 통해 null 값인 id와 createdAt이 JSON 변환 시 제외됩니다.
- @JsonSerializable(includeIfNull: false)
   const factory PensionTransaction({
     String? id,
     @JsonKey(name: 'transaction_date') required String transactionDate,

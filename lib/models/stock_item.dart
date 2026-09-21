@@ -5,7 +5,6 @@ part 'stock_item.g.dart';
 
 @freezed
 class StockItem with _$StockItem {
-  @JsonSerializable(includeIfNull: false)
   const factory StockItem({
     String? id,
     @JsonKey(name: 'symbol_code') required String symbolCode,
