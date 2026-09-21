@@ -57,6 +57,19 @@ class AllMenuScreen extends StatelessWidget {
 
         ListTile(
               leading: Icon(Icons.monetization_on_outlined),
+              title: Text('주식 거래구분 관리'),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const StockItemScreen(),
+                  ),
+                );
+              },
+            ),
+        SizedBox(height: 20),
+
+        ListTile(
+              leading: Icon(Icons.monetization_on_outlined),
               title: Text('연금 상품명 관리'),
               onTap: () {
                 Navigator.of(context).push(

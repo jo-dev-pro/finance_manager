@@ -17,10 +17,7 @@ _$PensionTransactionImpl _$$PensionTransactionImplFromJson(
   transactionType: json['transaction_type'] as String,
   amount: (json['amount'] as num?)?.toDouble() ?? 0,
   memo: json['memo'] as String?,
-  createdAt:
-      json['created_at'] == null
-          ? null
-          : DateTime.parse(json['created_at'] as String),
+  createdAt: const TimestampConverter().fromJson(json['created_at']),
 );
 
 Map<String, dynamic> _$$PensionTransactionImplToJson(
@@ -34,5 +31,5 @@ Map<String, dynamic> _$$PensionTransactionImplToJson(
   'transaction_type': instance.transactionType,
   'amount': instance.amount,
   'memo': instance.memo,
-  'created_at': instance.createdAt?.toIso8601String(),
+  'created_at': const TimestampConverter().toJson(instance.createdAt),
 };

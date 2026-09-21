@@ -15,10 +15,7 @@ _$MonthlyPensionBalanceImpl _$$MonthlyPensionBalanceImplFromJson(
   accountName: json['account_name'] as String,
   productName: json['product_name'] as String?,
   evaluationAmount: (json['evaluation_amount'] as num?)?.toDouble() ?? 0.0,
-  createdAt:
-      json['created_at'] == null
-          ? null
-          : DateTime.parse(json['created_at'] as String),
+  createdAt: const TimestampConverter().fromJson(json['created_at']),
 );
 
 Map<String, dynamic> _$$MonthlyPensionBalanceImplToJson(
@@ -30,5 +27,5 @@ Map<String, dynamic> _$$MonthlyPensionBalanceImplToJson(
   'account_name': instance.accountName,
   'product_name': instance.productName,
   'evaluation_amount': instance.evaluationAmount,
-  'created_at': instance.createdAt?.toIso8601String(),
+  'created_at': const TimestampConverter().toJson(instance.createdAt),
 };

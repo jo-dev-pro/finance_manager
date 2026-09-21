@@ -28,6 +28,7 @@ mixin _$PensionProduct {
   String get productName => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this PensionProduct to a JSON map.
@@ -52,7 +53,7 @@ abstract class $PensionProductCopyWith<$Res> {
     @JsonKey(name: 'account_name') String accountName,
     @JsonKey(name: 'product_name') String productName,
     String status,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -124,7 +125,7 @@ abstract class _$$ProductImplCopyWith<$Res>
     @JsonKey(name: 'account_name') String accountName,
     @JsonKey(name: 'product_name') String productName,
     String status,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -188,7 +189,7 @@ class _$ProductImpl implements _Product {
     @JsonKey(name: 'account_name') required this.accountName,
     @JsonKey(name: 'product_name') required this.productName,
     this.status = '활동',
-    @JsonKey(name: 'created_at') this.createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
 
   factory _$ProductImpl.fromJson(Map<String, dynamic> json) =>
@@ -207,6 +208,7 @@ class _$ProductImpl implements _Product {
   final String status;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   final DateTime? createdAt;
 
   @override
@@ -254,7 +256,9 @@ abstract class _Product implements PensionProduct {
     @JsonKey(name: 'account_name') required final String accountName,
     @JsonKey(name: 'product_name') required final String productName,
     final String status,
-    @JsonKey(name: 'created_at') final DateTime? createdAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    final DateTime? createdAt,
   }) = _$ProductImpl;
 
   factory _Product.fromJson(Map<String, dynamic> json) = _$ProductImpl.fromJson;
@@ -271,6 +275,7 @@ abstract class _Product implements PensionProduct {
   String get status;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt;
 
   /// Create a copy of PensionProduct

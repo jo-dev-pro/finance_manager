@@ -14,10 +14,7 @@ _$AccountImpl _$$AccountImplFromJson(Map<String, dynamic> json) =>
       logoUrl: json['logo_url'] as String?,
       accountName: json['account_name'] as String,
       status: json['status'] as String? ?? '활동',
-      createdAt:
-          json['created_at'] == null
-              ? null
-              : DateTime.parse(json['created_at'] as String),
+      createdAt: const TimestampConverter().fromJson(json['created_at']),
     );
 
 Map<String, dynamic> _$$AccountImplToJson(_$AccountImpl instance) =>
@@ -28,5 +25,5 @@ Map<String, dynamic> _$$AccountImplToJson(_$AccountImpl instance) =>
       'logo_url': instance.logoUrl,
       'account_name': instance.accountName,
       'status': instance.status,
-      'created_at': instance.createdAt?.toIso8601String(),
+      'created_at': const TimestampConverter().toJson(instance.createdAt),
     };

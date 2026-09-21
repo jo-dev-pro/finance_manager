@@ -32,6 +32,7 @@ mixin _$Account {
   String get accountName => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this Account to a JSON map.
@@ -55,7 +56,7 @@ abstract class $AccountCopyWith<$Res> {
     @JsonKey(name: 'logo_url') String? logoUrl,
     @JsonKey(name: 'account_name') String accountName,
     String status,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -140,7 +141,7 @@ abstract class _$$AccountImplCopyWith<$Res> implements $AccountCopyWith<$Res> {
     @JsonKey(name: 'logo_url') String? logoUrl,
     @JsonKey(name: 'account_name') String accountName,
     String status,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -218,7 +219,7 @@ class _$AccountImpl implements _Account {
     @JsonKey(name: 'logo_url') this.logoUrl,
     @JsonKey(name: 'account_name') required this.accountName,
     this.status = '활동',
-    @JsonKey(name: 'created_at') this.createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
 
   factory _$AccountImpl.fromJson(Map<String, dynamic> json) =>
@@ -243,6 +244,7 @@ class _$AccountImpl implements _Account {
   final String status;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   final DateTime? createdAt;
 
   @override
@@ -304,7 +306,9 @@ abstract class _Account implements Account {
     @JsonKey(name: 'logo_url') final String? logoUrl,
     @JsonKey(name: 'account_name') required final String accountName,
     final String status,
-    @JsonKey(name: 'created_at') final DateTime? createdAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    final DateTime? createdAt,
   }) = _$AccountImpl;
 
   factory _Account.fromJson(Map<String, dynamic> json) = _$AccountImpl.fromJson;
@@ -327,6 +331,7 @@ abstract class _Account implements Account {
   String get status;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt;
 
   /// Create a copy of Account

@@ -14,10 +14,7 @@ _$MonthlyBankBalanceImpl _$$MonthlyBankBalanceImplFromJson(
   financialInstitution: json['financial_institution'] as String,
   accountName: json['account_name'] as String,
   balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
-  createdAt:
-      json['created_at'] == null
-          ? null
-          : DateTime.parse(json['created_at'] as String),
+  createdAt: const TimestampConverter().fromJson(json['created_at']),
 );
 
 Map<String, dynamic> _$$MonthlyBankBalanceImplToJson(
@@ -28,5 +25,5 @@ Map<String, dynamic> _$$MonthlyBankBalanceImplToJson(
   'financial_institution': instance.financialInstitution,
   'account_name': instance.accountName,
   'balance': instance.balance,
-  'created_at': instance.createdAt?.toIso8601String(),
+  'created_at': const TimestampConverter().toJson(instance.createdAt),
 };

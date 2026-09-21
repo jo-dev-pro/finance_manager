@@ -35,6 +35,7 @@ mixin _$PensionTransaction {
   double get amount => throw _privateConstructorUsedError;
   String? get memo => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this PensionTransaction to a JSON map.
@@ -63,7 +64,7 @@ abstract class $PensionTransactionCopyWith<$Res> {
     @JsonKey(name: 'transaction_type') String transactionType,
     double amount,
     String? memo,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -163,7 +164,7 @@ abstract class _$$PensionTransactionImplCopyWith<$Res>
     @JsonKey(name: 'transaction_type') String transactionType,
     double amount,
     String? memo,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -255,7 +256,7 @@ class _$PensionTransactionImpl implements _PensionTransaction {
     @JsonKey(name: 'transaction_type') required this.transactionType,
     this.amount = 0,
     this.memo,
-    @JsonKey(name: 'created_at') this.createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
 
   factory _$PensionTransactionImpl.fromJson(Map<String, dynamic> json) =>
@@ -285,6 +286,7 @@ class _$PensionTransactionImpl implements _PensionTransaction {
   final String? memo;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   final DateTime? createdAt;
 
   @override
@@ -356,7 +358,9 @@ abstract class _PensionTransaction implements PensionTransaction {
     @JsonKey(name: 'transaction_type') required final String transactionType,
     final double amount,
     final String? memo,
-    @JsonKey(name: 'created_at') final DateTime? createdAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    final DateTime? createdAt,
   }) = _$PensionTransactionImpl;
 
   factory _PensionTransaction.fromJson(Map<String, dynamic> json) =
@@ -385,6 +389,7 @@ abstract class _PensionTransaction implements PensionTransaction {
   String? get memo;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt;
 
   /// Create a copy of PensionTransaction

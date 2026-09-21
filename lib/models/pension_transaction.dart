@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../core/utils/date_time_converter.dart';
+
 part 'pension_transaction.freezed.dart';
 part 'pension_transaction.g.dart';
 
@@ -14,7 +16,9 @@ class PensionTransaction with _$PensionTransaction {
     @JsonKey(name: 'transaction_type') required String transactionType,
     @Default(0) double amount,
     String? memo,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter() // 👈 이 줄을 추가합니다.
+    DateTime? createdAt,
   }) = _PensionTransaction;
 
   factory PensionTransaction.fromJson(Map<String, dynamic> json) =>

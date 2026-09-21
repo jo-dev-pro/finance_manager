@@ -28,6 +28,7 @@ mixin _$StockItem {
   String get market => throw _privateConstructorUsedError;
   String? get memo => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this StockItem to a JSON map.
@@ -51,7 +52,7 @@ abstract class $StockItemCopyWith<$Res> {
     String name,
     String market,
     String? memo,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -130,7 +131,7 @@ abstract class _$$StockItemImplCopyWith<$Res>
     String name,
     String market,
     String? memo,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -201,7 +202,7 @@ class _$StockItemImpl implements _StockItem {
     required this.name,
     this.market = 'KOSPI',
     this.memo,
-    @JsonKey(name: 'created_at') this.createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
 
   factory _$StockItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -221,6 +222,7 @@ class _$StockItemImpl implements _StockItem {
   final String? memo;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   final DateTime? createdAt;
 
   @override
@@ -269,7 +271,9 @@ abstract class _StockItem implements StockItem {
     required final String name,
     final String market,
     final String? memo,
-    @JsonKey(name: 'created_at') final DateTime? createdAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    final DateTime? createdAt,
   }) = _$StockItemImpl;
 
   factory _StockItem.fromJson(Map<String, dynamic> json) =
@@ -288,6 +292,7 @@ abstract class _StockItem implements StockItem {
   String? get memo;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt;
 
   /// Create a copy of StockItem

@@ -12,10 +12,7 @@ _$ProductImpl _$$ProductImplFromJson(Map<String, dynamic> json) =>
       accountName: json['account_name'] as String,
       productName: json['product_name'] as String,
       status: json['status'] as String? ?? '활동',
-      createdAt:
-          json['created_at'] == null
-              ? null
-              : DateTime.parse(json['created_at'] as String),
+      createdAt: const TimestampConverter().fromJson(json['created_at']),
     );
 
 Map<String, dynamic> _$$ProductImplToJson(_$ProductImpl instance) =>
@@ -24,5 +21,5 @@ Map<String, dynamic> _$$ProductImplToJson(_$ProductImpl instance) =>
       'account_name': instance.accountName,
       'product_name': instance.productName,
       'status': instance.status,
-      'created_at': instance.createdAt?.toIso8601String(),
+      'created_at': const TimestampConverter().toJson(instance.createdAt),
     };

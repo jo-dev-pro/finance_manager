@@ -13,10 +13,7 @@ _$StockItemImpl _$$StockItemImplFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       market: json['market'] as String? ?? 'KOSPI',
       memo: json['memo'] as String?,
-      createdAt:
-          json['created_at'] == null
-              ? null
-              : DateTime.parse(json['created_at'] as String),
+      createdAt: const TimestampConverter().fromJson(json['created_at']),
     );
 
 Map<String, dynamic> _$$StockItemImplToJson(_$StockItemImpl instance) =>
@@ -26,5 +23,5 @@ Map<String, dynamic> _$$StockItemImplToJson(_$StockItemImpl instance) =>
       'name': instance.name,
       'market': instance.market,
       'memo': instance.memo,
-      'created_at': instance.createdAt?.toIso8601String(),
+      'created_at': const TimestampConverter().toJson(instance.createdAt),
     };

@@ -11,10 +11,7 @@ _$InvestmentImpl _$$InvestmentImplFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String?,
       description: json['description'] as String,
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      createdAt:
-          json['created_at'] == null
-              ? null
-              : DateTime.parse(json['created_at'] as String),
+      createdAt: const TimestampConverter().fromJson(json['created_at']),
     );
 
 Map<String, dynamic> _$$InvestmentImplToJson(_$InvestmentImpl instance) =>
@@ -22,5 +19,5 @@ Map<String, dynamic> _$$InvestmentImplToJson(_$InvestmentImpl instance) =>
       'id': instance.id,
       'description': instance.description,
       'amount': instance.amount,
-      'created_at': instance.createdAt?.toIso8601String(),
+      'created_at': const TimestampConverter().toJson(instance.createdAt),
     };

@@ -30,6 +30,7 @@ mixin _$MonthlyBankBalance {
   String get accountName => throw _privateConstructorUsedError;
   double get balance => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this MonthlyBankBalance to a JSON map.
@@ -55,7 +56,7 @@ abstract class $MonthlyBankBalanceCopyWith<$Res> {
     @JsonKey(name: 'financial_institution') String financialInstitution,
     @JsonKey(name: 'account_name') String accountName,
     double balance,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -134,7 +135,7 @@ abstract class _$$MonthlyBankBalanceImplCopyWith<$Res>
     @JsonKey(name: 'financial_institution') String financialInstitution,
     @JsonKey(name: 'account_name') String accountName,
     double balance,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -205,7 +206,7 @@ class _$MonthlyBankBalanceImpl implements _MonthlyBankBalance {
     @JsonKey(name: 'financial_institution') required this.financialInstitution,
     @JsonKey(name: 'account_name') required this.accountName,
     this.balance = 0.0,
-    @JsonKey(name: 'created_at') this.createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
 
   factory _$MonthlyBankBalanceImpl.fromJson(Map<String, dynamic> json) =>
@@ -227,6 +228,7 @@ class _$MonthlyBankBalanceImpl implements _MonthlyBankBalance {
   final double balance;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   final DateTime? createdAt;
 
   @override
@@ -288,7 +290,9 @@ abstract class _MonthlyBankBalance implements MonthlyBankBalance {
     required final String financialInstitution,
     @JsonKey(name: 'account_name') required final String accountName,
     final double balance,
-    @JsonKey(name: 'created_at') final DateTime? createdAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    final DateTime? createdAt,
   }) = _$MonthlyBankBalanceImpl;
 
   factory _MonthlyBankBalance.fromJson(Map<String, dynamic> json) =
@@ -309,6 +313,7 @@ abstract class _MonthlyBankBalance implements MonthlyBankBalance {
   double get balance;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt;
 
   /// Create a copy of MonthlyBankBalance

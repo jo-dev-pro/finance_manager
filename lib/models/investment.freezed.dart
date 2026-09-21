@@ -25,6 +25,7 @@ mixin _$Investment {
   String get description => throw _privateConstructorUsedError;
   double get amount => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this Investment to a JSON map.
@@ -48,7 +49,7 @@ abstract class $InvestmentCopyWith<$Res> {
     String? id,
     String description,
     double amount,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -113,7 +114,7 @@ abstract class _$$InvestmentImplCopyWith<$Res>
     String? id,
     String description,
     double amount,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -170,7 +171,7 @@ class _$InvestmentImpl implements _Investment {
     this.id,
     required this.description,
     this.amount = 0,
-    @JsonKey(name: 'created_at') this.createdAt,
+    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
 
   factory _$InvestmentImpl.fromJson(Map<String, dynamic> json) =>
@@ -185,6 +186,7 @@ class _$InvestmentImpl implements _Investment {
   final double amount;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   final DateTime? createdAt;
 
   @override
@@ -229,7 +231,9 @@ abstract class _Investment implements Investment {
     final String? id,
     required final String description,
     final double amount,
-    @JsonKey(name: 'created_at') final DateTime? createdAt,
+    @JsonKey(name: 'created_at')
+    @TimestampConverter()
+    final DateTime? createdAt,
   }) = _$InvestmentImpl;
 
   factory _Investment.fromJson(Map<String, dynamic> json) =
@@ -243,6 +247,7 @@ abstract class _Investment implements Investment {
   double get amount;
   @override
   @JsonKey(name: 'created_at')
+  @TimestampConverter()
   DateTime? get createdAt;
 
   /// Create a copy of Investment
