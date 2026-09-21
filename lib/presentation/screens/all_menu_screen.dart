@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'account_screen.dart';
 import 'investment_screen.dart';
 import 'pension_product_screen.dart';
-import 'stock_item_screen.dart';
+import 'stock_item_screen.dart';       
+import 'stock_transaction_type_screen.dart';       
 
 
 class AllMenuScreen extends StatelessWidget {
@@ -61,7 +62,7 @@ class AllMenuScreen extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => const StockItemScreen(),
+                    builder: (context) => const StockTransactionTypeScreen(),
                   ),
                 );
               },

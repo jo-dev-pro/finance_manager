@@ -135,7 +135,7 @@ class _AccountFormDialogState extends ConsumerState<AccountFormDialog> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: const InputDecoration(
                   labelText: '계좌구분',
                   border: OutlineInputBorder(),

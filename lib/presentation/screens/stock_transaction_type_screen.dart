@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/stock_item.dart';
+
 import '../../models/stock_transaction_type.dart';
 import '../../providers/stock_item_provider.dart';
 import '../../providers/stock_transaction_type_provider.dart';
-import '../widgets/stock_item_dialog.dart';
 import '../widgets/stock_transaction_type_dialog.dart';
 
 class StockTransactionTypeScreen extends ConsumerWidget {
