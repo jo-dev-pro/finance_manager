@@ -164,8 +164,7 @@ class __$$InvestmentImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable()
 class _$InvestmentImpl implements _Investment {
   const _$InvestmentImpl({
     this.id,

@@ -193,8 +193,7 @@ class __$$StockItemImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable()
 class _$StockItemImpl implements _StockItem {
   const _$StockItemImpl({
     this.id,

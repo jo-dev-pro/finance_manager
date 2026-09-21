@@ -26,15 +26,13 @@ _$PensionTransactionImpl _$$PensionTransactionImplFromJson(
 Map<String, dynamic> _$$PensionTransactionImplToJson(
   _$PensionTransactionImpl instance,
 ) => <String, dynamic>{
-  if (instance.id case final value?) 'id': value,
+  'id': instance.id,
   'transaction_date': instance.transactionDate,
-  if (instance.financialInstitution case final value?)
-    'financial_institution': value,
+  'financial_institution': instance.financialInstitution,
   'account_name': instance.accountName,
-  if (instance.productName case final value?) 'product_name': value,
+  'product_name': instance.productName,
   'transaction_type': instance.transactionType,
   'amount': instance.amount,
-  if (instance.memo case final value?) 'memo': value,
-  if (instance.createdAt?.toIso8601String() case final value?)
-    'created_at': value,
+  'memo': instance.memo,
+  'created_at': instance.createdAt?.toIso8601String(),
 };

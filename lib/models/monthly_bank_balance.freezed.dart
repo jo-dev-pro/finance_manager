@@ -197,8 +197,7 @@ class __$$MonthlyBankBalanceImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable()
 class _$MonthlyBankBalanceImpl implements _MonthlyBankBalance {
   const _$MonthlyBankBalanceImpl({
     this.id,

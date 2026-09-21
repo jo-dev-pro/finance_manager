@@ -181,8 +181,7 @@ class __$$ProductImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable()
 class _$ProductImpl implements _Product {
   const _$ProductImpl({
     this.id,

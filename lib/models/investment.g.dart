@@ -19,9 +19,8 @@ _$InvestmentImpl _$$InvestmentImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$InvestmentImplToJson(_$InvestmentImpl instance) =>
     <String, dynamic>{
-      if (instance.id case final value?) 'id': value,
+      'id': instance.id,
       'description': instance.description,
       'amount': instance.amount,
-      if (instance.createdAt?.toIso8601String() case final value?)
-        'created_at': value,
+      'created_at': instance.createdAt?.toIso8601String(),
     };

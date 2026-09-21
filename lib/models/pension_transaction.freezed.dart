@@ -244,8 +244,7 @@ class __$$PensionTransactionImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable()
 class _$PensionTransactionImpl implements _PensionTransaction {
   const _$PensionTransactionImpl({
     this.id,

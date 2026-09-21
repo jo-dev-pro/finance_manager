@@ -24,13 +24,11 @@ _$MonthlyPensionBalanceImpl _$$MonthlyPensionBalanceImplFromJson(
 Map<String, dynamic> _$$MonthlyPensionBalanceImplToJson(
   _$MonthlyPensionBalanceImpl instance,
 ) => <String, dynamic>{
-  if (instance.id case final value?) 'id': value,
+  'id': instance.id,
   'year_month': instance.yearMonth,
-  if (instance.financialInstitution case final value?)
-    'financial_institution': value,
+  'financial_institution': instance.financialInstitution,
   'account_name': instance.accountName,
-  if (instance.productName case final value?) 'product_name': value,
+  'product_name': instance.productName,
   'evaluation_amount': instance.evaluationAmount,
-  if (instance.createdAt?.toIso8601String() case final value?)
-    'created_at': value,
+  'created_at': instance.createdAt?.toIso8601String(),
 };

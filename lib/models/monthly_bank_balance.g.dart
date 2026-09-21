@@ -23,11 +23,10 @@ _$MonthlyBankBalanceImpl _$$MonthlyBankBalanceImplFromJson(
 Map<String, dynamic> _$$MonthlyBankBalanceImplToJson(
   _$MonthlyBankBalanceImpl instance,
 ) => <String, dynamic>{
-  if (instance.id case final value?) 'id': value,
+  'id': instance.id,
   'year_month': instance.yearMonth,
   'financial_institution': instance.financialInstitution,
   'account_name': instance.accountName,
   'balance': instance.balance,
-  if (instance.createdAt?.toIso8601String() case final value?)
-    'created_at': value,
+  'created_at': instance.createdAt?.toIso8601String(),
 };

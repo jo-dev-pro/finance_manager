@@ -220,8 +220,7 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable()
 class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
   const _$MonthlyPensionBalanceImpl({
     this.id,
