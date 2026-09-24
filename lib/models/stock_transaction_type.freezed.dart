@@ -23,7 +23,8 @@ StockTransactionType _$StockTransactionTypeFromJson(Map<String, dynamic> json) {
 mixin _$StockTransactionType {
   String? get id => throw _privateConstructorUsedError;
   String get typeName => throw _privateConstructorUsedError;
-  String get type => throw _privateConstructorUsedError;
+  String get amountSign => throw _privateConstructorUsedError;
+  String get quantitySign => throw _privateConstructorUsedError;
 
   /// Serializes this StockTransactionType to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -42,7 +43,12 @@ abstract class $StockTransactionTypeCopyWith<$Res> {
     $Res Function(StockTransactionType) then,
   ) = _$StockTransactionTypeCopyWithImpl<$Res, StockTransactionType>;
   @useResult
-  $Res call({String? id, String typeName, String type});
+  $Res call({
+    String? id,
+    String typeName,
+    String amountSign,
+    String quantitySign,
+  });
 }
 
 /// @nodoc
@@ -65,7 +71,8 @@ class _$StockTransactionTypeCopyWithImpl<
   $Res call({
     Object? id = freezed,
     Object? typeName = null,
-    Object? type = null,
+    Object? amountSign = null,
+    Object? quantitySign = null,
   }) {
     return _then(
       _value.copyWith(
@@ -79,10 +86,15 @@ class _$StockTransactionTypeCopyWithImpl<
                     ? _value.typeName
                     : typeName // ignore: cast_nullable_to_non_nullable
                         as String,
-            type:
-                null == type
-                    ? _value.type
-                    : type // ignore: cast_nullable_to_non_nullable
+            amountSign:
+                null == amountSign
+                    ? _value.amountSign
+                    : amountSign // ignore: cast_nullable_to_non_nullable
+                        as String,
+            quantitySign:
+                null == quantitySign
+                    ? _value.quantitySign
+                    : quantitySign // ignore: cast_nullable_to_non_nullable
                         as String,
           )
           as $Val,
@@ -99,7 +111,12 @@ abstract class _$$StockTransactionTypeImplCopyWith<$Res>
   ) = __$$StockTransactionTypeImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? id, String typeName, String type});
+  $Res call({
+    String? id,
+    String typeName,
+    String amountSign,
+    String quantitySign,
+  });
 }
 
 /// @nodoc
@@ -118,7 +135,8 @@ class __$$StockTransactionTypeImplCopyWithImpl<$Res>
   $Res call({
     Object? id = freezed,
     Object? typeName = null,
-    Object? type = null,
+    Object? amountSign = null,
+    Object? quantitySign = null,
   }) {
     return _then(
       _$StockTransactionTypeImpl(
@@ -132,10 +150,15 @@ class __$$StockTransactionTypeImplCopyWithImpl<$Res>
                 ? _value.typeName
                 : typeName // ignore: cast_nullable_to_non_nullable
                     as String,
-        type:
-            null == type
-                ? _value.type
-                : type // ignore: cast_nullable_to_non_nullable
+        amountSign:
+            null == amountSign
+                ? _value.amountSign
+                : amountSign // ignore: cast_nullable_to_non_nullable
+                    as String,
+        quantitySign:
+            null == quantitySign
+                ? _value.quantitySign
+                : quantitySign // ignore: cast_nullable_to_non_nullable
                     as String,
       ),
     );
@@ -148,7 +171,8 @@ class _$StockTransactionTypeImpl implements _StockTransactionType {
   const _$StockTransactionTypeImpl({
     this.id,
     required this.typeName,
-    this.type = 'plus',
+    required this.amountSign,
+    required this.quantitySign,
   });
 
   factory _$StockTransactionTypeImpl.fromJson(Map<String, dynamic> json) =>
@@ -159,12 +183,13 @@ class _$StockTransactionTypeImpl implements _StockTransactionType {
   @override
   final String typeName;
   @override
-  @JsonKey()
-  final String type;
+  final String amountSign;
+  @override
+  final String quantitySign;
 
   @override
   String toString() {
-    return 'StockTransactionType(id: $id, typeName: $typeName, type: $type)';
+    return 'StockTransactionType(id: $id, typeName: $typeName, amountSign: $amountSign, quantitySign: $quantitySign)';
   }
 
   @override
@@ -175,12 +200,16 @@ class _$StockTransactionTypeImpl implements _StockTransactionType {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.typeName, typeName) ||
                 other.typeName == typeName) &&
-            (identical(other.type, type) || other.type == type));
+            (identical(other.amountSign, amountSign) ||
+                other.amountSign == amountSign) &&
+            (identical(other.quantitySign, quantitySign) ||
+                other.quantitySign == quantitySign));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, typeName, type);
+  int get hashCode =>
+      Object.hash(runtimeType, id, typeName, amountSign, quantitySign);
 
   /// Create a copy of StockTransactionType
   /// with the given fields replaced by the non-null parameter values.
@@ -204,7 +233,8 @@ abstract class _StockTransactionType implements StockTransactionType {
   const factory _StockTransactionType({
     final String? id,
     required final String typeName,
-    final String type,
+    required final String amountSign,
+    required final String quantitySign,
   }) = _$StockTransactionTypeImpl;
 
   factory _StockTransactionType.fromJson(Map<String, dynamic> json) =
@@ -215,7 +245,9 @@ abstract class _StockTransactionType implements StockTransactionType {
   @override
   String get typeName;
   @override
-  String get type;
+  String get amountSign;
+  @override
+  String get quantitySign;
 
   /// Create a copy of StockTransactionType
   /// with the given fields replaced by the non-null parameter values.

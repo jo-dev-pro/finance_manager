@@ -15,9 +15,7 @@ class InvestmentScreen extends ConsumerWidget {
     final dateFormatter = DateFormat('yyyy.MM.dd');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('투자 내역 관리'),
-      ),
+      appBar: AppBar(title: const Text('투자 내역 관리')),
       body: investmentState.when(
         data: (investments) {
           final totalAmount = investments.fold<double>(

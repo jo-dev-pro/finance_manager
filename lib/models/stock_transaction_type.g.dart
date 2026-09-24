@@ -11,7 +11,8 @@ _$StockTransactionTypeImpl _$$StockTransactionTypeImplFromJson(
 ) => _$StockTransactionTypeImpl(
   id: json['id'] as String?,
   typeName: json['typeName'] as String,
-  type: json['type'] as String? ?? 'plus',
+  amountSign: json['amountSign'] as String,
+  quantitySign: json['quantitySign'] as String,
 );
 
 Map<String, dynamic> _$$StockTransactionTypeImplToJson(
@@ -19,5 +20,6 @@ Map<String, dynamic> _$$StockTransactionTypeImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'typeName': instance.typeName,
-  'type': instance.type,
+  'amountSign': instance.amountSign,
+  'quantitySign': instance.quantitySign,
 };

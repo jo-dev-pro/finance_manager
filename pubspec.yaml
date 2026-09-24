@@ -35,6 +35,7 @@ dependencies:
   # flutter pub run flutter_launcher_icons
   flutter_launcher_icons: ^0.14.4
   json_annotation: ^4.9.0
+  google_fonts: ^8.2.1
 
 dev_dependencies:
   flutter_test:
@@ -50,7 +51,7 @@ flutter_launcher_icons:
   android: "launcher_icon"
   #  ios: "AppIcon"
   #  image_path_ios: "assets/logo.jpg"
-  image_path_android: "assets/logos/logo_white.png"
+  image_path_android: "assets/logos/finance.png"
   remove_alpha_ios: true
 
   # The "flutter_lints" package below contains a set of recommended lints to

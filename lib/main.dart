@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'core/router/app_router.dart';
 
 void main() async {
@@ -23,8 +24,8 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        fontFamily: 'NotoSansKR',
-
+        fontFamily: GoogleFonts.notoSansKr().fontFamily,
+        
         // 1. ColorScheme의 surface(표면색)를 흰색으로 지정
         colorScheme: ColorScheme.light(
           primary: Colors.blue,
@@ -42,6 +43,10 @@ class MyApp extends ConsumerWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ko', 'KR'),
+        Locale('en', 'US'),
       ],
       locale: const Locale('ko', 'KR'),
 

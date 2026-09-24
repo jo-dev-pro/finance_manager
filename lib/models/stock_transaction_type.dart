@@ -8,7 +8,8 @@ class StockTransactionType with _$StockTransactionType {
   const factory StockTransactionType({
     String? id,
     required String typeName,
-    @Default('plus') String type,
+    required String amountSign,
+    required String quantitySign,
   }) = _StockTransactionType;
 
   factory StockTransactionType.fromJson(Map<String, dynamic> json) =>

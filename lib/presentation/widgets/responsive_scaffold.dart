@@ -66,70 +66,29 @@ class ResponsiveScaffold extends StatelessWidget {
       body: Row(
         children: [
           NavigationRail(
-            minWidth: isTablet ? 110 : 130, // 태블릿에서 축소 시 최소 너비
+            minWidth: isTablet ? 120 : 150, // 태블릿에서 축소 시 최소 너비
             labelType: NavigationRailLabelType.all, // 데스크톱: extended 모드로 자동 처리
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: _onDestinationSelected,
-            indicatorColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            indicatorColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.2),
             // 상단 헤더 (태블릿/데스크톱 구분)
-            leading: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 16.0,
-                horizontal: 8.0,
-              ),
-              child: isTablet
-                  // 태블릿: 심플한 로고 아이콘만 표시
-                  ? Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.account_balance,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 22,
-                      ),
-                    )
-                  // 데스크톱: 로고 아이콘 + 텍스트 표시
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                Icons.account_balance,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Finance Hub',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        const Divider(height: 1),
-                      ],
+            leading: isTablet
+                // 태블릿: 심플한 로고 아이콘만 표시
+                ? Image.asset(
+                  'assets/logos/finance.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover, // 이미지 비율 맞춤 설정
+                )
+                // 데스크톱: 로고 아이콘 + 텍스트 표시
+                : Image.asset(  
+                      'assets/logos/finance.png',
+                      width: 150,
+                      height: 150,
+                      fit: BoxFit.cover, // 이미지 비율 맞춤 설정
                     ),
-            ),
 
             // 스타일 설정
             selectedIconTheme: IconThemeData(
@@ -153,15 +112,16 @@ class ResponsiveScaffold extends StatelessWidget {
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
 
-            destinations: destinations
-                .map(
-                  (d) => NavigationRailDestination(
-                    icon: d.icon,
-                    selectedIcon: d.selectedIcon,
-                    label: Text(d.label),
-                  ),
-                )
-                .toList(),
+            destinations:
+                destinations
+                    .map(
+                      (d) => NavigationRailDestination(
+                        icon: d.icon,
+                        selectedIcon: d.selectedIcon,
+                        label: Text(d.label),
+                      ),
+                    )
+                    .toList(),
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(child: navigationShell),

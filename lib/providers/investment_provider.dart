@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import '../core/providers/firestore_provider.dart';
 import '../models/investment.dart';
 
@@ -32,7 +33,10 @@ class InvestmentNotifier extends _$InvestmentNotifier {
       ..remove('id')
       ..removeWhere((key, value) => value == null);
 
-    data['created_at'] = FieldValue.serverTimestamp();
+    // 전달받은 createdAt이 있으면 사용하고, 없으면 현재 시간 적용[cite: 8]
+    data['created_at'] = investment.createdAt != null
+        ? Timestamp.fromDate(investment.createdAt!)
+        : FieldValue.serverTimestamp();
 
     await firestore.collection('investment').add(data);
     ref.invalidateSelf();
@@ -41,7 +45,12 @@ class InvestmentNotifier extends _$InvestmentNotifier {
   Future<void> updateInvestment(Investment investment) async {
     if (investment.id == null) return;
     final firestore = ref.read(firestoreProvider);
+    
     final data = investment.toJson()..remove('id');
+    // DateTime -> Timestamp 변환 처리
+    if (investment.createdAt != null) {
+      data['created_at'] = Timestamp.fromDate(investment.createdAt!);
+    }
 
     await firestore.collection('investment').doc(investment.id).update(data);
     ref.invalidateSelf();
