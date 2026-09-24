@@ -22,8 +22,8 @@ PensionProduct _$PensionProductFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$PensionProduct {
   String? get id => throw _privateConstructorUsedError;
-  @JsonKey(name: 'account_name')
-  String get accountName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_id')
+  String get accountId => throw _privateConstructorUsedError;
   @JsonKey(name: 'product_name')
   String get productName => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
@@ -50,7 +50,7 @@ abstract class $PensionProductCopyWith<$Res> {
   @useResult
   $Res call({
     String? id,
-    @JsonKey(name: 'account_name') String accountName,
+    @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_name') String productName,
     String status,
     @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
@@ -73,7 +73,7 @@ class _$PensionProductCopyWithImpl<$Res, $Val extends PensionProduct>
   @override
   $Res call({
     Object? id = freezed,
-    Object? accountName = null,
+    Object? accountId = null,
     Object? productName = null,
     Object? status = null,
     Object? createdAt = freezed,
@@ -85,10 +85,10 @@ class _$PensionProductCopyWithImpl<$Res, $Val extends PensionProduct>
                     ? _value.id
                     : id // ignore: cast_nullable_to_non_nullable
                         as String?,
-            accountName:
-                null == accountName
-                    ? _value.accountName
-                    : accountName // ignore: cast_nullable_to_non_nullable
+            accountId:
+                null == accountId
+                    ? _value.accountId
+                    : accountId // ignore: cast_nullable_to_non_nullable
                         as String,
             productName:
                 null == productName
@@ -122,7 +122,7 @@ abstract class _$$ProductImplCopyWith<$Res>
   @useResult
   $Res call({
     String? id,
-    @JsonKey(name: 'account_name') String accountName,
+    @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_name') String productName,
     String status,
     @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
@@ -144,7 +144,7 @@ class __$$ProductImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = freezed,
-    Object? accountName = null,
+    Object? accountId = null,
     Object? productName = null,
     Object? status = null,
     Object? createdAt = freezed,
@@ -156,10 +156,10 @@ class __$$ProductImplCopyWithImpl<$Res>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                     as String?,
-        accountName:
-            null == accountName
-                ? _value.accountName
-                : accountName // ignore: cast_nullable_to_non_nullable
+        accountId:
+            null == accountId
+                ? _value.accountId
+                : accountId // ignore: cast_nullable_to_non_nullable
                     as String,
         productName:
             null == productName
@@ -186,7 +186,7 @@ class __$$ProductImplCopyWithImpl<$Res>
 class _$ProductImpl implements _Product {
   const _$ProductImpl({
     this.id,
-    @JsonKey(name: 'account_name') required this.accountName,
+    @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'product_name') required this.productName,
     this.status = '활동',
     @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
@@ -198,8 +198,8 @@ class _$ProductImpl implements _Product {
   @override
   final String? id;
   @override
-  @JsonKey(name: 'account_name')
-  final String accountName;
+  @JsonKey(name: 'account_id')
+  final String accountId;
   @override
   @JsonKey(name: 'product_name')
   final String productName;
@@ -213,7 +213,7 @@ class _$ProductImpl implements _Product {
 
   @override
   String toString() {
-    return 'PensionProduct(id: $id, accountName: $accountName, productName: $productName, status: $status, createdAt: $createdAt)';
+    return 'PensionProduct(id: $id, accountId: $accountId, productName: $productName, status: $status, createdAt: $createdAt)';
   }
 
   @override
@@ -222,8 +222,8 @@ class _$ProductImpl implements _Product {
         (other.runtimeType == runtimeType &&
             other is _$ProductImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.accountName, accountName) ||
-                other.accountName == accountName) &&
+            (identical(other.accountId, accountId) ||
+                other.accountId == accountId) &&
             (identical(other.productName, productName) ||
                 other.productName == productName) &&
             (identical(other.status, status) || other.status == status) &&
@@ -234,7 +234,7 @@ class _$ProductImpl implements _Product {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, accountName, productName, status, createdAt);
+      Object.hash(runtimeType, id, accountId, productName, status, createdAt);
 
   /// Create a copy of PensionProduct
   /// with the given fields replaced by the non-null parameter values.
@@ -253,7 +253,7 @@ class _$ProductImpl implements _Product {
 abstract class _Product implements PensionProduct {
   const factory _Product({
     final String? id,
-    @JsonKey(name: 'account_name') required final String accountName,
+    @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'product_name') required final String productName,
     final String status,
     @JsonKey(name: 'created_at')
@@ -266,8 +266,8 @@ abstract class _Product implements PensionProduct {
   @override
   String? get id;
   @override
-  @JsonKey(name: 'account_name')
-  String get accountName;
+  @JsonKey(name: 'account_id')
+  String get accountId;
   @override
   @JsonKey(name: 'product_name')
   String get productName;

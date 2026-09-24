@@ -7,7 +7,7 @@ part of 'pension_product_provider.dart';
 // **************************************************************************
 
 String _$pensionProductsByAccountHash() =>
-    r'4044fc6b8e12407c5024091b6fba3e549a6c1038';
+    r'181a7f83538ed5766c85c4d7c4834267937cadd2';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -41,15 +41,15 @@ class PensionProductsByAccountFamily
   const PensionProductsByAccountFamily();
 
   /// See also [pensionProductsByAccount].
-  PensionProductsByAccountProvider call(String accountName) {
-    return PensionProductsByAccountProvider(accountName);
+  PensionProductsByAccountProvider call(String accountId) {
+    return PensionProductsByAccountProvider(accountId);
   }
 
   @override
   PensionProductsByAccountProvider getProviderOverride(
     covariant PensionProductsByAccountProvider provider,
   ) {
-    return call(provider.accountName);
+    return call(provider.accountId);
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -71,11 +71,11 @@ class PensionProductsByAccountFamily
 class PensionProductsByAccountProvider
     extends AutoDisposeFutureProvider<List<PensionProduct>> {
   /// See also [pensionProductsByAccount].
-  PensionProductsByAccountProvider(String accountName)
+  PensionProductsByAccountProvider(String accountId)
     : this._internal(
         (ref) => pensionProductsByAccount(
           ref as PensionProductsByAccountRef,
-          accountName,
+          accountId,
         ),
         from: pensionProductsByAccountProvider,
         name: r'pensionProductsByAccountProvider',
@@ -86,7 +86,7 @@ class PensionProductsByAccountProvider
         dependencies: PensionProductsByAccountFamily._dependencies,
         allTransitiveDependencies:
             PensionProductsByAccountFamily._allTransitiveDependencies,
-        accountName: accountName,
+        accountId: accountId,
       );
 
   PensionProductsByAccountProvider._internal(
@@ -96,10 +96,10 @@ class PensionProductsByAccountProvider
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.accountName,
+    required this.accountId,
   }) : super.internal();
 
-  final String accountName;
+  final String accountId;
 
   @override
   Override overrideWith(
@@ -117,7 +117,7 @@ class PensionProductsByAccountProvider
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        accountName: accountName,
+        accountId: accountId,
       ),
     );
   }
@@ -130,13 +130,13 @@ class PensionProductsByAccountProvider
   @override
   bool operator ==(Object other) {
     return other is PensionProductsByAccountProvider &&
-        other.accountName == accountName;
+        other.accountId == accountId;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, accountName.hashCode);
+    hash = _SystemHash.combine(hash, accountId.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -146,8 +146,8 @@ class PensionProductsByAccountProvider
 // ignore: unused_element
 mixin PensionProductsByAccountRef
     on AutoDisposeFutureProviderRef<List<PensionProduct>> {
-  /// The parameter `accountName` of this provider.
-  String get accountName;
+  /// The parameter `accountId` of this provider.
+  String get accountId;
 }
 
 class _PensionProductsByAccountProviderElement
@@ -156,12 +156,12 @@ class _PensionProductsByAccountProviderElement
   _PensionProductsByAccountProviderElement(super.provider);
 
   @override
-  String get accountName =>
-      (origin as PensionProductsByAccountProvider).accountName;
+  String get accountId =>
+      (origin as PensionProductsByAccountProvider).accountId;
 }
 
 String _$pensionProductNotifierHash() =>
-    r'2634a4aefb05e36cd1ef8a283808e9cd2ffec471';
+    r'9978ae163526f8f41050a702f8d92c8aec7c6e31';
 
 /// See also [PensionProductNotifier].
 @ProviderFor(PensionProductNotifier)

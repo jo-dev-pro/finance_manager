@@ -6,7 +6,7 @@ part of 'pension_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pensionScreenDataHash() => r'aec056b99ed82fc1350a9cc8f7e353cb8db31f01';
+String _$pensionScreenDataHash() => r'd285b1f63bbf900ce142fd735c8b7f6ae5fabd59';
 
 /// Copied from Dart SDK
 class _SystemHash {

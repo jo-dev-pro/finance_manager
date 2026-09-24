@@ -7,7 +7,6 @@ import '../../providers/account_provider.dart';
 import '../../providers/pension_product_provider.dart';
 import '../../providers/pension_transaction_provider.dart';
 
-
 class PensionTransactionFormDialog extends ConsumerStatefulWidget {
   final PensionTransaction? transaction;
 
@@ -26,8 +25,8 @@ class _PensionTransactionFormDialogState
   late TextEditingController _amountController;
   late TextEditingController _memoController;
 
-  String? _selectedAccountName;
-  String? _selectedProductName;
+  String? _selectedAccountId;
+  String? _selectedProductId;
   String _transactionType = '입금';
 
   @override
@@ -44,8 +43,8 @@ class _PensionTransactionFormDialogState
     _memoController = TextEditingController(text: item?.memo ?? '');
 
     if (item != null) {
-      _selectedAccountName = item.accountName;
-      _selectedProductName = item.productName;
+      _selectedAccountId = item.accountId;
+      _selectedProductId = item.productId;
       _transactionType = item.transactionType;
     }
   }
@@ -79,8 +78,8 @@ class _PensionTransactionFormDialogState
     final transactionData = PensionTransaction(
       id: widget.transaction?.id,
       transactionDate: _dateController.text,
-      accountName: _selectedAccountName!,
-      productName: _selectedProductName,
+      accountId: _selectedAccountId!, // 👈 accountId 저장
+      productId: _selectedProductId,  // 👈 productId 저장
       transactionType: _transactionType,
       amount: double.tryParse(_amountController.text) ?? 0.0,
       memo: _memoController.text.trim().isEmpty ? null : _memoController.text.trim(),
@@ -131,8 +130,8 @@ class _PensionTransactionFormDialogState
     final isEdit = widget.transaction != null;
 
     final accountsAsync = ref.watch(accountNotifierProvider);
-    final productsAsync = _selectedAccountName != null
-        ? ref.watch(pensionProductsByAccountProvider(_selectedAccountName!))
+    final productsAsync = _selectedAccountId != null
+        ? ref.watch(pensionProductsByAccountProvider(_selectedAccountId!))
         : null;
 
     return Dialog(
@@ -147,7 +146,6 @@ class _PensionTransactionFormDialogState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 다이얼로그 헤더 (타이틀 & 삭제버튼)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -178,31 +176,29 @@ class _PensionTransactionFormDialogState
                 ),
                 const SizedBox(height: 12),
 
-                // 2. 계좌명 콤보박스 (계좌구분 == '연금'만 필터링)
+                // 2. 계좌 선택 (accountId 매핑)
                 accountsAsync.when(
                   loading: () => const LinearProgressIndicator(),
                   error: (err, stack) => Text('계좌 로딩 실패: $err', style: const TextStyle(color: Colors.red)),
                   data: (accounts) {
                     final pensionAccounts = accounts
                         .where((a) => a.accountType == '연금')
-                        .map((a) => a.accountName)
                         .toList();
 
-                    if (_selectedAccountName != null && !pensionAccounts.contains(_selectedAccountName)) {
-                      pensionAccounts.add(_selectedAccountName!);
-                    }
-
                     return DropdownButtonFormField<String>(
-                      initialValue: _selectedAccountName,
+                      initialValue: _selectedAccountId,
                       decoration: const InputDecoration(labelText: '계좌명 *'),
                       hint: const Text('연금 계좌 선택'),
                       items: pensionAccounts
-                          .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                          .map((acc) => DropdownMenuItem(
+                                value: acc.id,
+                                child: Text(acc.accountName),
+                              ))
                           .toList(),
                       onChanged: (val) {
                         setState(() {
-                          _selectedAccountName = val;
-                          _selectedProductName = null;
+                          _selectedAccountId = val;
+                          _selectedProductId = null;
                         });
                       },
                       validator: (val) => val == null || val.isEmpty ? '계좌를 선택해주세요.' : null,
@@ -211,9 +207,9 @@ class _PensionTransactionFormDialogState
                 ),
                 const SizedBox(height: 12),
 
-                // 3. 상품명 콤보박스 (선택한 계좌 연동)
-                if (_selectedAccountName == null)
-                   DropdownButtonFormField<String>(
+                // 3. 상품 선택 (productId 매핑)
+                if (_selectedAccountId == null)
+                  DropdownButtonFormField<String>(
                     onChanged: null,
                     items: [],
                     decoration: InputDecoration(
@@ -226,20 +222,17 @@ class _PensionTransactionFormDialogState
                         loading: () => const LinearProgressIndicator(),
                         error: (err, stack) => Text('상품 로딩 실패: $err', style: const TextStyle(color: Colors.red)),
                         data: (products) {
-                          final productNames = products.map((p) => p.productName).toList();
-
-                          if (_selectedProductName != null && !productNames.contains(_selectedProductName)) {
-                            productNames.add(_selectedProductName!);
-                          }
-
                           return DropdownButtonFormField<String>(
-                            initialValue: _selectedProductName,
+                            initialValue: _selectedProductId,
                             decoration: const InputDecoration(labelText: '상품명'),
                             hint: const Text('상품 선택'),
-                            items: productNames
-                                .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                            items: products
+                                .map((prod) => DropdownMenuItem(
+                                      value: prod.id,
+                                      child: Text(prod.productName),
+                                    ))
                                 .toList(),
-                            onChanged: (val) => setState(() => _selectedProductName = val),
+                            onChanged: (val) => setState(() => _selectedProductId = val),
                           );
                         },
                       ) ??
@@ -283,7 +276,6 @@ class _PensionTransactionFormDialogState
                 ),
                 const SizedBox(height: 24),
 
-                // 하단 버튼 (취소 / 저장)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:collection/collection.dart';
 
 import '../../core/utils/formatters.dart';
 import '../../models/monthly_pension_balance.dart';
@@ -26,6 +27,7 @@ class _MonthlyPensionBalanceScreenState
     final balanceAsync = ref.watch(
       monthlyPensionBalanceNotifierProvider(_selectedYearMonth),
     );
+    final accountsAsync = ref.watch(accountNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -44,6 +46,8 @@ class _MonthlyPensionBalanceScreenState
           if (balances.isEmpty) {
             return const Center(child: Text('등록된 월말 연금 데이터가 없습니다.'));
           }
+
+          final accounts = accountsAsync.value ?? [];
 
           // 총 연금 잔액 계산
           final double totalBalance = balances.fold(
@@ -95,6 +99,11 @@ class _MonthlyPensionBalanceScreenState
                   itemCount: balances.length,
                   itemBuilder: (context, index) {
                     final item = balances[index];
+                   final matchedAccount = accounts.firstWhereOrNull((a) => a.id == item.accountId);
+
+                    final displayAccountName = matchedAccount?.accountName ?? item.accountId;
+                    final displayInstitution = matchedAccount?.financialInstitution ?? item.financialInstitution;
+
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Card(
@@ -106,7 +115,6 @@ class _MonthlyPensionBalanceScreenState
                           padding: const EdgeInsets.all(16),
                           child: Row(
                             children: [
-                              // 계좌 아이콘
                               CircleAvatar(
                                 backgroundColor: Colors.indigo.shade50,
                                 child: Icon(
@@ -116,40 +124,30 @@ class _MonthlyPensionBalanceScreenState
                               ),
                               const SizedBox(width: 14),
 
-                              // 계좌명 및 금융기관/상품명
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      item.accountName,
+                                      displayAccountName,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    Text(
-                                      [
-                                        if (item.financialInstitution != null &&
-                                            item
-                                                .financialInstitution!
-                                                .isNotEmpty)
-                                          item.financialInstitution,
-                                        if (item.productName != null &&
-                                            item.productName!.isNotEmpty)
-                                          item.productName,
-                                      ].join(' · '),
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey.shade600,
+                                    if (displayInstitution != null && displayInstitution.isNotEmpty)
+                                      Text(
+                                        displayInstitution,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                        ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
 
-                              // 금액 및 수정/삭제 버튼
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
@@ -173,7 +171,7 @@ class _MonthlyPensionBalanceScreenState
                                           color: Colors.grey,
                                         ),
                                         onPressed: () =>
-                                            _showEditDialog(context, item),
+                                            _showEditDialog(context, item, displayAccountName),
                                       ),
                                       const SizedBox(width: 8),
                                       IconButton(
@@ -185,7 +183,7 @@ class _MonthlyPensionBalanceScreenState
                                           color: Colors.redAccent,
                                         ),
                                         onPressed: () =>
-                                            _confirmDelete(context, item),
+                                            _confirmDelete(context, item, displayAccountName),
                                       ),
                                     ],
                                   ),
@@ -224,7 +222,6 @@ class _MonthlyPensionBalanceScreenState
     );
   }
 
-  // 연월 선택 피커
   Future<void> _selectYearMonth(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
@@ -239,8 +236,7 @@ class _MonthlyPensionBalanceScreenState
     }
   }
 
-  // 잔액 수정 팝업 (세 자리 콤마 적용)
-  void _showEditDialog(BuildContext context, MonthlyPensionBalance item) {
+  void _showEditDialog(BuildContext context, MonthlyPensionBalance item, String accountName) {
     final controller = TextEditingController(
       text: _currencyFormatter.format(item.evaluationAmount),
     );
@@ -248,7 +244,7 @@ class _MonthlyPensionBalanceScreenState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${item.accountName} 금액 수정'),
+        title: Text('$accountName 금액 수정'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -293,14 +289,13 @@ class _MonthlyPensionBalanceScreenState
     );
   }
 
-  // 삭제 확인 팝업
-  void _confirmDelete(BuildContext context, MonthlyPensionBalance item) {
+  void _confirmDelete(BuildContext context, MonthlyPensionBalance item, String accountName) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('삭제 확인'),
         content: Text(
-          '${item.accountName}의 $_selectedYearMonth 월말 데이터를 삭제하시겠습니까?',
+          '$accountName의 $_selectedYearMonth 월말 데이터를 삭제하시겠습니까?',
         ),
         actions: [
           TextButton(
@@ -328,7 +323,6 @@ class _MonthlyPensionBalanceScreenState
     );
   }
 
-  // 추가 입력 바텀시트
   void _showAddBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -342,7 +336,6 @@ class _MonthlyPensionBalanceScreenState
   }
 }
 
-// 신규 입력용 BottomSheet 위젯
 class _AddPensionBalanceForm extends ConsumerStatefulWidget {
   final String yearMonth;
   const _AddPensionBalanceForm({required this.yearMonth});
@@ -402,7 +395,6 @@ class _AddPensionBalanceFormState
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, stack) => Center(child: Text('계좌 목록 오류: $err')),
               data: (accounts) {
-                // 살아있는(status == '활동') 연금 계좌만 필터링
                 final activeAccounts = accounts.where((acc) {
                   final isPension = acc.accountType.toUpperCase() == '연금';
                   final isActive = acc.status == '활동';
@@ -417,8 +409,9 @@ class _AddPensionBalanceFormState
                   itemCount: activeAccounts.length,
                   itemBuilder: (context, index) {
                     final acc = activeAccounts[index];
+                    final accId = acc.id ?? '';
                     _controllers.putIfAbsent(
-                      acc.accountName,
+                      accId,
                       () => TextEditingController(),
                     );
 
@@ -450,7 +443,7 @@ class _AddPensionBalanceFormState
                           Expanded(
                             flex: 3,
                             child: TextField(
-                              controller: _controllers[acc.accountName],
+                              controller: _controllers[accId],
                               keyboardType: TextInputType.number,
                               textAlign: TextAlign.end,
                               inputFormatters: [
@@ -493,6 +486,7 @@ class _AddPensionBalanceFormState
               final accounts = ref.read(accountNotifierProvider).value ?? [];
 
               for (var entry in _controllers.entries) {
+                final accountId = entry.key;
                 final rawText = entry.value.text;
 
                 if (rawText.trim().isNotEmpty) {
@@ -501,13 +495,14 @@ class _AddPensionBalanceFormState
                   if (cleanText.isNotEmpty) {
                     final balanceVal = double.tryParse(cleanText) ?? 0.0;
                     final targetAcc = accounts.firstWhere(
-                      (a) => a.accountName == entry.key,
+                      (a) => a.id == accountId,
+                      orElse: () => null as dynamic,
                     );
 
                     final newBalanceItem = MonthlyPensionBalance(
                       yearMonth: widget.yearMonth,
                       financialInstitution: targetAcc.financialInstitution,
-                      accountName: targetAcc.accountName,
+                      accountId: accountId, // 👈 accountName 대신 accountId 바인딩
                       evaluationAmount: balanceVal,
                     );
 

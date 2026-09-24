@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/pension_product.dart';
-import '../../providers/account_provider.dart'; // Account Provider Import
+import '../../providers/account_provider.dart';
 import '../../providers/pension_product_provider.dart';
 
 class PensionProductDialog extends ConsumerStatefulWidget {
@@ -16,7 +16,7 @@ class PensionProductDialog extends ConsumerStatefulWidget {
 
 class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
   final _formKey = GlobalKey<FormState>();
-  String? _selectedAccountName;
+  String? _selectedAccountId; // 👈 accountName -> accountId 로 변경
   late TextEditingController _productNameController;
   String _status = '활동';
   bool _isSubmitting = false;
@@ -26,7 +26,7 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedAccountName = widget.initialData?.accountName;
+    _selectedAccountId = widget.initialData?.accountId; // 👈 accountId 매핑
     _productNameController = TextEditingController(
       text: widget.initialData?.productName ?? '',
     );
@@ -47,7 +47,7 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
     try {
       final product = PensionProduct(
         id: widget.initialData?.id,
-        accountName: _selectedAccountName!,
+        accountId: _selectedAccountId!, // 👈 accountId 저장
         productName: _productNameController.text.trim(),
         status: _status,
       );
@@ -73,7 +73,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // 계좌 목록 조회를 위한 Account Provider 상태 감시
     final accountState = ref.watch(accountNotifierProvider);
 
     return AlertDialog(
@@ -87,19 +86,15 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
               // 계좌선택 (연금 계좌 필터링 콤보박스)
               accountState.when(
                 data: (accounts) {
-                  // 계좌 구분이 '연금' 또는 'PENSION'인 계좌만 필터링
                   final pensionAccounts = accounts.where((acc) {
                     final type = acc.accountType.toUpperCase();
                     return type == '연금';
                   }).toList();
 
-                  // 수정 시 기존 accountName이 선택 목록에 포함되어 있는지 확인
+                  // 👈 acc.id 기준으로 선택 존재 여부 확인
                   final initialExists = pensionAccounts.any(
-                    (acc) => acc.accountName == _selectedAccountName,
+                    (acc) => acc.id == _selectedAccountId,
                   );
-                  if (!initialExists && _selectedAccountName != null) {
-                    // 기존 선택값이 드롭다운에 없는 경우(예: 삭제되었거나 초기값) 처리
-                  }
 
                   if (pensionAccounts.isEmpty) {
                     return const Padding(
@@ -112,19 +107,19 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
                   }
 
                   return DropdownButtonFormField<String>(
-                    initialValue: initialExists ? _selectedAccountName : null,
+                    initialValue: initialExists ? _selectedAccountId : null, // 👈 id 값 사용
                     decoration: const InputDecoration(
                       labelText: '연금 계좌',
                       hintText: '계좌 선택',
                     ),
                     items: pensionAccounts.map((acc) {
                       return DropdownMenuItem<String>(
-                        value: acc.accountName,
-                        child: Text(acc.accountName),
+                        value: acc.id, // 👈 드롭다운 value를 계좌 ID로 지정
+                        child: Text('${acc.financialInstitution} - ${acc.accountName}'), // 화면에는 금융사와 계좌명 표시
                       );
                     }).toList(),
                     onChanged: (val) {
-                      setState(() => _selectedAccountName = val);
+                      setState(() => _selectedAccountId = val);
                     },
                     validator: (val) {
                       if (val == null || val.isEmpty) {

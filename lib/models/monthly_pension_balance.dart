@@ -11,8 +11,8 @@ class MonthlyPensionBalance with _$MonthlyPensionBalance {
     String? id,
     @JsonKey(name: 'year_month') required String yearMonth,
     @JsonKey(name: 'financial_institution') String? financialInstitution,
-    @JsonKey(name: 'account_name') required String accountName,
-    @JsonKey(name: 'product_name') String? productName,
+    @JsonKey(name: 'account_id') required String accountId,
+    @JsonKey(name: 'product_id') String? productId,
     @JsonKey(name: 'evaluation_amount') @Default(0.0) double evaluationAmount,
     @JsonKey(name: 'created_at')
     @TimestampConverter() // 👈 이 줄을 추가합니다.

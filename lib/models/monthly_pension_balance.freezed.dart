@@ -28,10 +28,10 @@ mixin _$MonthlyPensionBalance {
   String get yearMonth => throw _privateConstructorUsedError;
   @JsonKey(name: 'financial_institution')
   String? get financialInstitution => throw _privateConstructorUsedError;
-  @JsonKey(name: 'account_name')
-  String get accountName => throw _privateConstructorUsedError;
-  @JsonKey(name: 'product_name')
-  String? get productName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_id')
+  String get accountId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'product_id')
+  String? get productId => throw _privateConstructorUsedError;
   @JsonKey(name: 'evaluation_amount')
   double get evaluationAmount => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
@@ -59,8 +59,8 @@ abstract class $MonthlyPensionBalanceCopyWith<$Res> {
     String? id,
     @JsonKey(name: 'year_month') String yearMonth,
     @JsonKey(name: 'financial_institution') String? financialInstitution,
-    @JsonKey(name: 'account_name') String accountName,
-    @JsonKey(name: 'product_name') String? productName,
+    @JsonKey(name: 'account_id') String accountId,
+    @JsonKey(name: 'product_id') String? productId,
     @JsonKey(name: 'evaluation_amount') double evaluationAmount,
     @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
@@ -87,8 +87,8 @@ class _$MonthlyPensionBalanceCopyWithImpl<
     Object? id = freezed,
     Object? yearMonth = null,
     Object? financialInstitution = freezed,
-    Object? accountName = null,
-    Object? productName = freezed,
+    Object? accountId = null,
+    Object? productId = freezed,
     Object? evaluationAmount = null,
     Object? createdAt = freezed,
   }) {
@@ -109,15 +109,15 @@ class _$MonthlyPensionBalanceCopyWithImpl<
                     ? _value.financialInstitution
                     : financialInstitution // ignore: cast_nullable_to_non_nullable
                         as String?,
-            accountName:
-                null == accountName
-                    ? _value.accountName
-                    : accountName // ignore: cast_nullable_to_non_nullable
+            accountId:
+                null == accountId
+                    ? _value.accountId
+                    : accountId // ignore: cast_nullable_to_non_nullable
                         as String,
-            productName:
-                freezed == productName
-                    ? _value.productName
-                    : productName // ignore: cast_nullable_to_non_nullable
+            productId:
+                freezed == productId
+                    ? _value.productId
+                    : productId // ignore: cast_nullable_to_non_nullable
                         as String?,
             evaluationAmount:
                 null == evaluationAmount
@@ -148,8 +148,8 @@ abstract class _$$MonthlyPensionBalanceImplCopyWith<$Res>
     String? id,
     @JsonKey(name: 'year_month') String yearMonth,
     @JsonKey(name: 'financial_institution') String? financialInstitution,
-    @JsonKey(name: 'account_name') String accountName,
-    @JsonKey(name: 'product_name') String? productName,
+    @JsonKey(name: 'account_id') String accountId,
+    @JsonKey(name: 'product_id') String? productId,
     @JsonKey(name: 'evaluation_amount') double evaluationAmount,
     @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
@@ -173,8 +173,8 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
     Object? id = freezed,
     Object? yearMonth = null,
     Object? financialInstitution = freezed,
-    Object? accountName = null,
-    Object? productName = freezed,
+    Object? accountId = null,
+    Object? productId = freezed,
     Object? evaluationAmount = null,
     Object? createdAt = freezed,
   }) {
@@ -195,15 +195,15 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
                 ? _value.financialInstitution
                 : financialInstitution // ignore: cast_nullable_to_non_nullable
                     as String?,
-        accountName:
-            null == accountName
-                ? _value.accountName
-                : accountName // ignore: cast_nullable_to_non_nullable
+        accountId:
+            null == accountId
+                ? _value.accountId
+                : accountId // ignore: cast_nullable_to_non_nullable
                     as String,
-        productName:
-            freezed == productName
-                ? _value.productName
-                : productName // ignore: cast_nullable_to_non_nullable
+        productId:
+            freezed == productId
+                ? _value.productId
+                : productId // ignore: cast_nullable_to_non_nullable
                     as String?,
         evaluationAmount:
             null == evaluationAmount
@@ -227,8 +227,8 @@ class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
     this.id,
     @JsonKey(name: 'year_month') required this.yearMonth,
     @JsonKey(name: 'financial_institution') this.financialInstitution,
-    @JsonKey(name: 'account_name') required this.accountName,
-    @JsonKey(name: 'product_name') this.productName,
+    @JsonKey(name: 'account_id') required this.accountId,
+    @JsonKey(name: 'product_id') this.productId,
     @JsonKey(name: 'evaluation_amount') this.evaluationAmount = 0.0,
     @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
@@ -245,11 +245,11 @@ class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
   @JsonKey(name: 'financial_institution')
   final String? financialInstitution;
   @override
-  @JsonKey(name: 'account_name')
-  final String accountName;
+  @JsonKey(name: 'account_id')
+  final String accountId;
   @override
-  @JsonKey(name: 'product_name')
-  final String? productName;
+  @JsonKey(name: 'product_id')
+  final String? productId;
   @override
   @JsonKey(name: 'evaluation_amount')
   final double evaluationAmount;
@@ -260,7 +260,7 @@ class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
 
   @override
   String toString() {
-    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, financialInstitution: $financialInstitution, accountName: $accountName, productName: $productName, evaluationAmount: $evaluationAmount, createdAt: $createdAt)';
+    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, financialInstitution: $financialInstitution, accountId: $accountId, productId: $productId, evaluationAmount: $evaluationAmount, createdAt: $createdAt)';
   }
 
   @override
@@ -273,10 +273,10 @@ class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
                 other.yearMonth == yearMonth) &&
             (identical(other.financialInstitution, financialInstitution) ||
                 other.financialInstitution == financialInstitution) &&
-            (identical(other.accountName, accountName) ||
-                other.accountName == accountName) &&
-            (identical(other.productName, productName) ||
-                other.productName == productName) &&
+            (identical(other.accountId, accountId) ||
+                other.accountId == accountId) &&
+            (identical(other.productId, productId) ||
+                other.productId == productId) &&
             (identical(other.evaluationAmount, evaluationAmount) ||
                 other.evaluationAmount == evaluationAmount) &&
             (identical(other.createdAt, createdAt) ||
@@ -290,8 +290,8 @@ class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
     id,
     yearMonth,
     financialInstitution,
-    accountName,
-    productName,
+    accountId,
+    productId,
     evaluationAmount,
     createdAt,
   );
@@ -319,8 +319,8 @@ abstract class _MonthlyPensionBalance implements MonthlyPensionBalance {
     final String? id,
     @JsonKey(name: 'year_month') required final String yearMonth,
     @JsonKey(name: 'financial_institution') final String? financialInstitution,
-    @JsonKey(name: 'account_name') required final String accountName,
-    @JsonKey(name: 'product_name') final String? productName,
+    @JsonKey(name: 'account_id') required final String accountId,
+    @JsonKey(name: 'product_id') final String? productId,
     @JsonKey(name: 'evaluation_amount') final double evaluationAmount,
     @JsonKey(name: 'created_at')
     @TimestampConverter()
@@ -339,11 +339,11 @@ abstract class _MonthlyPensionBalance implements MonthlyPensionBalance {
   @JsonKey(name: 'financial_institution')
   String? get financialInstitution;
   @override
-  @JsonKey(name: 'account_name')
-  String get accountName;
+  @JsonKey(name: 'account_id')
+  String get accountId;
   @override
-  @JsonKey(name: 'product_name')
-  String? get productName;
+  @JsonKey(name: 'product_id')
+  String? get productId;
   @override
   @JsonKey(name: 'evaluation_amount')
   double get evaluationAmount;

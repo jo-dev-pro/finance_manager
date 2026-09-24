@@ -26,10 +26,10 @@ mixin _$PensionTransaction {
   String get transactionDate => throw _privateConstructorUsedError;
   @JsonKey(name: 'financial_institution')
   String? get financialInstitution => throw _privateConstructorUsedError;
-  @JsonKey(name: 'account_name')
-  String get accountName => throw _privateConstructorUsedError;
-  @JsonKey(name: 'product_name')
-  String? get productName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_id')
+  String get accountId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'product_id')
+  String? get productId => throw _privateConstructorUsedError;
   @JsonKey(name: 'transaction_type')
   String get transactionType => throw _privateConstructorUsedError;
   double get amount => throw _privateConstructorUsedError;
@@ -59,8 +59,8 @@ abstract class $PensionTransactionCopyWith<$Res> {
     String? id,
     @JsonKey(name: 'transaction_date') String transactionDate,
     @JsonKey(name: 'financial_institution') String? financialInstitution,
-    @JsonKey(name: 'account_name') String accountName,
-    @JsonKey(name: 'product_name') String? productName,
+    @JsonKey(name: 'account_id') String accountId,
+    @JsonKey(name: 'product_id') String? productId,
     @JsonKey(name: 'transaction_type') String transactionType,
     double amount,
     String? memo,
@@ -86,8 +86,8 @@ class _$PensionTransactionCopyWithImpl<$Res, $Val extends PensionTransaction>
     Object? id = freezed,
     Object? transactionDate = null,
     Object? financialInstitution = freezed,
-    Object? accountName = null,
-    Object? productName = freezed,
+    Object? accountId = null,
+    Object? productId = freezed,
     Object? transactionType = null,
     Object? amount = null,
     Object? memo = freezed,
@@ -110,15 +110,15 @@ class _$PensionTransactionCopyWithImpl<$Res, $Val extends PensionTransaction>
                     ? _value.financialInstitution
                     : financialInstitution // ignore: cast_nullable_to_non_nullable
                         as String?,
-            accountName:
-                null == accountName
-                    ? _value.accountName
-                    : accountName // ignore: cast_nullable_to_non_nullable
+            accountId:
+                null == accountId
+                    ? _value.accountId
+                    : accountId // ignore: cast_nullable_to_non_nullable
                         as String,
-            productName:
-                freezed == productName
-                    ? _value.productName
-                    : productName // ignore: cast_nullable_to_non_nullable
+            productId:
+                freezed == productId
+                    ? _value.productId
+                    : productId // ignore: cast_nullable_to_non_nullable
                         as String?,
             transactionType:
                 null == transactionType
@@ -159,8 +159,8 @@ abstract class _$$PensionTransactionImplCopyWith<$Res>
     String? id,
     @JsonKey(name: 'transaction_date') String transactionDate,
     @JsonKey(name: 'financial_institution') String? financialInstitution,
-    @JsonKey(name: 'account_name') String accountName,
-    @JsonKey(name: 'product_name') String? productName,
+    @JsonKey(name: 'account_id') String accountId,
+    @JsonKey(name: 'product_id') String? productId,
     @JsonKey(name: 'transaction_type') String transactionType,
     double amount,
     String? memo,
@@ -185,8 +185,8 @@ class __$$PensionTransactionImplCopyWithImpl<$Res>
     Object? id = freezed,
     Object? transactionDate = null,
     Object? financialInstitution = freezed,
-    Object? accountName = null,
-    Object? productName = freezed,
+    Object? accountId = null,
+    Object? productId = freezed,
     Object? transactionType = null,
     Object? amount = null,
     Object? memo = freezed,
@@ -209,15 +209,15 @@ class __$$PensionTransactionImplCopyWithImpl<$Res>
                 ? _value.financialInstitution
                 : financialInstitution // ignore: cast_nullable_to_non_nullable
                     as String?,
-        accountName:
-            null == accountName
-                ? _value.accountName
-                : accountName // ignore: cast_nullable_to_non_nullable
+        accountId:
+            null == accountId
+                ? _value.accountId
+                : accountId // ignore: cast_nullable_to_non_nullable
                     as String,
-        productName:
-            freezed == productName
-                ? _value.productName
-                : productName // ignore: cast_nullable_to_non_nullable
+        productId:
+            freezed == productId
+                ? _value.productId
+                : productId // ignore: cast_nullable_to_non_nullable
                     as String?,
         transactionType:
             null == transactionType
@@ -251,8 +251,8 @@ class _$PensionTransactionImpl implements _PensionTransaction {
     this.id,
     @JsonKey(name: 'transaction_date') required this.transactionDate,
     @JsonKey(name: 'financial_institution') this.financialInstitution,
-    @JsonKey(name: 'account_name') required this.accountName,
-    @JsonKey(name: 'product_name') this.productName,
+    @JsonKey(name: 'account_id') required this.accountId,
+    @JsonKey(name: 'product_id') this.productId,
     @JsonKey(name: 'transaction_type') required this.transactionType,
     this.amount = 0,
     this.memo,
@@ -271,11 +271,11 @@ class _$PensionTransactionImpl implements _PensionTransaction {
   @JsonKey(name: 'financial_institution')
   final String? financialInstitution;
   @override
-  @JsonKey(name: 'account_name')
-  final String accountName;
+  @JsonKey(name: 'account_id')
+  final String accountId;
   @override
-  @JsonKey(name: 'product_name')
-  final String? productName;
+  @JsonKey(name: 'product_id')
+  final String? productId;
   @override
   @JsonKey(name: 'transaction_type')
   final String transactionType;
@@ -291,7 +291,7 @@ class _$PensionTransactionImpl implements _PensionTransaction {
 
   @override
   String toString() {
-    return 'PensionTransaction(id: $id, transactionDate: $transactionDate, financialInstitution: $financialInstitution, accountName: $accountName, productName: $productName, transactionType: $transactionType, amount: $amount, memo: $memo, createdAt: $createdAt)';
+    return 'PensionTransaction(id: $id, transactionDate: $transactionDate, financialInstitution: $financialInstitution, accountId: $accountId, productId: $productId, transactionType: $transactionType, amount: $amount, memo: $memo, createdAt: $createdAt)';
   }
 
   @override
@@ -304,10 +304,10 @@ class _$PensionTransactionImpl implements _PensionTransaction {
                 other.transactionDate == transactionDate) &&
             (identical(other.financialInstitution, financialInstitution) ||
                 other.financialInstitution == financialInstitution) &&
-            (identical(other.accountName, accountName) ||
-                other.accountName == accountName) &&
-            (identical(other.productName, productName) ||
-                other.productName == productName) &&
+            (identical(other.accountId, accountId) ||
+                other.accountId == accountId) &&
+            (identical(other.productId, productId) ||
+                other.productId == productId) &&
             (identical(other.transactionType, transactionType) ||
                 other.transactionType == transactionType) &&
             (identical(other.amount, amount) || other.amount == amount) &&
@@ -323,8 +323,8 @@ class _$PensionTransactionImpl implements _PensionTransaction {
     id,
     transactionDate,
     financialInstitution,
-    accountName,
-    productName,
+    accountId,
+    productId,
     transactionType,
     amount,
     memo,
@@ -353,8 +353,8 @@ abstract class _PensionTransaction implements PensionTransaction {
     final String? id,
     @JsonKey(name: 'transaction_date') required final String transactionDate,
     @JsonKey(name: 'financial_institution') final String? financialInstitution,
-    @JsonKey(name: 'account_name') required final String accountName,
-    @JsonKey(name: 'product_name') final String? productName,
+    @JsonKey(name: 'account_id') required final String accountId,
+    @JsonKey(name: 'product_id') final String? productId,
     @JsonKey(name: 'transaction_type') required final String transactionType,
     final double amount,
     final String? memo,
@@ -375,11 +375,11 @@ abstract class _PensionTransaction implements PensionTransaction {
   @JsonKey(name: 'financial_institution')
   String? get financialInstitution;
   @override
-  @JsonKey(name: 'account_name')
-  String get accountName;
+  @JsonKey(name: 'account_id')
+  String get accountId;
   @override
-  @JsonKey(name: 'product_name')
-  String? get productName;
+  @JsonKey(name: 'product_id')
+  String? get productId;
   @override
   @JsonKey(name: 'transaction_type')
   String get transactionType;

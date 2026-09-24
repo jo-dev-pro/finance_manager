@@ -60,3 +60,29 @@ class PensionTransactionNotifier extends _$PensionTransactionNotifier {
     });
   }
 }
+
+// 🌐 특정 계좌 ID(accountId) 기준 거래 내역 필터링
+@riverpod
+Future<List<PensionTransaction>> pensionTransactionsByAccount(
+  PensionTransactionsByAccountRef ref,
+  String accountId,
+) async {
+  if (accountId.isEmpty) return [];
+
+  final allTransactions =
+      await ref.watch(pensionTransactionNotifierProvider.future);
+  return allTransactions.where((t) => t.accountId == accountId).toList();
+}
+
+// 🌐 특정 상품 ID(productId) 기준 거래 내역 필터링 (필요 시 활용)
+@riverpod
+Future<List<PensionTransaction>> pensionTransactionsByProduct(
+  PensionTransactionsByProductRef ref,
+  String productId,
+) async {
+  if (productId.isEmpty) return [];
+
+  final allTransactions =
+      await ref.watch(pensionTransactionNotifierProvider.future);
+  return allTransactions.where((t) => t.productId == productId).toList();
+}

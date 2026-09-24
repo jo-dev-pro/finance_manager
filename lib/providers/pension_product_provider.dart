@@ -15,7 +15,7 @@ class PensionProductNotifier extends _$PensionProductNotifier {
     final firestore = ref.read(firestoreProvider);
     final snapshot = await firestore
         .collection('pension_product')
-        .orderBy('account_name', descending: false)
+        .orderBy('account_id', descending: false) // 👈 account_name -> account_id 로 변경
         .orderBy('product_name', descending: false)
         .get();
 
@@ -53,13 +53,14 @@ class PensionProductNotifier extends _$PensionProductNotifier {
   }
 }
 
+// 🌐 특정 계좌 ID로 연금상품 목록을 필터링하는 프로바이더
 @riverpod
 Future<List<PensionProduct>> pensionProductsByAccount(
   PensionProductsByAccountRef ref,
-  String accountName,
+  String accountId, // 👈 accountName -> accountId
 ) async {
-  if (accountName.isEmpty) return [];
+  if (accountId.isEmpty) return [];
 
   final allProducts = await ref.watch(pensionProductNotifierProvider.future);
-  return allProducts.where((p) => p.accountName == accountName).toList();
+  return allProducts.where((p) => p.accountId == accountId).toList(); // 👈 p.accountName -> p.accountId
 }

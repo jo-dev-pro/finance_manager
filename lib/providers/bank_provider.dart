@@ -6,6 +6,7 @@ import 'monthly_bank_balance_provider.dart';
 
 part 'bank_provider.g.dart';
 
+// 은행 메뉴에서 사용
 class BankAccountItem {
   final Account account;
   final double currentBalance;
