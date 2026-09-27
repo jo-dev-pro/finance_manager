@@ -26,7 +26,7 @@ final availableYearMonthsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AvailableYearMonthsRef = AutoDisposeFutureProviderRef<List<String>>;
-String _$dashboardSummaryHash() => r'8cf74a8aa0f47a4679c78ad50b77afab27e26a23';
+String _$dashboardSummaryHash() => r'242af09e4d6e35a9bcdb31d506fd2b07aa2270bd';
 
 /// See also [dashboardSummary].
 @ProviderFor(dashboardSummary)
@@ -45,7 +45,7 @@ final dashboardSummaryProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DashboardSummaryRef = AutoDisposeFutureProviderRef<DashboardSummary>;
-String _$selectedYearMonthHash() => r'f3e6a05782d42b2c99ec20e594222fb37c152df0';
+String _$selectedYearMonthHash() => r'85133661c1bd2b752288cf9e7f89dacb96847f79';
 
 /// See also [SelectedYearMonth].
 @ProviderFor(SelectedYearMonth)

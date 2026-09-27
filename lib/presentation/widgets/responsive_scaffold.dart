@@ -1,3 +1,4 @@
+// responsive_scaffold.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,9 +8,10 @@ class ResponsiveScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   void _onDestinationSelected(int index) {
+    // initialLocation: true로 설정하여 탭 클릭 시 항상 최상위(대표) 화면으로 이동
     navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: true,
     );
   }
 
@@ -17,9 +19,13 @@ class ResponsiveScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
 
-    // 화면 크기 구간 정의
     final bool isMobile = width < 600;
     final bool isTablet = width >= 600 && width < 1000;
+
+    // 공통 테마 색상 정의 (웹 NavigationRail과 완벽히 동일하게 일치)
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final unselectedColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    final indicatorBgColor = primaryColor.withValues(alpha: 0.2);
 
     final destinations = const [
       NavigationDestination(
@@ -49,79 +55,88 @@ class ResponsiveScaffold extends StatelessWidget {
       ),
     ];
 
-    // 1. 모바일 뷰 (< 600px)
     if (isMobile) {
       return Scaffold(
         body: navigationShell,
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: _onDestinationSelected,
-          destinations: destinations,
+        bottomNavigationBar: NavigationBarTheme(
+          // 모바일 NavigationBar의 색상 및 라벨 스타일을 웹(NavigationRail)과 일치시킴
+          data: NavigationBarThemeData(
+            indicatorColor: indicatorBgColor,
+            iconTheme: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return IconThemeData(color: primaryColor, size: 24);
+              }
+              return IconThemeData(
+                color: unselectedColor.withValues(alpha: 0.7),
+                size: 22,
+              );
+            }),
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                );
+              }
+              return TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+                color: unselectedColor,
+              );
+            }),
+          ),
+          child: NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: _onDestinationSelected,
+            destinations: destinations,
+          ),
         ),
       );
     }
 
-    // 2. 태블릿 및 데스크톱 뷰 (≥ 600px)
     return Scaffold(
       body: Row(
         children: [
           NavigationRail(
-            minWidth: isTablet ? 120 : 150, // 태블릿에서 축소 시 최소 너비
-            labelType: NavigationRailLabelType.all, // 데스크톱: extended 모드로 자동 처리
+            minWidth: isTablet ? 120 : 150,
+            labelType: NavigationRailLabelType.all,
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: _onDestinationSelected,
-            indicatorColor: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.2),
-            // 상단 헤더 (태블릿/데스크톱 구분)
-            leading: isTablet
-                // 태블릿: 심플한 로고 아이콘만 표시
-                ? Image.asset(
-                  'assets/logos/finance.png',
-                  width: 120,
-                  height: 120,
-                  fit: BoxFit.cover, // 이미지 비율 맞춤 설정
-                )
-                // 데스크톱: 로고 아이콘 + 텍스트 표시
-                : Image.asset(  
-                      'assets/logos/finance.png',
-                      width: 150,
-                      height: 150,
-                      fit: BoxFit.cover, // 이미지 비율 맞춤 설정
-                    ),
-
-            // 스타일 설정
+            indicatorColor: indicatorBgColor,
+            leading: Image.asset(
+              'assets/logos/finance.png',
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
+            ),
             selectedIconTheme: IconThemeData(
-              color: Theme.of(context).colorScheme.primary,
+              color: primaryColor,
               size: 24,
             ),
             unselectedIconTheme: IconThemeData(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              color: unselectedColor.withValues(alpha: 0.7),
               size: 22,
             ),
             selectedLabelTextStyle: TextStyle(
-              fontSize: isTablet ? 11 : 14, // 태블릿에서는 글자 크기 축소
+              fontSize: isTablet ? 11 : 14,
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
+              color: primaryColor,
             ),
             unselectedLabelTextStyle: TextStyle(
               fontSize: isTablet ? 11 : 13,
               fontWeight: FontWeight.normal,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: unselectedColor,
             ),
-
-            destinations:
-                destinations
-                    .map(
-                      (d) => NavigationRailDestination(
-                        icon: d.icon,
-                        selectedIcon: d.selectedIcon,
-                        label: Text(d.label),
-                      ),
-                    )
-                    .toList(),
+            destinations: destinations
+                .map(
+                  (d) => NavigationRailDestination(
+                    icon: d.icon,
+                    selectedIcon: d.selectedIcon,
+                    label: Text(d.label),
+                  ),
+                )
+                .toList(),
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(child: navigationShell),

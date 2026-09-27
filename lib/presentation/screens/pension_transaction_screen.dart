@@ -1,12 +1,13 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:collection/collection.dart';
 
+import '../../providers/account_name_provider.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/pension_product_provider.dart';
 import '../../providers/pension_transaction_provider.dart';
-import '../widgets/pension_transaction_form_dialog.dart';
+import '../widgets/pension_transaction_dialog.dart';
 
 class PensionTransactionScreen extends ConsumerWidget {
   const PensionTransactionScreen({super.key});
@@ -15,6 +16,7 @@ class PensionTransactionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(pensionTransactionNotifierProvider);
     final accountsAsync = ref.watch(accountNotifierProvider);
+    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
     final productsAsync = ref.watch(pensionProductNotifierProvider);
     final currencyFormatter = NumberFormat('#,##0', 'ko_KR');
 
@@ -29,6 +31,8 @@ class PensionTransactionScreen extends ConsumerWidget {
           }
 
           final accounts = accountsAsync.value ?? [];
+          final accountNames = accountNamesAsync.value ?? [];
+          final accountNameMap = {for (var an in accountNames) an.id: an};
           final products = productsAsync.value ?? [];
 
           return ListView.separated(
@@ -43,13 +47,17 @@ class PensionTransactionScreen extends ConsumerWidget {
               final matchedAccount = accounts.firstWhereOrNull(
                 (a) => a.id == item.accountId,
               );
+              final matchedAccountName = matchedAccount != null
+                  ? accountNameMap[matchedAccount.accountNameId]
+                  : null;
+
               final matchedProduct = products.firstWhereOrNull(
                 (p) => p.id == item.productId,
               );
 
-              final accountName = matchedAccount?.accountName ?? item.accountId;
-              final institution =
-                  matchedAccount?.financialInstitution ??
+              final accountName =
+                  matchedAccountName?.accountName ?? item.accountId;
+              final institution = matchedAccount?.financialInstitution ??
                   item.financialInstitution ??
                   '금융사 미지정';
               final productName = matchedProduct?.productName ?? '상품 미지정';
@@ -67,18 +75,18 @@ class PensionTransactionScreen extends ConsumerWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color:
-                            isIncome ? Colors.blue.shade50 : Colors.red.shade50,
+                        color: isIncome
+                            ? Colors.blue.shade50
+                            : Colors.red.shade50,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         item.transactionType,
                         style: TextStyle(
                           fontSize: 12,
-                          color:
-                              isIncome
-                                  ? Colors.blue.shade700
-                                  : Colors.red.shade700,
+                          color: isIncome
+                              ? Colors.blue.shade700
+                              : Colors.red.shade700,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -129,8 +137,8 @@ class PensionTransactionScreen extends ConsumerWidget {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder:
-                        (_) => PensionTransactionFormDialog(transaction: item),
+                    builder: (_) =>
+                        PensionTransactionDialog(transaction: item),
                   );
                 },
               );
@@ -143,7 +151,7 @@ class PensionTransactionScreen extends ConsumerWidget {
         onPressed: () {
           showDialog(
             context: context,
-            builder: (_) => const PensionTransactionFormDialog(),
+            builder: (_) => const PensionTransactionDialog(),
           );
         },
       ),

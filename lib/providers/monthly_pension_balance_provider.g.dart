@@ -184,7 +184,7 @@ class _MonthlyPensionBalancesByAccountProviderElement
 }
 
 String _$monthlyPensionBalanceNotifierHash() =>
-    r'5dfbdc7a55e01f21c306f8ad7a5702c6178f4e1e';
+    r'cd0e2da02ec0f783235d07325d4871ab84cc1dac';
 
 abstract class _$MonthlyPensionBalanceNotifier
     extends BuildlessAutoDisposeAsyncNotifier<List<MonthlyPensionBalance>> {

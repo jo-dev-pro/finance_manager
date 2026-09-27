@@ -16,15 +16,24 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
     final snapshot = await firestore
         .collection('monthly_pension_balance')
         .where('year_month', isEqualTo: yearMonth)
-        .orderBy('financial_institution', descending: false)
-        .orderBy('account_id', descending: false) // 👈 account_id 기준 정렬
         .get();
 
-    return snapshot.docs.map((doc) {
+    final list = snapshot.docs.map((doc) {
       final data = doc.data();
       data['id'] = doc.id;
       return MonthlyPensionBalance.fromJson(data);
     }).toList();
+
+    // 금융기관 -> 계좌 ID 순 메모리 정렬
+    list.sort((a, b) {
+      int comp = (a.financialInstitution ?? '').compareTo(
+        b.financialInstitution ?? '',
+      );
+      if (comp != 0) return comp;
+      return a.accountId.compareTo(b.accountId);
+    });
+
+    return list;
   }
 
   Future<void> saveBalance(MonthlyPensionBalance balance) async {
@@ -49,7 +58,6 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
   }
 }
 
-// 🌐 특정 연월(yearMonth)과 계좌 ID(accountId)로 해당 월의 잔액 데이터를 필터링하는 프로바이더
 @riverpod
 Future<List<MonthlyPensionBalance>> monthlyPensionBalancesByAccount(
   MonthlyPensionBalancesByAccountRef ref, {

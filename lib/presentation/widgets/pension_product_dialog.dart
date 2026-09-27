@@ -1,7 +1,9 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/pension_product.dart';
+import '../../providers/account_name_provider.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/pension_product_provider.dart';
 
@@ -11,12 +13,13 @@ class PensionProductDialog extends ConsumerStatefulWidget {
   const PensionProductDialog({super.key, this.initialData});
 
   @override
-  ConsumerState<PensionProductDialog> createState() => _PensionProductDialogState();
+  ConsumerState<PensionProductDialog> createState() =>
+      _PensionProductDialogState();
 }
 
 class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
   final _formKey = GlobalKey<FormState>();
-  String? _selectedAccountId; // 👈 accountName -> accountId 로 변경
+  String? _selectedAccountId;
   late TextEditingController _productNameController;
   String _status = '활동';
   bool _isSubmitting = false;
@@ -26,7 +29,7 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedAccountId = widget.initialData?.accountId; // 👈 accountId 매핑
+    _selectedAccountId = widget.initialData?.accountId;
     _productNameController = TextEditingController(
       text: widget.initialData?.productName ?? '',
     );
@@ -47,7 +50,7 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
     try {
       final product = PensionProduct(
         id: widget.initialData?.id,
-        accountId: _selectedAccountId!, // 👈 accountId 저장
+        accountId: _selectedAccountId!,
         productName: _productNameController.text.trim(),
         status: _status,
       );
@@ -74,6 +77,7 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
   @override
   Widget build(BuildContext context) {
     final accountState = ref.watch(accountNotifierProvider);
+    final accountNameState = ref.watch(accountNameNotifierProvider);
 
     return AlertDialog(
       title: Text(_isEditing ? '연금상품 수정' : '연금상품 등록'),
@@ -83,7 +87,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 계좌선택 (연금 계좌 필터링 콤보박스)
               accountState.when(
                 data: (accounts) {
                   final pensionAccounts = accounts.where((acc) {
@@ -91,7 +94,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
                     return type == '연금';
                   }).toList();
 
-                  // 👈 acc.id 기준으로 선택 존재 여부 확인
                   final initialExists = pensionAccounts.any(
                     (acc) => acc.id == _selectedAccountId,
                   );
@@ -106,16 +108,26 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
                     );
                   }
 
+                  final accountNames = accountNameState.value ?? [];
+
                   return DropdownButtonFormField<String>(
-                    initialValue: initialExists ? _selectedAccountId : null, // 👈 id 값 사용
+                    initialValue: initialExists ? _selectedAccountId : null,
                     decoration: const InputDecoration(
                       labelText: '연금 계좌',
                       hintText: '계좌 선택',
                     ),
                     items: pensionAccounts.map((acc) {
+                      final matchedName = accountNames.firstWhereOrNull(
+                        (an) => an.id == acc.accountNameId,
+                      );
+                      final displayName =
+                          matchedName?.accountName ?? '계좌';
+
                       return DropdownMenuItem<String>(
-                        value: acc.id, // 👈 드롭다운 value를 계좌 ID로 지정
-                        child: Text('${acc.financialInstitution} - ${acc.accountName}'), // 화면에는 금융사와 계좌명 표시
+                        value: acc.id,
+                        child: Text(
+                          '${acc.financialInstitution} - $displayName',
+                        ),
                       );
                     }).toList(),
                     onChanged: (val) {
@@ -139,8 +151,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
                 ),
               ),
               const SizedBox(height: 12),
-
-              // 상품명 입력
               TextFormField(
                 controller: _productNameController,
                 decoration: const InputDecoration(
@@ -155,8 +165,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
                 },
               ),
               const SizedBox(height: 12),
-
-              // 상태 선택
               DropdownButtonFormField<String>(
                 initialValue: _status,
                 decoration: const InputDecoration(labelText: '상태'),

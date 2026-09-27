@@ -161,7 +161,7 @@ class _PensionProductsByAccountProviderElement
 }
 
 String _$pensionProductNotifierHash() =>
-    r'9978ae163526f8f41050a702f8d92c8aec7c6e31';
+    r'544f221d2ea0607995b21c0d49fe1fdb320ed96e';
 
 /// See also [PensionProductNotifier].
 @ProviderFor(PensionProductNotifier)

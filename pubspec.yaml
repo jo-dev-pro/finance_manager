@@ -15,7 +15,8 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
-  csv: ^6.0.0
+  # excel: ^4.0.0
+  spreadsheet_decoder: ^2.2.0 # 💡 excel 대신 안정적인 파서로 교체
 
   intl: ^0.20.2
   image_picker: ^1.2.3
@@ -36,6 +37,7 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   json_annotation: ^4.9.0
   google_fonts: ^8.2.1
+  file_picker: ^8.0.0
 
 dev_dependencies:
   flutter_test:

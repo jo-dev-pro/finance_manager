@@ -83,9 +83,10 @@ class StockItemScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('오류 발생: $e')),
       ),
-      floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddDialog(context),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('종목 추가'),
       ),
     );
   }

@@ -6,7 +6,7 @@ part of 'bank_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$bankScreenDataHash() => r'9eb85d002f42d65af4e15fd52aa9b87a7f3b4162';
+String _$bankScreenDataHash() => r'57dc2c5ee6c17b121e12aece154694632e3e74ea';
 
 /// Copied from Dart SDK
 class _SystemHash {

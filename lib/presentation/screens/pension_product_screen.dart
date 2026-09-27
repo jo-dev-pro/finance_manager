@@ -1,7 +1,10 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../models/pension_product.dart';
-import '../../providers/account_provider.dart'; // 👈 계좌 프로바이더 추가
+import '../../providers/account_name_provider.dart';
+import '../../providers/account_provider.dart';
 import '../../providers/pension_product_provider.dart';
 import '../widgets/pension_product_dialog.dart';
 
@@ -11,12 +14,11 @@ class PensionProductScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsState = ref.watch(pensionProductNotifierProvider);
-    final accountState = ref.watch(accountNotifierProvider); // 👈 계좌 목록 감시
+    final accountState = ref.watch(accountNotifierProvider);
+    final accountNameState = ref.watch(accountNameNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('연금상품 관리'),
-      ),
+      appBar: AppBar(title: const Text('연금상품 관리')),
       body: productsState.when(
         data: (products) {
           if (products.isEmpty) {
@@ -29,24 +31,31 @@ class PensionProductScreen extends ConsumerWidget {
             );
           }
 
-          // 👈 계좌 데이터를 미리 맵(Map) 형태로 변환해 두면 O(1) 시간 복잡도로 빠르게 찾을 수 있습니다.
           return accountState.when(
             data: (accounts) {
+              final accountNames = accountNameState.value ?? [];
               final accountMap = {for (var acc in accounts) acc.id: acc};
+              final accountNameMap = {for (var an in accountNames) an.id: an};
 
               return ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: products.length,
                 itemBuilder: (context, index) {
                   final item = products[index];
-                  // 데이터 상의 상태값 검증 ('활동' 상태 문자열 혹은 'ACTIVE'에 맞춰 수정 가능)
-                  final isActive = item.status == '활동' || item.status == 'ACTIVE';
+                  final isActive =
+                      item.status == '활동' || item.status == 'ACTIVE';
 
-                  // 👈 accountId로 해당 계좌 정보 조회 (계좌명이 변경되어도 자동으로 최신 이름 표시됨)
+                  // accountId로 계좌를 찾은 후 accountNameId로 계좌명 조회
                   final matchedAccount = accountMap[item.accountId];
-                  final accountDisplay = matchedAccount != null
-                      ? '${matchedAccount.financialInstitution} - ${matchedAccount.accountName}'
-                      : '알 수 없는 계좌';
+                  final matchedAccountName = matchedAccount != null
+                      ? accountNameMap[matchedAccount.accountNameId]
+                      : null;
+
+                  final displayName = matchedAccountName?.accountName ?? '알 수 없는 계좌';
+                  final institution = matchedAccount?.financialInstitution ?? '';
+                  final accountDisplay = institution.isNotEmpty
+                      ? '$institution - $displayName'
+                      : displayName;
 
                   return Card(
                     elevation: 1,
@@ -56,19 +65,28 @@ class PensionProductScreen extends ConsumerWidget {
                     ),
                     child: ListTile(
                       leading: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: isActive ? Colors.green.shade50 : Colors.grey.shade200,
+                          color: isActive
+                              ? Colors.green.shade50
+                              : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: isActive ? Colors.green.shade200 : Colors.grey.shade400,
+                            color: isActive
+                                ? Colors.green.shade200
+                                : Colors.grey.shade400,
                           ),
                         ),
                         child: Text(
                           isActive ? '운용중' : '중단',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: isActive ? Colors.green.shade800 : Colors.grey.shade700,
+                            color: isActive
+                                ? Colors.green.shade800
+                                : Colors.grey.shade700,
                             fontSize: 12,
                           ),
                         ),
@@ -77,7 +95,7 @@ class PensionProductScreen extends ConsumerWidget {
                         item.productName,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Text('계좌: $accountDisplay'), // 👈 최신 계좌 정보 출력
+                      subtitle: Text('계좌: $accountDisplay'),
                       trailing: PopupMenuButton<String>(
                         onSelected: (val) {
                           if (val == 'edit') {
@@ -87,10 +105,16 @@ class PensionProductScreen extends ConsumerWidget {
                           }
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(value: 'edit', child: Text('수정')),
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Text('수정'),
+                          ),
                           const PopupMenuItem(
                             value: 'delete',
-                            child: Text('삭제', style: TextStyle(color: Colors.red)),
+                            child: Text(
+                              '삭제',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ),
                         ],
                       ),
@@ -106,18 +130,16 @@ class PensionProductScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('오류 발생: $e')),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddDialog(context),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('상품 추가'),
       ),
     );
   }
 
   void _showAddDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => const PensionProductDialog(),
-    );
+    showDialog(context: context, builder: (_) => const PensionProductDialog());
   }
 
   void _showEditDialog(BuildContext context, PensionProduct product) {
@@ -127,7 +149,11 @@ class PensionProductScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, PensionProduct product) {
+  void _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    PensionProduct product,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -141,7 +167,9 @@ class PensionProductScreen extends ConsumerWidget {
           TextButton(
             onPressed: () {
               if (product.id != null) {
-                ref.read(pensionProductNotifierProvider.notifier).deletePensionProduct(product.id!);
+                ref
+                    .read(pensionProductNotifierProvider.notifier)
+                    .deletePensionProduct(product.id!);
               }
               Navigator.of(ctx).pop();
             },

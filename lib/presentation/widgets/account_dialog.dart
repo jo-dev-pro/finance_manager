@@ -2,22 +2,26 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../models/account.dart';
 import '../../providers/account_provider.dart';
+import '../../providers/account_name_provider.dart';
 
-class AccountFormDialog extends ConsumerStatefulWidget {
+class AccountDialog extends ConsumerStatefulWidget {
   final Account? initialAccount;
 
-  const AccountFormDialog({super.key, this.initialAccount});
+  const AccountDialog({super.key, this.initialAccount});
 
   @override
-  ConsumerState<AccountFormDialog> createState() => _AccountFormDialogState();
+  ConsumerState<AccountDialog> createState() => _AccountDialogState();
 }
 
-class _AccountFormDialogState extends ConsumerState<AccountFormDialog> {
+class _AccountDialogState extends ConsumerState<AccountDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _institutionController;
-  late final TextEditingController _nameController;
+  late final TextEditingController _numberController;
+
+  String? _selectedAccountNameId;
   late String _selectedType;
 
   XFile? _selectedImage;
@@ -33,9 +37,12 @@ class _AccountFormDialogState extends ConsumerState<AccountFormDialog> {
     _institutionController = TextEditingController(
       text: widget.initialAccount?.financialInstitution ?? '',
     );
-    _nameController = TextEditingController(
-      text: widget.initialAccount?.accountName ?? '',
+    _numberController = TextEditingController(
+      text: widget.initialAccount?.accountNumber ?? '',
     );
+
+    _selectedAccountNameId = widget.initialAccount?.accountNameId;
+
     _selectedType = widget.initialAccount?.accountType ?? '은행';
     if (!_accountTypes.contains(_selectedType)) {
       _selectedType = '기타';
@@ -45,7 +52,7 @@ class _AccountFormDialogState extends ConsumerState<AccountFormDialog> {
   @override
   void dispose() {
     _institutionController.dispose();
-    _nameController.dispose();
+    _numberController.dispose();
     super.dispose();
   }
 
@@ -64,20 +71,25 @@ class _AccountFormDialogState extends ConsumerState<AccountFormDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
+      final institution = _institutionController.text.trim();
+      final number = _numberController.text.trim();
+
       if (_isEditing) {
         final updatedAccount = widget.initialAccount!.copyWith(
-          financialInstitution: _institutionController.text.trim(),
+          financialInstitution: institution,
           accountType: _selectedType,
-          accountName: _nameController.text.trim(),
+          accountNameId: _selectedAccountNameId!,
+          accountNumber: number.isEmpty ? null : number,
         );
         ref
             .read(accountNotifierProvider.notifier)
             .updateAccount(updatedAccount, _selectedImage);
       } else {
         final newAccount = Account(
-          financialInstitution: _institutionController.text.trim(),
+          financialInstitution: institution,
           accountType: _selectedType,
-          accountName: _nameController.text.trim(),
+          accountNameId: _selectedAccountNameId!,
+          accountNumber: number.isEmpty ? null : number,
         );
         ref
             .read(accountNotifierProvider.notifier)
@@ -90,6 +102,7 @@ class _AccountFormDialogState extends ConsumerState<AccountFormDialog> {
   @override
   Widget build(BuildContext context) {
     final existingLogoUrl = widget.initialAccount?.logoUrl;
+    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
 
     return AlertDialog(
       title: Text(_isEditing ? '계좌 정보 수정' : '신규 계좌 등록'),
@@ -123,6 +136,7 @@ class _AccountFormDialogState extends ConsumerState<AccountFormDialog> {
                 ),
               ),
               const SizedBox(height: 20),
+
               TextFormField(
                 controller: _institutionController,
                 enableSuggestions: false,
@@ -134,6 +148,7 @@ class _AccountFormDialogState extends ConsumerState<AccountFormDialog> {
                 validator: (v) => v == null || v.isEmpty ? '금융기관을 입력하세요' : null,
               ),
               const SizedBox(height: 12),
+
               DropdownButtonFormField<String>(
                 initialValue: _selectedType,
                 decoration: const InputDecoration(
@@ -149,15 +164,50 @@ class _AccountFormDialogState extends ConsumerState<AccountFormDialog> {
                 },
               ),
               const SizedBox(height: 12),
+
+              accountNamesAsync.when(
+                data: (accountNames) {
+                  return DropdownButtonFormField<String>(
+                    initialValue: _selectedAccountNameId,
+                    decoration: const InputDecoration(
+                      labelText: '계좌명 선택',
+                      border: OutlineInputBorder(),
+                    ),
+                    hint: const Text('계좌명을 선택하세요'),
+                    icon: const Icon(Icons.arrow_drop_down),
+                    items: accountNames
+                        .map((accountName) => DropdownMenuItem<String>(
+                              value: accountName.id,
+                              child: Text(accountName.accountName),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      setState(() => _selectedAccountNameId = val);
+                    },
+                    validator: (v) => v == null || v.isEmpty ? '계좌명을 선택하세요' : null,
+                  );
+                },
+                loading: () => const LinearProgressIndicator(),
+                error: (err, _) => TextFormField(
+                  enabled: false,
+                  decoration: InputDecoration(
+                    labelText: '계좌명 목록 로드 실패 ($err)',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
               TextFormField(
-                controller: _nameController,
+                controller: _numberController,
                 enableSuggestions: false,
                 autocorrect: false,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: '계좌명 (예: 주거래 통장)',
+                  labelText: '계좌번호 (선택)',
+                  hintText: '예: 123-456-7890',
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) => v == null || v.isEmpty ? '계좌명을 입력하세요' : null,
               ),
             ],
           ),

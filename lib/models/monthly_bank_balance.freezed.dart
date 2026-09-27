@@ -24,14 +24,9 @@ mixin _$MonthlyBankBalance {
   String? get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'year_month')
   String get yearMonth => throw _privateConstructorUsedError;
-  @JsonKey(name: 'financial_institution')
-  String get financialInstitution => throw _privateConstructorUsedError;
-  @JsonKey(name: 'account_name')
-  String get accountName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_id')
+  String get accountId => throw _privateConstructorUsedError;
   double get balance => throw _privateConstructorUsedError;
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this MonthlyBankBalance to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -53,10 +48,8 @@ abstract class $MonthlyBankBalanceCopyWith<$Res> {
   $Res call({
     String? id,
     @JsonKey(name: 'year_month') String yearMonth,
-    @JsonKey(name: 'financial_institution') String financialInstitution,
-    @JsonKey(name: 'account_name') String accountName,
+    @JsonKey(name: 'account_id') String accountId,
     double balance,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -77,10 +70,8 @@ class _$MonthlyBankBalanceCopyWithImpl<$Res, $Val extends MonthlyBankBalance>
   $Res call({
     Object? id = freezed,
     Object? yearMonth = null,
-    Object? financialInstitution = null,
-    Object? accountName = null,
+    Object? accountId = null,
     Object? balance = null,
-    Object? createdAt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -94,26 +85,16 @@ class _$MonthlyBankBalanceCopyWithImpl<$Res, $Val extends MonthlyBankBalance>
                     ? _value.yearMonth
                     : yearMonth // ignore: cast_nullable_to_non_nullable
                         as String,
-            financialInstitution:
-                null == financialInstitution
-                    ? _value.financialInstitution
-                    : financialInstitution // ignore: cast_nullable_to_non_nullable
-                        as String,
-            accountName:
-                null == accountName
-                    ? _value.accountName
-                    : accountName // ignore: cast_nullable_to_non_nullable
+            accountId:
+                null == accountId
+                    ? _value.accountId
+                    : accountId // ignore: cast_nullable_to_non_nullable
                         as String,
             balance:
                 null == balance
                     ? _value.balance
                     : balance // ignore: cast_nullable_to_non_nullable
                         as double,
-            createdAt:
-                freezed == createdAt
-                    ? _value.createdAt
-                    : createdAt // ignore: cast_nullable_to_non_nullable
-                        as DateTime?,
           )
           as $Val,
     );
@@ -132,10 +113,8 @@ abstract class _$$MonthlyBankBalanceImplCopyWith<$Res>
   $Res call({
     String? id,
     @JsonKey(name: 'year_month') String yearMonth,
-    @JsonKey(name: 'financial_institution') String financialInstitution,
-    @JsonKey(name: 'account_name') String accountName,
+    @JsonKey(name: 'account_id') String accountId,
     double balance,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -155,10 +134,8 @@ class __$$MonthlyBankBalanceImplCopyWithImpl<$Res>
   $Res call({
     Object? id = freezed,
     Object? yearMonth = null,
-    Object? financialInstitution = null,
-    Object? accountName = null,
+    Object? accountId = null,
     Object? balance = null,
-    Object? createdAt = freezed,
   }) {
     return _then(
       _$MonthlyBankBalanceImpl(
@@ -172,26 +149,16 @@ class __$$MonthlyBankBalanceImplCopyWithImpl<$Res>
                 ? _value.yearMonth
                 : yearMonth // ignore: cast_nullable_to_non_nullable
                     as String,
-        financialInstitution:
-            null == financialInstitution
-                ? _value.financialInstitution
-                : financialInstitution // ignore: cast_nullable_to_non_nullable
-                    as String,
-        accountName:
-            null == accountName
-                ? _value.accountName
-                : accountName // ignore: cast_nullable_to_non_nullable
+        accountId:
+            null == accountId
+                ? _value.accountId
+                : accountId // ignore: cast_nullable_to_non_nullable
                     as String,
         balance:
             null == balance
                 ? _value.balance
                 : balance // ignore: cast_nullable_to_non_nullable
                     as double,
-        createdAt:
-            freezed == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                    as DateTime?,
       ),
     );
   }
@@ -203,10 +170,8 @@ class _$MonthlyBankBalanceImpl implements _MonthlyBankBalance {
   const _$MonthlyBankBalanceImpl({
     this.id,
     @JsonKey(name: 'year_month') required this.yearMonth,
-    @JsonKey(name: 'financial_institution') required this.financialInstitution,
-    @JsonKey(name: 'account_name') required this.accountName,
+    @JsonKey(name: 'account_id') required this.accountId,
     this.balance = 0.0,
-    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
 
   factory _$MonthlyBankBalanceImpl.fromJson(Map<String, dynamic> json) =>
@@ -218,22 +183,15 @@ class _$MonthlyBankBalanceImpl implements _MonthlyBankBalance {
   @JsonKey(name: 'year_month')
   final String yearMonth;
   @override
-  @JsonKey(name: 'financial_institution')
-  final String financialInstitution;
-  @override
-  @JsonKey(name: 'account_name')
-  final String accountName;
+  @JsonKey(name: 'account_id')
+  final String accountId;
   @override
   @JsonKey()
   final double balance;
-  @override
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  final DateTime? createdAt;
 
   @override
   String toString() {
-    return 'MonthlyBankBalance(id: $id, yearMonth: $yearMonth, financialInstitution: $financialInstitution, accountName: $accountName, balance: $balance, createdAt: $createdAt)';
+    return 'MonthlyBankBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, balance: $balance)';
   }
 
   @override
@@ -244,26 +202,15 @@ class _$MonthlyBankBalanceImpl implements _MonthlyBankBalance {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.yearMonth, yearMonth) ||
                 other.yearMonth == yearMonth) &&
-            (identical(other.financialInstitution, financialInstitution) ||
-                other.financialInstitution == financialInstitution) &&
-            (identical(other.accountName, accountName) ||
-                other.accountName == accountName) &&
-            (identical(other.balance, balance) || other.balance == balance) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+            (identical(other.accountId, accountId) ||
+                other.accountId == accountId) &&
+            (identical(other.balance, balance) || other.balance == balance));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    id,
-    yearMonth,
-    financialInstitution,
-    accountName,
-    balance,
-    createdAt,
-  );
+  int get hashCode =>
+      Object.hash(runtimeType, id, yearMonth, accountId, balance);
 
   /// Create a copy of MonthlyBankBalance
   /// with the given fields replaced by the non-null parameter values.
@@ -286,13 +233,8 @@ abstract class _MonthlyBankBalance implements MonthlyBankBalance {
   const factory _MonthlyBankBalance({
     final String? id,
     @JsonKey(name: 'year_month') required final String yearMonth,
-    @JsonKey(name: 'financial_institution')
-    required final String financialInstitution,
-    @JsonKey(name: 'account_name') required final String accountName,
+    @JsonKey(name: 'account_id') required final String accountId,
     final double balance,
-    @JsonKey(name: 'created_at')
-    @TimestampConverter()
-    final DateTime? createdAt,
   }) = _$MonthlyBankBalanceImpl;
 
   factory _MonthlyBankBalance.fromJson(Map<String, dynamic> json) =
@@ -304,17 +246,10 @@ abstract class _MonthlyBankBalance implements MonthlyBankBalance {
   @JsonKey(name: 'year_month')
   String get yearMonth;
   @override
-  @JsonKey(name: 'financial_institution')
-  String get financialInstitution;
-  @override
-  @JsonKey(name: 'account_name')
-  String get accountName;
+  @JsonKey(name: 'account_id')
+  String get accountId;
   @override
   double get balance;
-  @override
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt;
 
   /// Create a copy of MonthlyBankBalance
   /// with the given fields replaced by the non-null parameter values.

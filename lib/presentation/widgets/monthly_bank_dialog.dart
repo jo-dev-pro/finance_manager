@@ -1,165 +1,208 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/utils/number_formatter.dart';
 import '../../models/monthly_bank_balance.dart';
+import '../../providers/account_name_provider.dart';
+import '../../providers/account_provider.dart';
+import '../../providers/dashboard_provider.dart';
 import '../../providers/monthly_bank_balance_provider.dart';
 
 class MonthlyBankDialog extends ConsumerStatefulWidget {
   final String yearMonth;
-  final MonthlyBankBalance? initialData;
 
-  const MonthlyBankDialog({
-    super.key,
-    required this.yearMonth,
-    this.initialData,
-  });
+  const MonthlyBankDialog({super.key, required this.yearMonth});
 
   @override
   ConsumerState<MonthlyBankDialog> createState() => _MonthlyBankDialogState();
 }
 
 class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
+  late String _selectedYearMonth;
+  final Map<String, TextEditingController> _controllers = {};
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _institutionController;
-  late TextEditingController _accountNameController;
-  late TextEditingController _balanceController;
-  bool _isSubmitting = false;
-
-  bool get _isEditing => widget.initialData != null;
 
   @override
   void initState() {
     super.initState();
-    _institutionController = TextEditingController(
-      text: widget.initialData?.financialInstitution ?? '',
-    );
-    _accountNameController = TextEditingController(
-      text: widget.initialData?.accountName ?? '',
-    );
-    _balanceController = TextEditingController(
-      text: widget.initialData != null
-          ? widget.initialData!.balance.toInt().toString()
-          : '',
-    );
+    _selectedYearMonth = widget.yearMonth;
   }
 
   @override
   void dispose() {
-    _institutionController.dispose();
-    _accountNameController.dispose();
-    _balanceController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isSubmitting = true);
-
-    try {
-      final balance = MonthlyBankBalance(
-        id: widget.initialData?.id,
-        yearMonth: widget.yearMonth,
-        financialInstitution: _institutionController.text.trim(),
-        accountName: _accountNameController.text.trim(),
-        balance: double.parse(_balanceController.text.replaceAll(',', '')),
-      );
-
-      await ref
-          .read(monthlyBankBalanceNotifierProvider(widget.yearMonth).notifier)
-          .saveBalance(balance);
-
-      if (mounted) Navigator.of(context).pop();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+    for (var controller in _controllers.values) {
+      controller.dispose();
     }
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final accountsAsync = ref.watch(accountNotifierProvider);
+    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+
     return AlertDialog(
-      title: Text(_isEditing
-          ? '월말 은행 잔액 수정 (${widget.yearMonth})'
-          : '월말 은행 잔액 등록 (${widget.yearMonth})'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _institutionController,
-                decoration: const InputDecoration(
-                  labelText: '금융기관',
-                  hintText: '예: KB국민은행, 카카오뱅크, 신한은행',
+      title: const Text('월말 잔액 일괄 입력'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  initialValue: _selectedYearMonth,
+                  decoration: const InputDecoration(
+                    labelText: '기준월 (YYYY-MM)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.calendar_today),
+                  ),
+                  onChanged: (val) {
+                    _selectedYearMonth = val.trim();
+                  },
+                  validator: (val) {
+                    if (val == null || val.isEmpty) {
+                      return '기준월을 입력해주세요.';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return '금융기관을 입력해 주세요.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _accountNameController,
-                decoration: const InputDecoration(
-                  labelText: '계좌명',
-                  hintText: '예: 주거래 통장, 비상금 적금',
+                const SizedBox(height: 20),
+                const Text(
+                  '은행 계좌별 월말 잔액',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return '계좌명을 입력해 주세요.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _balanceController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
-                  labelText: '잔액 (원)',
-                  hintText: '0',
-                  suffixText: '원',
+                const SizedBox(height: 10),
+                accountsAsync.when(
+                  loading:
+                      () => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                  error: (err, stack) => Text('계좌 목록 불러오기 실패: $err'),
+                  data: (accounts) {
+                    final bankAccounts =
+                        accounts
+                            .where((a) => a.accountType.toUpperCase() == '은행')
+                            .toList();
+
+                    if (bankAccounts.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Text('등록된 은행 계좌가 없습니다.'),
+                      );
+                    }
+
+                    final accountNames = accountNamesAsync.value ?? [];
+
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: bankAccounts.length,
+                      separatorBuilder:
+                          (context, index) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final acc = bankAccounts[index];
+                        final accId = acc.id ?? '';
+
+                        // accountNameId 로 계좌명 매핑
+                        final matchedName = accountNames.firstWhereOrNull(
+                          (an) => an.id == acc.accountNameId,
+                        );
+
+                        // FIX: acc.accountName 참조 제거
+                        final displayName = matchedName?.accountName ?? '계좌';
+
+                        if (!_controllers.containsKey(accId)) {
+                          _controllers[accId] = TextEditingController();
+                        }
+                        
+                        final accNumberDisplay =
+                            (acc.accountNumber != null &&
+                                    acc.accountNumber!.isNotEmpty)
+                                ? ' (${acc.accountNumber})'
+                                : '';
+
+                        return TextFormField(
+                          controller: _controllers[accId],
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            ThousandsSeparatorInputFormatter(),
+                          ],
+                          decoration: InputDecoration(
+                            labelText:
+                                '${acc.financialInstitution} - $displayName$accNumberDisplay',
+                            suffixText: '원',
+                            border: const OutlineInputBorder(),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return '잔액을 입력해 주세요.';
-                  }
-                  if (double.tryParse(val) == null) {
-                    return '올바른 숫자를 입력해 주세요.';
-                  }
-                  return null;
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
       actions: [
         TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.pop(context),
           child: const Text('취소'),
         ),
         ElevatedButton(
-          onPressed: _isSubmitting ? null : _submit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(_isEditing ? '수정' : '등록'),
+          onPressed: () => _saveAllBalances(accountsAsync.value ?? []),
+          child: const Text('전체 저장'),
         ),
       ],
     );
+  }
+
+  Future<void> _saveAllBalances(List accounts) async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final notifier = ref.read(
+      monthlyBankBalanceNotifierProvider(_selectedYearMonth).notifier,
+    );
+
+    final bankAccounts =
+        accounts.where((a) => a.accountType.toUpperCase() == '은행').toList();
+
+    for (var acc in bankAccounts) {
+      final accId = acc.id ?? '';
+      final controller = _controllers[accId];
+
+      if (controller != null && controller.text.isNotEmpty) {
+        final cleanText = controller.text.replaceAll(RegExp(r'[^0-9]'), '');
+        final balanceVal = double.tryParse(cleanText) ?? 0.0;
+
+        final newBalanceItem = MonthlyBankBalance(
+          yearMonth: _selectedYearMonth,
+          accountId: accId,
+          balance: balanceVal,
+        );
+
+        await notifier.saveBalance(newBalanceItem);
+      }
+    }
+
+    ref.invalidate(monthlyBankBalanceNotifierProvider(_selectedYearMonth));
+    ref.invalidate(dashboardSummaryProvider);
+    ref.invalidate(availableYearMonthsProvider);
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 }

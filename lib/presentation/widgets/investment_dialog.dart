@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/utils/date_helper.dart'; // DateHelper 경로 확인 필요
-import '../../core/utils/formatters.dart';
+import '../../core/utils/number_formatter.dart';
 import '../../models/investment.dart';
 import '../../providers/investment_provider.dart';
 

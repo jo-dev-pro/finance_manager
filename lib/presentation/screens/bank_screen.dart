@@ -1,38 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/router/app_router_path.dart';
 import '../../providers/bank_provider.dart';
-import 'monthly_bank_balance_screen.dart';
+import '../../providers/dashboard_provider.dart';
+import '../../core/utils/number_formatter.dart';
 
 class BankScreen extends ConsumerWidget {
   const BankScreen({super.key});
 
+  String _getLastYearMonth(String currentYearMonth) {
+    try {
+      final parts = currentYearMonth.split('-');
+      int year = int.parse(parts[0]);
+      int month = int.parse(parts[1]);
+
+      DateTime date = DateTime(year, month, 1);
+      DateTime lastMonthDate = DateTime(date.year, date.month - 1, 1);
+      return DateFormat('yyyy-MM').format(lastMonthDate);
+    } catch (_) {
+      return currentYearMonth;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currencyFormatter = NumberFormat('#,###', 'ko_KR');
-
-    // 현재 기준 연월(YYYY-MM) 및 전월 계산
-    final now = DateTime.now();
-    final currentYearMonth = DateFormat('yyyy-MM').format(now);
-    final lastYearMonth = DateFormat('yyyy-MM').format(DateTime(now.year, now.month - 1));
-
-    // Supabase 데이터 조회를 위한 Provider 구독
-    final bankDataAsync = ref.watch(
-      bankScreenDataProvider(
-        currentYearMonth: currentYearMonth,
-        lastYearMonth: lastYearMonth,
-      ),
-    );
+    final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
+    final selectedMonth = ref.watch(selectedYearMonthProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('은행 자산 현황'),
+        elevation: 0,
         actions: [
           ElevatedButton.icon(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const MonthlyBankBalanceScreen()),
+              context.push(
+                AppRoutePath.monthlyBankBalance,
+                extra: selectedMonth,
               );
             },
             icon: const Icon(Icons.calendar_month, size: 18),
@@ -41,133 +48,343 @@ class BankScreen extends ConsumerWidget {
           const SizedBox(width: 16),
         ],
       ),
-      body: bankDataAsync.when(
+      body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('계좌 정보를 불러오지 못했습니다:\n$err', textAlign: TextAlign.center),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(bankScreenDataProvider),
-                child: const Text('다시 시도'),
+        error:
+            (err, stack) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '기준월 정보를 불러오지 못했습니다:\n$err',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed:
+                        () => ref.invalidate(availableYearMonthsProvider),
+                    child: const Text('다시 시도'),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-        data: (rawItems) {
-          // 계좌구분(type)이 '은행' 또는 'BANK'인 항목만 필터링
-          final items = rawItems.where((item) {
-            final type = item.account.accountType.toUpperCase();
-            return type == '은행';
-          }).toList();
+            ),
+        data: (months) {
+          if (months.isEmpty) {
+            return const Center(child: Text('등록된 기준월 데이터가 없습니다.'));
+          }
 
-          // 은행 전체 총 금액 및 총 전월 대비 금액 계산 (필터링된 목록 기준)
-          final double totalCurrentBalance = items.fold(0, (sum, i) => sum + i.currentBalance);
-          final double totalDiffFromLastMonth = items.fold(0, (sum, i) => sum + i.diffFromLastMonth);
+          final String defaultTarget = months.first;
+          final String activeCurrentMonth =
+              (selectedMonth != null && months.contains(selectedMonth))
+                  ? selectedMonth
+                  : defaultTarget;
 
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              final isDesktop = constraints.maxWidth >= 900;
+          if (selectedMonth == null || !months.contains(selectedMonth)) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref
+                  .read(selectedYearMonthProvider.notifier)
+                  .select(activeCurrentMonth);
+            });
+          }
 
-              return RefreshIndicator(
-                onRefresh: () async => ref.invalidate(bankScreenDataProvider),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 상단 요약 박스 (전체 금액 & 전월대비)
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(isDesktop ? 28 : 20),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade600,
-                              borderRadius: BorderRadius.circular(16),
+          final lastYearMonth = _getLastYearMonth(activeCurrentMonth);
+
+          final bankDataAsync = ref.watch(
+            bankScreenDataProvider(
+              currentYearMonth: activeCurrentMonth,
+              lastYearMonth: lastYearMonth,
+            ),
+          );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildMonthSelectorHeader(
+                context,
+                ref,
+                months,
+                activeCurrentMonth,
+              ),
+
+              Expanded(
+                child: bankDataAsync.when(
+                  loading:
+                      () => const Center(child: CircularProgressIndicator()),
+                  error:
+                      (err, stack) => Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '계좌 정보를 불러오지 못했습니다:\n$err',
+                              textAlign: TextAlign.center,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('은행 계좌 전체 금액', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                                const SizedBox(height: 6),
-                                Text(
-                                  '${currencyFormatter.format(totalCurrentBalance)} 원',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: isDesktop ? 32 : 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            const SizedBox(height: 12),
+                            ElevatedButton(
+                              onPressed:
+                                  () => ref.invalidate(bankScreenDataProvider),
+                              child: const Text('다시 시도'),
+                            ),
+                          ],
+                        ),
+                      ),
+                  data: (rawItems) {
+                    final items =
+                        rawItems.where((item) {
+                          final type = item.account.accountType.toUpperCase();
+                          return type == '은행';
+                        }).toList();
+
+                    final double totalCurrentBalance = items.fold(
+                      0,
+                      (sum, i) => sum + i.currentBalance,
+                    );
+                    final double totalDiffFromLastMonth = items.fold(
+                      0,
+                      (sum, i) => sum + i.diffFromLastMonth,
+                    );
+
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth >= 900;
+
+                        return RefreshIndicator(
+                          onRefresh: () async {
+                            ref.invalidate(availableYearMonthsProvider);
+                            ref.invalidate(bankScreenDataProvider);
+                          },
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(16),
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 1200,
                                 ),
-                                const SizedBox(height: 12),
-                                Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('전월 대비: ', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                                    Text(
-                                      '${totalDiffFromLastMonth >= 0 ? '+' : ''}${currencyFormatter.format(totalDiffFromLastMonth)} 원',
-                                      style: TextStyle(
-                                        color: totalDiffFromLastMonth >= 0 ? Colors.greenAccent : Colors.redAccent,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: Colors.indigo.shade600,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Colors.black12,
+                                            blurRadius: 8,
+                                            offset: Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            '은행 계좌 전체 금액',
+                                            style: TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            totalCurrentBalance.toWon(),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 26,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.18),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                                child: const Text(
+                                                  '전월 대비',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              totalDiffFromLastMonth
+                                                  .toSignedPriceText(
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                    positiveColor: const Color(
+                                                      0xFFFF8A80,
+                                                    ),
+                                                    negativeColor: const Color(
+                                                      0xFF82B1FF,
+                                                    ),
+                                                    zeroColor: Colors.white,
+                                                  ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ),
+                                    const SizedBox(height: 24),
+
+                                    const Text(
+                                      '계좌별 잔액',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+
+                                    if (items.isEmpty)
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 32,
+                                        ),
+                                        child: Center(
+                                          child: Text('등록된 은행 계좌/자산 내역이 없습니다.'),
+                                        ),
+                                      )
+                                    else if (isDesktop)
+                                      GridView.builder(
+                                        shrinkWrap: true,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        gridDelegate:
+                                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: 2,
+                                              childAspectRatio: 3.5,
+                                              crossAxisSpacing: 12,
+                                              mainAxisSpacing: 12,
+                                            ),
+                                        itemCount: items.length,
+                                        itemBuilder:
+                                            (context, index) =>
+                                                _buildBankTile(items[index]),
+                                      )
+                                    else
+                                      ListView.builder(
+                                        shrinkWrap: true,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        itemCount: items.length,
+                                        itemBuilder:
+                                            (context, index) => Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 10,
+                                              ),
+                                              child: _buildBankTile(
+                                                items[index],
+                                              ),
+                                            ),
+                                      ),
                                   ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 24),
-
-                          // 하단 계좌별 리스트
-                          const Text('계좌별 잔액', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 12),
-
-                          if (items.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 32),
-                              child: Center(child: Text('등록된 은행 계좌가 없습니다.')),
-                            )
-                          else if (isDesktop)
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 3.5,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                              ),
-                              itemCount: items.length,
-                              itemBuilder: (context, index) => _buildBankTile(items[index], currencyFormatter),
-                            )
-                          else
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: items.length,
-                              itemBuilder: (context, index) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: _buildBankTile(items[index], currencyFormatter),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        );
+                      },
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  Widget _buildBankTile(BankAccountItem item, NumberFormat currencyFormatter) {
+  Widget _buildMonthSelectorHeader(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> months,
+    String currentMonth,
+  ) {
+    final currentIndex = months.indexOf(currentMonth);
+
+    return Container(
+      color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed:
+                currentIndex < months.length - 1
+                    ? () {
+                      ref
+                          .read(selectedYearMonthProvider.notifier)
+                          .select(months[currentIndex + 1]);
+                    }
+                    : null,
+          ),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value:
+                  months.contains(currentMonth) ? currentMonth : months.first,
+              icon: const Icon(Icons.arrow_drop_down),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
+              items:
+                  months.map((String month) {
+                    return DropdownMenuItem<String>(
+                      value: month,
+                      child: Text(
+                        month,
+                        style: const TextStyle(color: Colors.black87),
+                      ),
+                    );
+                  }).toList(),
+              onChanged: (String? newMonth) {
+                if (newMonth != null) {
+                  ref.read(selectedYearMonthProvider.notifier).select(newMonth);
+                }
+              },
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed:
+                currentIndex > 0
+                    ? () {
+                      ref
+                          .read(selectedYearMonthProvider.notifier)
+                          .select(months[currentIndex - 1]);
+                    }
+                    : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBankTile(BankAccountItem item) {
     final account = item.account;
     final diff = item.diffFromLastMonth;
 
@@ -177,14 +394,16 @@ class BankScreen extends ConsumerWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: Colors.blue.shade50,
-          backgroundImage: account.logoUrl != null ? NetworkImage(account.logoUrl!) : null,
-          child: account.logoUrl == null
-              ? Icon(Icons.account_balance, color: Colors.blue.shade700)
-              : null,
+          backgroundColor: Colors.white,
+          backgroundImage:
+              account.logoUrl != null ? NetworkImage(account.logoUrl!) : null,
+          child:
+              account.logoUrl == null
+                  ? Icon(Icons.account_balance, color: Colors.blue.shade700)
+                  : null,
         ),
         title: Text(
-          account.accountName,
+          item.productName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(account.financialInstitution),
@@ -193,15 +412,22 @@ class BankScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${currencyFormatter.format(item.currentBalance)} 원',
+              item.currentBalance.toWon(),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
-            Text(
-              '전월대비 ${diff >= 0 ? '+' : ''}${currencyFormatter.format(diff)}',
-              style: TextStyle(
-                fontSize: 12,
-                color: diff >= 0 ? Colors.red : Colors.blue,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '전월대비 ',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                diff.toSignedPriceText(
+                  style: const TextStyle(fontSize: 12),
+                  positiveColor: Colors.red,
+                  negativeColor: Colors.blue,
+                ),
+              ],
             ),
           ],
         ),

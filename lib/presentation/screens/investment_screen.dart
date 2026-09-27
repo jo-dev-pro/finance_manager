@@ -157,9 +157,10 @@ class InvestmentScreen extends ConsumerWidget {
           child: Text('데이터를 불러오는 중 오류가 발생했습니다:\n$e'),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddDialog(context),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('투자금 추가'),
       ),
     );
   }

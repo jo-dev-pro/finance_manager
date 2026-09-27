@@ -1,24 +1,26 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../models/pension_transaction.dart';
+import '../../providers/account_name_provider.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/pension_product_provider.dart';
 import '../../providers/pension_transaction_provider.dart';
 
-class PensionTransactionFormDialog extends ConsumerStatefulWidget {
+class PensionTransactionDialog extends ConsumerStatefulWidget {
   final PensionTransaction? transaction;
 
-  const PensionTransactionFormDialog({super.key, this.transaction});
+  const PensionTransactionDialog({super.key, this.transaction});
 
   @override
-  ConsumerState<PensionTransactionFormDialog> createState() =>
-      _PensionTransactionFormDialogState();
+  ConsumerState<PensionTransactionDialog> createState() =>
+      _PensionTransactionDialogState();
 }
 
-class _PensionTransactionFormDialogState
-    extends ConsumerState<PensionTransactionFormDialog> {
+class _PensionTransactionDialogState
+    extends ConsumerState<PensionTransactionDialog> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _dateController;
@@ -35,7 +37,9 @@ class _PensionTransactionFormDialogState
     final item = widget.transaction;
 
     _dateController = TextEditingController(
-      text: item?.transactionDate ?? DateFormat('yyyy-MM-dd').format(DateTime.now()),
+      text:
+          item?.transactionDate ??
+          DateFormat('yyyy-MM-dd').format(DateTime.now()),
     );
     _amountController = TextEditingController(
       text: item?.amount != null ? item!.amount.toInt().toString() : '',
@@ -74,15 +78,24 @@ class _PensionTransactionFormDialogState
   void _saveForm() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final accounts = ref.read(accountNotifierProvider).value ?? [];
+    final matchedAccount = accounts.firstWhereOrNull(
+      (a) => a.id == _selectedAccountId,
+    );
+
     final isEdit = widget.transaction != null;
     final transactionData = PensionTransaction(
       id: widget.transaction?.id,
       transactionDate: _dateController.text,
-      accountId: _selectedAccountId!, // 👈 accountId 저장
-      productId: _selectedProductId,  // 👈 productId 저장
+      financialInstitution: matchedAccount?.financialInstitution,
+      accountId: _selectedAccountId!,
+      productId: _selectedProductId,
       transactionType: _transactionType,
       amount: double.tryParse(_amountController.text) ?? 0.0,
-      memo: _memoController.text.trim().isEmpty ? null : _memoController.text.trim(),
+      memo:
+          _memoController.text.trim().isEmpty
+              ? null
+              : _memoController.text.trim(),
     );
 
     final notifier = ref.read(pensionTransactionNotifierProvider.notifier);
@@ -100,21 +113,22 @@ class _PensionTransactionFormDialogState
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('삭제 확인'),
-        content: const Text('해당 거래 내역을 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('삭제 확인'),
+            content: const Text('해당 거래 내역을 삭제하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('취소'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('삭제'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
     );
 
     if (confirm == true) {
@@ -130,9 +144,11 @@ class _PensionTransactionFormDialogState
     final isEdit = widget.transaction != null;
 
     final accountsAsync = ref.watch(accountNotifierProvider);
-    final productsAsync = _selectedAccountId != null
-        ? ref.watch(pensionProductsByAccountProvider(_selectedAccountId!))
-        : null;
+    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final productsAsync =
+        _selectedAccountId != null
+            ? ref.watch(pensionProductsByAccountProvider(_selectedAccountId!))
+            : null;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -151,7 +167,10 @@ class _PensionTransactionFormDialogState
                   children: [
                     Text(
                       isEdit ? '거래내역 수정' : '거래내역 등록',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     if (isEdit)
                       IconButton(
@@ -163,7 +182,6 @@ class _PensionTransactionFormDialogState
                 const Divider(),
                 const SizedBox(height: 12),
 
-                // 1. 거래일자
                 TextFormField(
                   controller: _dateController,
                   readOnly: true,
@@ -172,42 +190,62 @@ class _PensionTransactionFormDialogState
                     suffixIcon: Icon(Icons.calendar_today),
                   ),
                   onTap: _selectDate,
-                  validator: (val) => val == null || val.isEmpty ? '날짜를 선택해주세요.' : null,
+                  validator:
+                      (val) =>
+                          val == null || val.isEmpty ? '날짜를 선택해주세요.' : null,
                 ),
                 const SizedBox(height: 12),
 
-                // 2. 계좌 선택 (accountId 매핑)
                 accountsAsync.when(
                   loading: () => const LinearProgressIndicator(),
-                  error: (err, stack) => Text('계좌 로딩 실패: $err', style: const TextStyle(color: Colors.red)),
+                  error:
+                      (err, stack) => Text(
+                        '계좌 로딩 실패: $err',
+                        style: const TextStyle(color: Colors.red),
+                      ),
                   data: (accounts) {
-                    final pensionAccounts = accounts
-                        .where((a) => a.accountType == '연금')
-                        .toList();
+                    final pensionAccounts =
+                        accounts
+                            .where((a) => a.accountType.toUpperCase() == '연금')
+                            .toList();
+
+                    final accountNames = accountNamesAsync.value ?? [];
+                    final accountNameMap = {
+                      for (var an in accountNames) an.id: an,
+                    };
 
                     return DropdownButtonFormField<String>(
                       initialValue: _selectedAccountId,
                       decoration: const InputDecoration(labelText: '계좌명 *'),
                       hint: const Text('연금 계좌 선택'),
-                      items: pensionAccounts
-                          .map((acc) => DropdownMenuItem(
-                                value: acc.id,
-                                child: Text(acc.accountName),
-                              ))
-                          .toList(),
+                      items:
+                          pensionAccounts.map((acc) {
+                            final matchedName =
+                                accountNameMap[acc.accountNameId];
+                            final displayName =
+                                matchedName?.accountName ?? '계좌';
+
+                            return DropdownMenuItem(
+                              value: acc.id,
+                              child: Text(
+                                '${acc.financialInstitution} - $displayName',
+                              ),
+                            );
+                          }).toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedAccountId = val;
                           _selectedProductId = null;
                         });
                       },
-                      validator: (val) => val == null || val.isEmpty ? '계좌를 선택해주세요.' : null,
+                      validator:
+                          (val) =>
+                              val == null || val.isEmpty ? '계좌를 선택해주세요.' : null,
                     );
                   },
                 ),
                 const SizedBox(height: 12),
 
-                // 3. 상품 선택 (productId 매핑)
                 if (_selectedAccountId == null)
                   DropdownButtonFormField<String>(
                     onChanged: null,
@@ -220,39 +258,52 @@ class _PensionTransactionFormDialogState
                 else
                   productsAsync?.when(
                         loading: () => const LinearProgressIndicator(),
-                        error: (err, stack) => Text('상품 로딩 실패: $err', style: const TextStyle(color: Colors.red)),
+                        error:
+                            (err, stack) => Text(
+                              '상품 로딩 실패: $err',
+                              style: const TextStyle(color: Colors.red),
+                            ),
                         data: (products) {
                           return DropdownButtonFormField<String>(
                             initialValue: _selectedProductId,
                             decoration: const InputDecoration(labelText: '상품명'),
                             hint: const Text('상품 선택'),
-                            items: products
-                                .map((prod) => DropdownMenuItem(
-                                      value: prod.id,
-                                      child: Text(prod.productName),
-                                    ))
-                                .toList(),
-                            onChanged: (val) => setState(() => _selectedProductId = val),
+                            items:
+                                products
+                                    .map(
+                                      (prod) => DropdownMenuItem(
+                                        value: prod.id,
+                                        child: Text(prod.productName),
+                                      ),
+                                    )
+                                    .toList(),
+                            onChanged:
+                                (val) =>
+                                    setState(() => _selectedProductId = val),
                           );
                         },
                       ) ??
                       const SizedBox.shrink(),
                 const SizedBox(height: 12),
 
-                // 4. 거래구분 콤보박스
                 DropdownButtonFormField<String>(
                   initialValue: _transactionType,
                   decoration: const InputDecoration(labelText: '거래구분'),
-                  items: ['입금', '출금', '매수', '매도', '배당/이자']
-                      .map((type) => DropdownMenuItem(value: type, child: Text(type)))
-                      .toList(),
+                  items:
+                      ['입금', '출금', '매수', '매도', '배당/이자']
+                          .map(
+                            (type) => DropdownMenuItem(
+                              value: type,
+                              child: Text(type),
+                            ),
+                          )
+                          .toList(),
                   onChanged: (val) {
                     if (val != null) setState(() => _transactionType = val);
                   },
                 ),
                 const SizedBox(height: 12),
 
-                // 5. 금액
                 TextFormField(
                   controller: _amountController,
                   keyboardType: TextInputType.number,
@@ -261,14 +312,17 @@ class _PensionTransactionFormDialogState
                     suffixText: '원',
                   ),
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return '금액을 입력해주세요.';
-                    if (double.tryParse(val) == null) return '올바른 숫자를 입력해주세요.';
+                    if (val == null || val.trim().isEmpty) {
+                      return '금액을 입력해주세요.';
+                    }
+                    if (double.tryParse(val) == null) {
+                      return '올바른 숫자를 입력해주세요.';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
 
-                // 6. 메모
                 TextFormField(
                   controller: _memoController,
                   maxLines: 2,

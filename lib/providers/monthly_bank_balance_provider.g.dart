@@ -6,8 +6,29 @@ part of 'monthly_bank_balance_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$allMonthlyBankBalancesHash() =>
+    r'5350cbb8e3eea1af4080a4365a808cdecb251758';
+
+/// See also [allMonthlyBankBalances].
+@ProviderFor(allMonthlyBankBalances)
+final allMonthlyBankBalancesProvider =
+    AutoDisposeFutureProvider<List<MonthlyBankBalanceWithAccount>>.internal(
+      allMonthlyBankBalances,
+      name: r'allMonthlyBankBalancesProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$allMonthlyBankBalancesHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AllMonthlyBankBalancesRef =
+    AutoDisposeFutureProviderRef<List<MonthlyBankBalanceWithAccount>>;
 String _$monthlyBankBalanceNotifierHash() =>
-    r'1de3765198ba698bdd53d249181c26d08bdff9f8';
+    r'f3cccba96e394f547df591ae0279fb795fb5d5a3';
 
 /// Copied from Dart SDK
 class _SystemHash {

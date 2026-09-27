@@ -24,16 +24,15 @@ mixin _$Account {
   String? get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'financial_institution')
   String get financialInstitution => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_name_id')
+  String? get accountNameId => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_type')
   String get accountType => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_number')
+  String? get accountNumber => throw _privateConstructorUsedError; // 💡 계좌번호 필드 추가
   @JsonKey(name: 'logo_url')
   String? get logoUrl => throw _privateConstructorUsedError;
-  @JsonKey(name: 'account_name')
-  String get accountName => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this Account to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -52,11 +51,11 @@ abstract class $AccountCopyWith<$Res> {
   $Res call({
     String? id,
     @JsonKey(name: 'financial_institution') String financialInstitution,
+    @JsonKey(name: 'account_name_id') String? accountNameId,
     @JsonKey(name: 'account_type') String accountType,
+    @JsonKey(name: 'account_number') String? accountNumber,
     @JsonKey(name: 'logo_url') String? logoUrl,
-    @JsonKey(name: 'account_name') String accountName,
     String status,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -77,11 +76,11 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
   $Res call({
     Object? id = freezed,
     Object? financialInstitution = null,
+    Object? accountNameId = freezed,
     Object? accountType = null,
+    Object? accountNumber = freezed,
     Object? logoUrl = freezed,
-    Object? accountName = null,
     Object? status = null,
-    Object? createdAt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -95,31 +94,31 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
                     ? _value.financialInstitution
                     : financialInstitution // ignore: cast_nullable_to_non_nullable
                         as String,
+            accountNameId:
+                freezed == accountNameId
+                    ? _value.accountNameId
+                    : accountNameId // ignore: cast_nullable_to_non_nullable
+                        as String?,
             accountType:
                 null == accountType
                     ? _value.accountType
                     : accountType // ignore: cast_nullable_to_non_nullable
                         as String,
+            accountNumber:
+                freezed == accountNumber
+                    ? _value.accountNumber
+                    : accountNumber // ignore: cast_nullable_to_non_nullable
+                        as String?,
             logoUrl:
                 freezed == logoUrl
                     ? _value.logoUrl
                     : logoUrl // ignore: cast_nullable_to_non_nullable
                         as String?,
-            accountName:
-                null == accountName
-                    ? _value.accountName
-                    : accountName // ignore: cast_nullable_to_non_nullable
-                        as String,
             status:
                 null == status
                     ? _value.status
                     : status // ignore: cast_nullable_to_non_nullable
                         as String,
-            createdAt:
-                freezed == createdAt
-                    ? _value.createdAt
-                    : createdAt // ignore: cast_nullable_to_non_nullable
-                        as DateTime?,
           )
           as $Val,
     );
@@ -137,11 +136,11 @@ abstract class _$$AccountImplCopyWith<$Res> implements $AccountCopyWith<$Res> {
   $Res call({
     String? id,
     @JsonKey(name: 'financial_institution') String financialInstitution,
+    @JsonKey(name: 'account_name_id') String? accountNameId,
     @JsonKey(name: 'account_type') String accountType,
+    @JsonKey(name: 'account_number') String? accountNumber,
     @JsonKey(name: 'logo_url') String? logoUrl,
-    @JsonKey(name: 'account_name') String accountName,
     String status,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -161,11 +160,11 @@ class __$$AccountImplCopyWithImpl<$Res>
   $Res call({
     Object? id = freezed,
     Object? financialInstitution = null,
+    Object? accountNameId = freezed,
     Object? accountType = null,
+    Object? accountNumber = freezed,
     Object? logoUrl = freezed,
-    Object? accountName = null,
     Object? status = null,
-    Object? createdAt = freezed,
   }) {
     return _then(
       _$AccountImpl(
@@ -179,31 +178,31 @@ class __$$AccountImplCopyWithImpl<$Res>
                 ? _value.financialInstitution
                 : financialInstitution // ignore: cast_nullable_to_non_nullable
                     as String,
+        accountNameId:
+            freezed == accountNameId
+                ? _value.accountNameId
+                : accountNameId // ignore: cast_nullable_to_non_nullable
+                    as String?,
         accountType:
             null == accountType
                 ? _value.accountType
                 : accountType // ignore: cast_nullable_to_non_nullable
                     as String,
+        accountNumber:
+            freezed == accountNumber
+                ? _value.accountNumber
+                : accountNumber // ignore: cast_nullable_to_non_nullable
+                    as String?,
         logoUrl:
             freezed == logoUrl
                 ? _value.logoUrl
                 : logoUrl // ignore: cast_nullable_to_non_nullable
                     as String?,
-        accountName:
-            null == accountName
-                ? _value.accountName
-                : accountName // ignore: cast_nullable_to_non_nullable
-                    as String,
         status:
             null == status
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                     as String,
-        createdAt:
-            freezed == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                    as DateTime?,
       ),
     );
   }
@@ -215,11 +214,11 @@ class _$AccountImpl implements _Account {
   const _$AccountImpl({
     this.id,
     @JsonKey(name: 'financial_institution') required this.financialInstitution,
+    @JsonKey(name: 'account_name_id') this.accountNameId,
     @JsonKey(name: 'account_type') required this.accountType,
+    @JsonKey(name: 'account_number') this.accountNumber,
     @JsonKey(name: 'logo_url') this.logoUrl,
-    @JsonKey(name: 'account_name') required this.accountName,
     this.status = '활동',
-    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
 
   factory _$AccountImpl.fromJson(Map<String, dynamic> json) =>
@@ -231,25 +230,25 @@ class _$AccountImpl implements _Account {
   @JsonKey(name: 'financial_institution')
   final String financialInstitution;
   @override
+  @JsonKey(name: 'account_name_id')
+  final String? accountNameId;
+  @override
   @JsonKey(name: 'account_type')
   final String accountType;
+  @override
+  @JsonKey(name: 'account_number')
+  final String? accountNumber;
+  // 💡 계좌번호 필드 추가
   @override
   @JsonKey(name: 'logo_url')
   final String? logoUrl;
   @override
-  @JsonKey(name: 'account_name')
-  final String accountName;
-  @override
   @JsonKey()
   final String status;
-  @override
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  final DateTime? createdAt;
 
   @override
   String toString() {
-    return 'Account(id: $id, financialInstitution: $financialInstitution, accountType: $accountType, logoUrl: $logoUrl, accountName: $accountName, status: $status, createdAt: $createdAt)';
+    return 'Account(id: $id, financialInstitution: $financialInstitution, accountNameId: $accountNameId, accountType: $accountType, accountNumber: $accountNumber, logoUrl: $logoUrl, status: $status)';
   }
 
   @override
@@ -260,14 +259,14 @@ class _$AccountImpl implements _Account {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.financialInstitution, financialInstitution) ||
                 other.financialInstitution == financialInstitution) &&
+            (identical(other.accountNameId, accountNameId) ||
+                other.accountNameId == accountNameId) &&
             (identical(other.accountType, accountType) ||
                 other.accountType == accountType) &&
+            (identical(other.accountNumber, accountNumber) ||
+                other.accountNumber == accountNumber) &&
             (identical(other.logoUrl, logoUrl) || other.logoUrl == logoUrl) &&
-            (identical(other.accountName, accountName) ||
-                other.accountName == accountName) &&
-            (identical(other.status, status) || other.status == status) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+            (identical(other.status, status) || other.status == status));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -276,11 +275,11 @@ class _$AccountImpl implements _Account {
     runtimeType,
     id,
     financialInstitution,
+    accountNameId,
     accountType,
+    accountNumber,
     logoUrl,
-    accountName,
     status,
-    createdAt,
   );
 
   /// Create a copy of Account
@@ -302,13 +301,11 @@ abstract class _Account implements Account {
     final String? id,
     @JsonKey(name: 'financial_institution')
     required final String financialInstitution,
+    @JsonKey(name: 'account_name_id') final String? accountNameId,
     @JsonKey(name: 'account_type') required final String accountType,
+    @JsonKey(name: 'account_number') final String? accountNumber,
     @JsonKey(name: 'logo_url') final String? logoUrl,
-    @JsonKey(name: 'account_name') required final String accountName,
     final String status,
-    @JsonKey(name: 'created_at')
-    @TimestampConverter()
-    final DateTime? createdAt,
   }) = _$AccountImpl;
 
   factory _Account.fromJson(Map<String, dynamic> json) = _$AccountImpl.fromJson;
@@ -319,20 +316,19 @@ abstract class _Account implements Account {
   @JsonKey(name: 'financial_institution')
   String get financialInstitution;
   @override
+  @JsonKey(name: 'account_name_id')
+  String? get accountNameId;
+  @override
   @JsonKey(name: 'account_type')
   String get accountType;
+  @override
+  @JsonKey(name: 'account_number')
+  String? get accountNumber; // 💡 계좌번호 필드 추가
   @override
   @JsonKey(name: 'logo_url')
   String? get logoUrl;
   @override
-  @JsonKey(name: 'account_name')
-  String get accountName;
-  @override
   String get status;
-  @override
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt;
 
   /// Create a copy of Account
   /// with the given fields replaced by the non-null parameter values.

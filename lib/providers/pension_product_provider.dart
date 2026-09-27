@@ -13,17 +13,22 @@ class PensionProductNotifier extends _$PensionProductNotifier {
 
   Future<List<PensionProduct>> fetchPensionProducts() async {
     final firestore = ref.read(firestoreProvider);
-    final snapshot = await firestore
-        .collection('pension_product')
-        .orderBy('account_id', descending: false) // 👈 account_name -> account_id 로 변경
-        .orderBy('product_name', descending: false)
-        .get();
+    final snapshot = await firestore.collection('pension_product').get();
 
-    return snapshot.docs.map((doc) {
+    final products = snapshot.docs.map((doc) {
       final data = doc.data();
       data['id'] = doc.id;
       return PensionProduct.fromJson(data);
     }).toList();
+
+    // accountId -> productName 순으로 정렬
+    products.sort((a, b) {
+      int compareAccountId = a.accountId.compareTo(b.accountId);
+      if (compareAccountId != 0) return compareAccountId;
+      return a.productName.compareTo(b.productName);
+    });
+
+    return products;
   }
 
   Future<void> addPensionProduct(PensionProduct product) async {
@@ -39,10 +44,7 @@ class PensionProductNotifier extends _$PensionProductNotifier {
     final firestore = ref.read(firestoreProvider);
     final data = product.toJson()..remove('id');
 
-    await firestore
-        .collection('pension_product')
-        .doc(product.id)
-        .update(data);
+    await firestore.collection('pension_product').doc(product.id).update(data);
     ref.invalidateSelf();
   }
 
@@ -53,14 +55,13 @@ class PensionProductNotifier extends _$PensionProductNotifier {
   }
 }
 
-// 🌐 특정 계좌 ID로 연금상품 목록을 필터링하는 프로바이더
 @riverpod
 Future<List<PensionProduct>> pensionProductsByAccount(
   PensionProductsByAccountRef ref,
-  String accountId, // 👈 accountName -> accountId
+  String accountId,
 ) async {
   if (accountId.isEmpty) return [];
 
   final allProducts = await ref.watch(pensionProductNotifierProvider.future);
-  return allProducts.where((p) => p.accountId == accountId).toList(); // 👈 p.accountName -> p.accountId
+  return allProducts.where((p) => p.accountId == accountId).toList();
 }

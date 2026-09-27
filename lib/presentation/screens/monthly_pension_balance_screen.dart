@@ -1,11 +1,12 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:collection/collection.dart';
 
-import '../../core/utils/formatters.dart';
+import '../../core/utils/number_formatter.dart';
 import '../../models/monthly_pension_balance.dart';
+import '../../providers/account_name_provider.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/monthly_pension_balance_provider.dart';
 
@@ -28,6 +29,7 @@ class _MonthlyPensionBalanceScreenState
       monthlyPensionBalanceNotifierProvider(_selectedYearMonth),
     );
     final accountsAsync = ref.watch(accountNotifierProvider);
+    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -48,8 +50,9 @@ class _MonthlyPensionBalanceScreenState
           }
 
           final accounts = accountsAsync.value ?? [];
+          final accountNames = accountNamesAsync.value ?? [];
+          final accountNameMap = {for (var an in accountNames) an.id: an};
 
-          // 총 연금 잔액 계산
           final double totalBalance = balances.fold(
             0.0,
             (sum, item) => sum + item.evaluationAmount,
@@ -60,7 +63,6 @@ class _MonthlyPensionBalanceScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 상단 월말 총액 카드
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -92,17 +94,24 @@ class _MonthlyPensionBalanceScreenState
                 ),
                 const SizedBox(height: 20),
 
-                // 계좌별 월말 잔액 카드 리스트
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: balances.length,
                   itemBuilder: (context, index) {
                     final item = balances[index];
-                   final matchedAccount = accounts.firstWhereOrNull((a) => a.id == item.accountId);
+                    final matchedAccount = accounts.firstWhereOrNull(
+                      (a) => a.id == item.accountId,
+                    );
+                    final matchedAccountName = matchedAccount != null
+                        ? accountNameMap[matchedAccount.accountNameId]
+                        : null;
 
-                    final displayAccountName = matchedAccount?.accountName ?? item.accountId;
-                    final displayInstitution = matchedAccount?.financialInstitution ?? item.financialInstitution;
+                    final displayAccountName =
+                        matchedAccountName?.accountName ?? item.accountId;
+                    final displayInstitution =
+                        matchedAccount?.financialInstitution ??
+                        item.financialInstitution;
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -136,7 +145,8 @@ class _MonthlyPensionBalanceScreenState
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    if (displayInstitution != null && displayInstitution.isNotEmpty)
+                                    if (displayInstitution != null &&
+                                        displayInstitution.isNotEmpty)
                                       Text(
                                         displayInstitution,
                                         style: TextStyle(
@@ -170,8 +180,11 @@ class _MonthlyPensionBalanceScreenState
                                           size: 20,
                                           color: Colors.grey,
                                         ),
-                                        onPressed: () =>
-                                            _showEditDialog(context, item, displayAccountName),
+                                        onPressed: () => _showEditDialog(
+                                          context,
+                                          item,
+                                          displayAccountName,
+                                        ),
                                       ),
                                       const SizedBox(width: 8),
                                       IconButton(
@@ -182,8 +195,11 @@ class _MonthlyPensionBalanceScreenState
                                           size: 20,
                                           color: Colors.redAccent,
                                         ),
-                                        onPressed: () =>
-                                            _confirmDelete(context, item, displayAccountName),
+                                        onPressed: () => _confirmDelete(
+                                          context,
+                                          item,
+                                          displayAccountName,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -236,7 +252,11 @@ class _MonthlyPensionBalanceScreenState
     }
   }
 
-  void _showEditDialog(BuildContext context, MonthlyPensionBalance item, String accountName) {
+  void _showEditDialog(
+    BuildContext context,
+    MonthlyPensionBalance item,
+    String accountName,
+  ) {
     final controller = TextEditingController(
       text: _currencyFormatter.format(item.evaluationAmount),
     );
@@ -289,7 +309,11 @@ class _MonthlyPensionBalanceScreenState
     );
   }
 
-  void _confirmDelete(BuildContext context, MonthlyPensionBalance item, String accountName) {
+  void _confirmDelete(
+    BuildContext context,
+    MonthlyPensionBalance item,
+    String accountName,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -360,6 +384,7 @@ class _AddPensionBalanceFormState
   @override
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountNotifierProvider);
+    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -405,6 +430,9 @@ class _AddPensionBalanceFormState
                   return const Center(child: Text('입력 가능한 연금 계좌가 없습니다.'));
                 }
 
+                final accountNames = accountNamesAsync.value ?? [];
+                final accountNameMap = {for (var an in accountNames) an.id: an};
+
                 return ListView.builder(
                   itemCount: activeAccounts.length,
                   itemBuilder: (context, index) {
@@ -414,6 +442,9 @@ class _AddPensionBalanceFormState
                       accId,
                       () => TextEditingController(),
                     );
+
+                    final matchedName = accountNameMap[acc.accountNameId];
+                    final displayName = matchedName?.accountName ?? '이름 없는 계좌';
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -425,7 +456,7 @@ class _AddPensionBalanceFormState
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  acc.accountName,
+                                  displayName,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -494,19 +525,20 @@ class _AddPensionBalanceFormState
 
                   if (cleanText.isNotEmpty) {
                     final balanceVal = double.tryParse(cleanText) ?? 0.0;
-                    final targetAcc = accounts.firstWhere(
+                    final targetAcc = accounts.firstWhereOrNull(
                       (a) => a.id == accountId,
-                      orElse: () => null as dynamic,
                     );
 
-                    final newBalanceItem = MonthlyPensionBalance(
-                      yearMonth: widget.yearMonth,
-                      financialInstitution: targetAcc.financialInstitution,
-                      accountId: accountId, // 👈 accountName 대신 accountId 바인딩
-                      evaluationAmount: balanceVal,
-                    );
+                    if (targetAcc != null) {
+                      final newBalanceItem = MonthlyPensionBalance(
+                        yearMonth: widget.yearMonth,
+                        financialInstitution: targetAcc.financialInstitution,
+                        accountId: accountId,
+                        evaluationAmount: balanceVal,
+                      );
 
-                    await notifier.saveBalance(newBalanceItem);
+                      await notifier.saveBalance(newBalanceItem);
+                    }
                   }
                 }
               }

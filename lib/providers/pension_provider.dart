@@ -5,7 +5,6 @@ import 'monthly_pension_balance_provider.dart';
 
 part 'pension_provider.g.dart';
 
-// 연금 메뉴에서 사용
 class PensionAccountItem {
   final Account account;
   final double currentBalance;
@@ -32,7 +31,7 @@ Future<List<PensionAccountItem>> pensionScreenData(
       monthlyPensionBalanceNotifierProvider(lastYearMonth).future);
 
   return accounts.map((account) {
-    // 👈 b.accountName 대신 b.accountId 및 account.id 비교로 변경
+    // account.id 와 b.accountId 매핑
     final currentTotal = currentBalances
         .where((b) => b.accountId == account.id)
         .fold<double>(0.0, (sum, b) => sum + b.evaluationAmount);

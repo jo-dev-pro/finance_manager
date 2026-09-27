@@ -6,20 +6,23 @@ class DateHelper {
   static Future<DateTime?> pickDate(BuildContext context, {DateTime? initialDate}) async {
     final DateTime now = DateTime.now();
     
+    // Theme 밖으로 생성 로직 추출하여 렌더링 딜레이 방지
+    final customTheme = Theme.of(context).copyWith(
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          textStyle: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: initialDate ?? now, // 처음 선택되어 있을 날짜
-      firstDate: DateTime(now.year - 10), // 선택 가능한 가장 과거 날짜 (10년 전)
-      lastDate: DateTime(now.year + 10),  // 선택 가능한 가장 미래 날짜 (10년 후)
-      
-      // 달력 내부 디자인을 커스텀하고 싶다면 추가 (선택사항)
+      initialDate: initialDate ?? now,
+      firstDate: DateTime(now.year - 10),
+      lastDate: DateTime(now.year + 10),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(textStyle: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
+          data: customTheme,
           child: child!,
         );
       },

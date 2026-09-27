@@ -1,13 +1,18 @@
 import 'dart:math';
+import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/utils/number_formatter.dart';
+import '../../models/account.dart';
 import '../../models/monthly_pension_balance.dart';
+import '../../providers/account_name_provider.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/monthly_pension_balance_provider.dart';
+import '../../providers/pension_provider.dart';
 import 'monthly_pension_balance_screen.dart';
 import 'pension_transaction_screen.dart';
 
@@ -31,6 +36,20 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     Colors.pink,
   ];
 
+  String _getLastYearMonth(String currentYearMonth) {
+    try {
+      final parts = currentYearMonth.split('-');
+      int year = int.parse(parts[0]);
+      int month = int.parse(parts[1]);
+
+      DateTime date = DateTime(year, month, 1);
+      DateTime lastMonthDate = DateTime(date.year, date.month - 1, 1);
+      return DateFormat('yyyy-MM').format(lastMonthDate);
+    } catch (_) {
+      return currentYearMonth;
+    }
+  }
+
   @override
   void dispose() {
     _transformationController.dispose();
@@ -42,6 +61,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
     final selectedMonth = ref.watch(selectedYearMonthProvider);
     final accountsAsync = ref.watch(accountNotifierProvider);
+    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -75,111 +95,209 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
       ),
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('기준월 로드 실패: $err')),
+        error: (err, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '기준월 정보를 불러오지 못했습니다:\n$err',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(availableYearMonthsProvider),
+                child: const Text('다시 시도'),
+              ),
+            ],
+          ),
+        ),
         data: (months) {
           if (months.isEmpty) {
             return const Center(child: Text('등록된 기준월 데이터가 없습니다.'));
           }
 
-          final currentMonth =
-              (selectedMonth != null && months.contains(selectedMonth))
-              ? selectedMonth
-              : months.first;
+          final activeMonths = months;
+          final activeCurrentMonth =
+              (selectedMonth != null && activeMonths.contains(selectedMonth))
+                  ? selectedMonth
+                  : activeMonths.first;
 
-          if (selectedMonth == null || !months.contains(selectedMonth)) {
+          if (selectedMonth == null || !activeMonths.contains(selectedMonth)) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              ref.read(selectedYearMonthProvider.notifier).select(currentMonth);
+              ref
+                  .read(selectedYearMonthProvider.notifier)
+                  .select(activeCurrentMonth);
             });
           }
 
+          final lastMonth = _getLastYearMonth(activeCurrentMonth);
           final balancesAsync = ref.watch(
-            monthlyPensionBalanceNotifierProvider(currentMonth),
+            monthlyPensionBalanceNotifierProvider(activeCurrentMonth),
+          );
+          final lastBalancesAsync = ref.watch(
+            monthlyPensionBalanceNotifierProvider(lastMonth),
           );
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildMonthSelectorHeader(context, months, currentMonth),
+              _buildMonthSelectorHeader(
+                context,
+                activeMonths,
+                activeCurrentMonth,
+              ),
+
               Expanded(
-                child: balancesAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (err, stack) => Center(child: Text('오류 발생: $err')),
-                  data: (balances) {
-                    if (balances.isEmpty) {
-                      return Center(
-                        child: Text('$currentMonth 의 연금 자산 내역이 없습니다.'),
-                      );
-                    }
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      balancesAsync.when(
+                        loading: () => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                        error: (err, stack) => Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '계좌 정보를 불러오지 못했습니다:\n$err',
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed: () => ref.invalidate(
+                                  pensionScreenDataProvider,
+                                ),
+                                child: const Text('다시 시도'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        data: (balances) {
+                          final totalBalance = balances.fold<double>(
+                            0.0,
+                            (sum, item) => sum + item.evaluationAmount,
+                          );
 
-                    final accounts = accountsAsync.value ?? [];
+                          final lastTotalBalance = lastBalancesAsync.maybeWhen(
+                            data: (lastBalances) => lastBalances.fold<double>(
+                              0.0,
+                              (sum, item) => sum + item.evaluationAmount,
+                            ),
+                            orElse: () => 0.0,
+                          );
 
-                    // 계좌 ID 기준 그룹화
-                    final Map<String, List<MonthlyPensionBalance>> accountGroups = {};
-                    for (var item in balances) {
-                      accountGroups.putIfAbsent(item.accountId, () => []).add(item);
-                    }
+                          final diffFromLastMonth =
+                              totalBalance - lastTotalBalance;
 
-                    final accountIds = accountGroups.keys.toList();
-                    final totalBalance = balances.fold<double>(
-                      0.0,
-                      (sum, item) => sum + item.evaluationAmount,
-                    );
-
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSummaryCard(totalBalance),
-                          const SizedBox(height: 24),
-                          const Text(
-                            '계좌 목록',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildAccountGrid(accountIds, accountGroups, accounts),
-                          const SizedBox(height: 28),
-                          const Text(
-                            '계좌별 평가 비중',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildPortionSection(
-                            accountIds,
-                            accountGroups,
-                            accounts,
-                            totalBalance,
-                          ),
-                          const SizedBox(height: 28),
-                          const Text(
-                            '계좌별 월말 평가액 추이',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '💡 차트를 좌우로 드래그하거나 확대/축소(Pinch Zoom)하여 전기간 데이터를 확인하세요.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildZoomableChartSection(accountIds, months),
-                          const SizedBox(height: 20),
-                        ],
+                          return _buildSummaryCard(
+                            totalBalance: totalBalance,
+                            diffFromLastMonth: diffFromLastMonth,
+                          );
+                        },
                       ),
-                    );
-                  },
+                      const SizedBox(height: 24),
+
+                      const Text(
+                        '계좌 목록',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      balancesAsync.when(
+                        loading: () => const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        error: (err, stack) =>
+                            Center(child: Text('데이터 로드 실패: $err')),
+                        data: (balances) {
+                          if (balances.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 40),
+                              child: Center(
+                                child: Text('등록된 연금 계좌/자산 내역이 없습니다.'),
+                              ),
+                            );
+                          }
+
+                          final accounts = accountsAsync.value ?? [];
+                          final accountNames = accountNamesAsync.value ?? [];
+
+                          final Map<String, List<MonthlyPensionBalance>>
+                              accountGroups = {};
+                          for (var item in balances) {
+                            accountGroups
+                                .putIfAbsent(item.accountId, () => [])
+                                .add(item);
+                          }
+
+                          final accountIds = accountGroups.keys.toList();
+                          final totalBalance = balances.fold<double>(
+                            0.0,
+                            (sum, item) => sum + item.evaluationAmount,
+                          );
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildAccountGrid(
+                                accountIds,
+                                accountGroups,
+                                accounts,
+                                accountNames,
+                              ),
+                              const SizedBox(height: 28),
+                              const Text(
+                                '계좌별 평가 비중',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildPortionSection(
+                                accountIds,
+                                accountGroups,
+                                accounts,
+                                accountNames,
+                                totalBalance,
+                              ),
+                              const SizedBox(height: 28),
+                              const Text(
+                                '계좌별 월말 평가액 추이',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '💡 차트를 좌우로 드래그하거나 확대/축소(Pinch Zoom)하여 전기간 데이터를 확인하세요.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildZoomableChartSection(
+                                accountIds,
+                                activeMonths,
+                              ),
+                              const SizedBox(height: 20),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -253,31 +371,71 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     );
   }
 
-  Widget _buildSummaryCard(double totalBalance) {
-    final currencyFormatter = NumberFormat('#,##0', 'ko_KR');
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text(
-              '연금 총 평가액',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+  Widget _buildSummaryCard({
+    required double totalBalance,
+    required double diffFromLastMonth,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade600,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '연금 자산 전체 금액',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
-            Text(
-              '${currencyFormatter.format(totalBalance)} 원',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.indigo,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            totalBalance.toWon(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  '전월 대비',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 8),
+              diffFromLastMonth.toSignedPriceText(
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                positiveColor: const Color(0xFFFF8A80),
+                negativeColor: const Color(0xFF82B1FF),
+                zeroColor: Colors.white,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -285,8 +443,11 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
   Widget _buildAccountGrid(
     List<String> accountIds,
     Map<String, List<MonthlyPensionBalance>> accountGroups,
-    List<dynamic> accounts,
+    List<Account> accounts,
+    List<dynamic> accountNames,
   ) {
+    final accountNameMap = {for (var an in accountNames) an.id: an};
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -294,7 +455,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.1,
+        childAspectRatio: 1.15,
       ),
       itemCount: accountIds.length,
       itemBuilder: (context, index) {
@@ -305,13 +466,15 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
           (sum, item) => sum + item.evaluationAmount,
         );
 
-        final matchedAcc = accounts.firstWhere(
-          (a) => a.id == accountId,
-          orElse: () => null as dynamic,
-        );
+        final matchedAcc = accounts.firstWhereOrNull((a) => a.id == accountId);
+        final matchedAccountName = matchedAcc != null
+            ? accountNameMap[matchedAcc.accountNameId]
+            : null;
 
-        final institution = matchedAcc?.financialInstitution ?? items.first.financialInstitution ?? '기타';
-        final accountName = matchedAcc?.accountName ?? accountId;
+        final institution = matchedAcc?.financialInstitution ??
+            items.first.financialInstitution ??
+            '기타';
+        final accountName = matchedAccountName?.accountName ?? accountId;
 
         return _AccountCard(
           institution: institution,
@@ -334,10 +497,11 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
   Widget _buildPortionSection(
     List<String> accountIds,
     Map<String, List<MonthlyPensionBalance>> accountGroups,
-    List<dynamic> accounts,
+    List<Account> accounts,
+    List<dynamic> accountNames,
     double totalBalance,
   ) {
-    final currencyFormatter = NumberFormat('#,##0', 'ko_KR');
+    final accountNameMap = {for (var an in accountNames) an.id: an};
 
     return Card(
       elevation: 1.5,
@@ -360,12 +524,11 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                       0.0,
                       (sum, item) => sum + item.evaluationAmount,
                     );
-                    final ratio = totalBalance > 0
-                        ? accountTotal / totalBalance
-                        : 0.0;
+                    final ratio =
+                        totalBalance > 0 ? accountTotal / totalBalance : 0.0;
 
                     return Expanded(
-                      flex: (ratio * 1000).toInt(),
+                      flex: max(1, (ratio * 1000).toInt()),
                       child: Container(
                         color: _chartColors[index % _chartColors.length],
                       ),
@@ -389,11 +552,15 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                     ? (accountTotal / totalBalance) * 100
                     : 0.0;
 
-                final matchedAcc = accounts.firstWhere(
-                  (a) => a.id == accId,
-                  orElse: () => null as dynamic,
-                );
-                final labelText = '${matchedAcc?.financialInstitution ?? items.first.financialInstitution ?? "기타"} - ${matchedAcc?.accountName ?? accId}';
+                final matchedAcc =
+                    accounts.firstWhereOrNull((a) => a.id == accId);
+                final matchedAccountName = matchedAcc != null
+                    ? accountNameMap[matchedAcc.accountNameId]
+                    : null;
+
+                final displayName = matchedAccountName?.accountName ?? accId;
+                final labelText =
+                    '${matchedAcc?.financialInstitution ?? items.first.financialInstitution ?? "기타"} - $displayName';
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -420,11 +587,11 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         ),
                       ),
                       Text(
-                        '${currencyFormatter.format(accountTotal)}원 ',
+                        '${accountTotal.toWon()} ',
                         style: const TextStyle(fontSize: 13),
                       ),
                       Text(
-                        '(${ratio.toStringAsFixed(1)}%)',
+                        '(${ratio.toPercent(fractionDigits: 1)})',
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -492,9 +659,8 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             final int index = value.toInt();
                             if (index >= 0 && index < sortedMonths.length) {
                               final ym = sortedMonths[index];
-                              final display = ym.length >= 7
-                                  ? ym.substring(2)
-                                  : ym;
+                              final display =
+                                  ym.length >= 7 ? ym.substring(2) : ym;
                               return Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
                                 child: Text(
@@ -519,7 +685,10 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                           final idx = mEntry.key;
                           final baseVal = (colorIdx + 1) * 1000000.0;
                           final randomOffset = (idx * 50000);
-                          return FlSpot(idx.toDouble(), baseVal + randomOffset);
+                          return FlSpot(
+                            idx.toDouble(),
+                            baseVal + randomOffset,
+                          );
                         }).toList(),
                         isCurved: true,
                         color: _chartColors[colorIdx % _chartColors.length],
@@ -543,8 +712,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     required String accountName,
     required List<MonthlyPensionBalance> products,
   }) {
-    final currencyFormatter = NumberFormat('#,##0', 'ko_KR');
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -604,7 +771,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             ),
                           ),
                           trailing: Text(
-                            '${currencyFormatter.format(product.evaluationAmount)} 원',
+                            product.evaluationAmount.toWon(),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
@@ -641,8 +808,6 @@ class _AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat('#,##0', 'ko_KR');
-
     return Card(
       elevation: 1.5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -682,7 +847,7 @@ class _AccountCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${currencyFormatter.format(totalBalance)} 원',
+                    totalBalance.toWon(),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
