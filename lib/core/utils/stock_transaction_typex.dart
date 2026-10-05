@@ -1,4 +1,4 @@
-import '../../models/stock_transaction_type.dart';
+import '../../models/stock/stock_transaction_type.dart';
 
 extension StockTransactionTypeX on StockTransactionType {
   // 수량 계산용 계수 (+1, -1, 0)

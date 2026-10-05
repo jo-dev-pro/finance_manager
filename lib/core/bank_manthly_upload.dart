@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spreadsheet_decoder/spreadsheet_decoder.dart';
 
-import '../models/monthly_bank_balance.dart';
-import '../providers/dashboard_provider.dart';
-import '../providers/monthly_bank_balance_provider.dart';
+import '../models/monthly_data/monthly_bank_balance.dart';
+import '../providers/dashboard/dashboard_provider.dart';
+import '../providers/monthly_data/monthly_bank_balance_provider.dart';
 
 class BankMonthlyUploadScreen extends ConsumerStatefulWidget {
   const BankMonthlyUploadScreen({super.key});

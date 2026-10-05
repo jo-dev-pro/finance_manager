@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/dashboard_provider.dart';
+import '../../providers/dashboard/dashboard_provider.dart';
 import '../../core/utils/number_formatter.dart';
 
 class DashboardScreen extends ConsumerWidget {

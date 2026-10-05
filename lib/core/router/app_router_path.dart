@@ -15,6 +15,7 @@ abstract class AppRoutePath {
   static const String stockItemSub = 'stock-item';
   static const String stockTransactionTypeSub = 'stock-transaction-type';
   static const String pensionProductSub = 'pension-product';
+  static const String pensionTransactionTypeSub = 'pension-transaction-type';
 
   // 화면 이동용 Full Path (context.push 등에서 직접 사용)
   static const String monthlyBankBalance = '/bank/monthly';
@@ -24,4 +25,5 @@ abstract class AppRoutePath {
   static const String stockItem = '/all/stock-item';
   static const String stockTransactionType = '/all/stock-transaction-type';
   static const String pensionProduct = '/all/pension-product';
+  static const String pensionTransactionType = '/all/pension-transaction-type';
 }

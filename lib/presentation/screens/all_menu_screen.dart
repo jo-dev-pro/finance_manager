@@ -49,6 +49,11 @@ class AllMenuScreen extends StatelessWidget {
               title: const Text('연금 상품명 관리'),
               onTap: () => context.push(AppRoutePath.pensionProduct),
             ),
+                        ListTile(
+              leading: const Icon(Icons.swap_horiz_outlined),
+              title: const Text('연금 거래구분 관리'),
+              onTap: () => context.push(AppRoutePath.pensionTransactionType),
+            ),
             ListTile(
               leading: const Icon(Icons.savings_outlined),
               title: const Text('(Batch)은행 월말자료 업로드'),
