@@ -1,8 +1,10 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // 💡 FilteringTextInputFormatter 추가
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/number_formatter.dart'; // 💡 첨부해주신 포맷터 파일 import
 import '../../../../models/pension/pension_transaction.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
@@ -41,8 +43,10 @@ class _PensionTransactionDialogState
       text: item?.transactionDate ??
           DateFormat('yyyy-MM-dd').format(DateTime.now()),
     );
+    
+    // 💡 초기 금액 표시 시 콤마 포맷팅 적용
     _amountController = TextEditingController(
-      text: item?.amount != null ? item!.amount.toInt().toString() : '',
+      text: item?.amount != null ? item!.amount.toCommaString() : '',
     );
     _memoController = TextEditingController(text: item?.memo ?? '');
 
@@ -83,6 +87,10 @@ class _PensionTransactionDialogState
       (a) => a.id == _selectedAccountId,
     );
 
+    // 💡 콤마(,) 제거 후 숫자 변환
+    final cleanAmountText = _amountController.text.replaceAll(',', '').trim();
+    final parsedAmount = double.tryParse(cleanAmountText) ?? 0.0;
+
     final isEdit = widget.transaction != null;
     final transactionData = PensionTransaction(
       id: widget.transaction?.id,
@@ -91,7 +99,7 @@ class _PensionTransactionDialogState
       accountId: _selectedAccountId!,
       productId: _selectedProductId,
       transactionType: _transactionType!,
-      amount: double.tryParse(_amountController.text) ?? 0.0,
+      amount: parsedAmount,
       memo: _memoController.text.trim().isEmpty
           ? null
           : _memoController.text.trim(),
@@ -102,23 +110,6 @@ class _PensionTransactionDialogState
       await notifier.updateTransaction(transactionData);
     } else {
       await notifier.addTransaction(transactionData);
-    }
-
-    // 💡 해지 처리 로직: 거래구분이 '해지'이고 연금 상품이 지정되어 있는 경우
-    if (_transactionType == '해지' && _selectedProductId != null) {
-      final products = ref.read(pensionProductNotifierProvider).value ?? [];
-      final targetProduct = products.firstWhereOrNull(
-        (p) => p.id == _selectedProductId,
-      );
-
-      if (targetProduct != null) {
-        final updatedProduct = targetProduct.copyWith(
-          status: '비활동',
-        );
-        await ref
-            .read(pensionProductNotifierProvider.notifier)
-            .updatePensionProduct(updatedProduct);
-      }
     }
 
     if (mounted) Navigator.pop(context);
@@ -160,10 +151,9 @@ class _PensionTransactionDialogState
 
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final transactionTypesAsync = ref.watch(pensionTransactionTypeNotifierProvider);
-    final productsAsync = _selectedAccountId != null
-        ? ref.watch(pensionProductsByAccountProvider(_selectedAccountId!))
-        : null;
+    final transactionTypesAsync =
+        ref.watch(pensionTransactionTypeNotifierProvider);
+    final productsAsync = ref.watch(pensionProductNotifierProvider);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -228,6 +218,7 @@ class _PensionTransactionDialogState
 
                     return DropdownButtonFormField<String>(
                       initialValue: _selectedAccountId,
+                      isExpanded: true,
                       decoration: const InputDecoration(labelText: '연금 계좌명 *'),
                       hint: const Text('연금 계좌 선택'),
                       items: pensionAccounts.map((acc) {
@@ -238,13 +229,13 @@ class _PensionTransactionDialogState
                           value: acc.id,
                           child: Text(
                             '${acc.financialInstitution} - $displayName',
+                            overflow: TextOverflow.ellipsis,
                           ),
                         );
                       }).toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedAccountId = val;
-                          _selectedProductId = null;
                         });
                       },
                       validator: (val) =>
@@ -254,45 +245,37 @@ class _PensionTransactionDialogState
                 ),
                 const SizedBox(height: 12),
 
-                if (_selectedAccountId == null)
-                  DropdownButtonFormField<String>(
-                    onChanged: null,
-                    items: const [],
-                    decoration: const InputDecoration(
-                      labelText: '연금 상품명 (선택)',
-                      hintText: '계좌를 먼저 선택하세요',
-                    ),
-                  )
-                else
-                  productsAsync?.when(
-                        loading: () => const LinearProgressIndicator(),
-                        error: (err, stack) => Text(
-                          '상품 로딩 실패: $err',
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                        data: (products) {
-                          return DropdownButtonFormField<String>(
-                            initialValue: _selectedProductId,
-                            decoration:
-                                const InputDecoration(labelText: '연금 상품명 (선택)'),
-                            hint: const Text('상품 선택 (입출금일 경우 미선택가능)'),
-                            items: products
-                                .map(
-                                  (prod) => DropdownMenuItem(
-                                    value: prod.id,
-                                    child: Text(prod.productName),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (val) =>
-                                setState(() => _selectedProductId = val),
-                          );
-                        },
-                      ) ??
-                      const SizedBox.shrink(),
+                productsAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (err, stack) => Text(
+                    '상품 로딩 실패: $err',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  data: (products) {
+                    return DropdownButtonFormField<String>(
+                      initialValue: _selectedProductId,
+                      isExpanded: true,
+                      decoration:
+                          const InputDecoration(labelText: '연금 상품명 (선택)'),
+                      hint: const Text('상품 선택 (입출금일 경우 미선택가능)'),
+                      items: products
+                          .map(
+                            (prod) => DropdownMenuItem(
+                              value: prod.id,
+                              child: Text(
+                                prod.productName,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (val) =>
+                          setState(() => _selectedProductId = val),
+                    );
+                  },
+                ),
                 const SizedBox(height: 12),
 
-                // 💡 Firestore 연금 거래타입 DB 적용 영역
                 transactionTypesAsync.when(
                   loading: () => const LinearProgressIndicator(),
                   error: (err, stack) => Text(
@@ -303,27 +286,29 @@ class _PensionTransactionDialogState
                     final activeTypes =
                         types.where((t) => t.isActive).toList();
 
-                    // 기존 선택된 값이나 전달받은 초기값이 활성 타입 목록에 있는지 확인
                     final initialType = activeTypes.any(
                       (t) => t.name == _transactionType,
                     )
                         ? _transactionType
                         : (activeTypes.isNotEmpty ? activeTypes.first.name : null);
 
-                    // 선택 상태 동기화
                     if (_transactionType == null && initialType != null) {
                       _transactionType = initialType;
                     }
 
                     return DropdownButtonFormField<String>(
                       initialValue: initialType,
+                      isExpanded: true,
                       decoration: const InputDecoration(labelText: '거래구분 *'),
                       hint: const Text('거래구분 선택'),
                       items: activeTypes
                           .map(
                             (type) => DropdownMenuItem(
                               value: type.name,
-                              child: Text(type.name),
+                              child: Text(
+                                type.name,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           )
                           .toList(),
@@ -339,9 +324,14 @@ class _PensionTransactionDialogState
                 ),
                 const SizedBox(height: 12),
 
+                // 💡 천 단위 콤마 포맷터(ThousandsSeparatorInputFormatter) 적용
                 TextFormField(
                   controller: _amountController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    ThousandsSeparatorInputFormatter(),
+                  ],
                   decoration: const InputDecoration(
                     labelText: '금액 *',
                     suffixText: '원',
@@ -350,7 +340,8 @@ class _PensionTransactionDialogState
                     if (val == null || val.trim().isEmpty) {
                       return '금액을 입력해주세요.';
                     }
-                    if (double.tryParse(val) == null) {
+                    final cleanVal = val.replaceAll(',', '').trim();
+                    if (double.tryParse(cleanVal) == null) {
                       return '올바른 숫자를 입력해주세요.';
                     }
                     return null;

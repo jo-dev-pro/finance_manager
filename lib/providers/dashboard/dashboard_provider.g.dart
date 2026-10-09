@@ -26,25 +26,24 @@ final availableYearMonthsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AvailableYearMonthsRef = AutoDisposeFutureProviderRef<List<String>>;
-String _$dashboardSummaryHash() => r'242af09e4d6e35a9bcdb31d506fd2b07aa2270bd';
+String _$dashboardSummaryHash() => r'9b27ab8c2f7f8065e5dfbe6e3f1948f6cbd8eec2';
 
 /// See also [dashboardSummary].
 @ProviderFor(dashboardSummary)
-final dashboardSummaryProvider =
-    AutoDisposeFutureProvider<DashboardSummary>.internal(
-      dashboardSummary,
-      name: r'dashboardSummaryProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$dashboardSummaryHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+final dashboardSummaryProvider = FutureProvider<DashboardSummary>.internal(
+  dashboardSummary,
+  name: r'dashboardSummaryProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$dashboardSummaryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef DashboardSummaryRef = AutoDisposeFutureProviderRef<DashboardSummary>;
+typedef DashboardSummaryRef = FutureProviderRef<DashboardSummary>;
 String _$selectedYearMonthHash() => r'85133661c1bd2b752288cf9e7f89dacb96847f79';
 
 /// See also [SelectedYearMonth].

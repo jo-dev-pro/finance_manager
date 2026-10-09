@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import '../../models/account/account.dart';
-import '../../models/account/account_name.dart';
 import '../account/account_provider.dart';
 import '../account/account_name_provider.dart';
 import '../monthly_data/monthly_bank_balance_provider.dart';
@@ -21,7 +21,7 @@ class BankAccountItem {
   });
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<BankAccountItem>> bankScreenData(
   ref, {
   required String currentYearMonth,

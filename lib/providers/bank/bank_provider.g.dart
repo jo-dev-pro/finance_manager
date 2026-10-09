@@ -6,7 +6,7 @@ part of 'bank_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$bankScreenDataHash() => r'24b6ab5a4bde17d2cd656024bd34983a2f336bc2';
+String _$bankScreenDataHash() => r'b73f7a1c0c23ea8aeb08f5f25acd7401968d9612';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -75,8 +75,7 @@ class BankScreenDataFamily extends Family<AsyncValue<List<BankAccountItem>>> {
 }
 
 /// See also [bankScreenData].
-class BankScreenDataProvider
-    extends AutoDisposeFutureProvider<List<BankAccountItem>> {
+class BankScreenDataProvider extends FutureProvider<List<BankAccountItem>> {
   /// See also [bankScreenData].
   BankScreenDataProvider({
     required String currentYearMonth,
@@ -134,7 +133,7 @@ class BankScreenDataProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<BankAccountItem>> createElement() {
+  FutureProviderElement<List<BankAccountItem>> createElement() {
     return _BankScreenDataProviderElement(this);
   }
 
@@ -157,7 +156,7 @@ class BankScreenDataProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin BankScreenDataRef on AutoDisposeFutureProviderRef<List<BankAccountItem>> {
+mixin BankScreenDataRef on FutureProviderRef<List<BankAccountItem>> {
   /// The parameter `currentYearMonth` of this provider.
   String get currentYearMonth;
 
@@ -166,7 +165,7 @@ mixin BankScreenDataRef on AutoDisposeFutureProviderRef<List<BankAccountItem>> {
 }
 
 class _BankScreenDataProviderElement
-    extends AutoDisposeFutureProviderElement<List<BankAccountItem>>
+    extends FutureProviderElement<List<BankAccountItem>>
     with BankScreenDataRef {
   _BankScreenDataProviderElement(super.provider);
 

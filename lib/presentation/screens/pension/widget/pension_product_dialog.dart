@@ -1,10 +1,7 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../models/pension/pension_product.dart';
-import '../../../../providers/account/account_name_provider.dart';
-import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/pension/pension_product_provider.dart';
 
 class PensionProductDialog extends ConsumerStatefulWidget {
@@ -19,9 +16,7 @@ class PensionProductDialog extends ConsumerStatefulWidget {
 
 class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
   final _formKey = GlobalKey<FormState>();
-  String? _selectedAccountId;
   late TextEditingController _productNameController;
-  String _status = '활동';
   bool _isSubmitting = false;
 
   bool get _isEditing => widget.initialData != null;
@@ -29,11 +24,9 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedAccountId = widget.initialData?.accountId;
     _productNameController = TextEditingController(
       text: widget.initialData?.productName ?? '',
     );
-    _status = widget.initialData?.status ?? '활동';
   }
 
   @override
@@ -50,9 +43,7 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
     try {
       final product = PensionProduct(
         id: widget.initialData?.id,
-        accountId: _selectedAccountId!,
         productName: _productNameController.text.trim(),
-        status: _status,
       );
 
       final notifier = ref.read(pensionProductNotifierProvider.notifier);
@@ -76,9 +67,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final accountState = ref.watch(accountNotifierProvider);
-    final accountNameState = ref.watch(accountNameNotifierProvider);
-
     return AlertDialog(
       title: Text(_isEditing ? '연금상품 수정' : '연금상품 등록'),
       content: SingleChildScrollView(
@@ -87,70 +75,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              accountState.when(
-                data: (accounts) {
-                  final pensionAccounts = accounts.where((acc) {
-                    final type = acc.accountType.toUpperCase();
-                    return type == '연금';
-                  }).toList();
-
-                  final initialExists = pensionAccounts.any(
-                    (acc) => acc.id == _selectedAccountId,
-                  );
-
-                  if (pensionAccounts.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        '등록된 연금 계좌가 없습니다.\n계좌 관리에서 먼저 연금 계좌를 등록해 주세요.',
-                        style: TextStyle(color: Colors.red, fontSize: 13),
-                      ),
-                    );
-                  }
-
-                  final accountNames = accountNameState.value ?? [];
-
-                  return DropdownButtonFormField<String>(
-                    initialValue: initialExists ? _selectedAccountId : null,
-                    decoration: const InputDecoration(
-                      labelText: '연금 계좌',
-                      hintText: '계좌 선택',
-                    ),
-                    items: pensionAccounts.map((acc) {
-                      final matchedName = accountNames.firstWhereOrNull(
-                        (an) => an.id == acc.accountNameId,
-                      );
-                      final displayName =
-                          matchedName?.accountName ?? '계좌';
-
-                      return DropdownMenuItem<String>(
-                        value: acc.id,
-                        child: Text(
-                          '${acc.financialInstitution} - $displayName',
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      setState(() => _selectedAccountId = val);
-                    },
-                    validator: (val) {
-                      if (val == null || val.isEmpty) {
-                        return '계좌를 선택해 주세요.';
-                      }
-                      return null;
-                    },
-                  );
-                },
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: CircularProgressIndicator(),
-                ),
-                error: (err, stack) => Text(
-                  '계좌 목록 로드 실패: $err',
-                  style: const TextStyle(color: Colors.red, fontSize: 12),
-                ),
-              ),
-              const SizedBox(height: 12),
               TextFormField(
                 controller: _productNameController,
                 decoration: const InputDecoration(
@@ -162,18 +86,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
                     return '상품명을 입력해 주세요.';
                   }
                   return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _status,
-                decoration: const InputDecoration(labelText: '상태'),
-                items: const [
-                  DropdownMenuItem(value: '활동', child: Text('활동')),
-                  DropdownMenuItem(value: '해지', child: Text('해지')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _status = val);
                 },
               ),
             ],

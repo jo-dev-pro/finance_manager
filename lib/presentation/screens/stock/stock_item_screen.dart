@@ -32,6 +32,7 @@ class StockItemScreen extends ConsumerWidget {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
+              
               return Card(
                 elevation: 1,
                 margin: const EdgeInsets.only(bottom: 10),

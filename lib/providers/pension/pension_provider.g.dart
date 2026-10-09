@@ -6,7 +6,7 @@ part of 'pension_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pensionScreenDataHash() => r'd285b1f63bbf900ce142fd735c8b7f6ae5fabd59';
+String _$pensionScreenDataHash() => r'0935c3bb815d41935d9b4a06346919ecad15bb50';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -77,7 +77,7 @@ class PensionScreenDataFamily
 
 /// See also [pensionScreenData].
 class PensionScreenDataProvider
-    extends AutoDisposeFutureProvider<List<PensionAccountItem>> {
+    extends FutureProvider<List<PensionAccountItem>> {
   /// See also [pensionScreenData].
   PensionScreenDataProvider({
     required String currentYearMonth,
@@ -136,7 +136,7 @@ class PensionScreenDataProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<PensionAccountItem>> createElement() {
+  FutureProviderElement<List<PensionAccountItem>> createElement() {
     return _PensionScreenDataProviderElement(this);
   }
 
@@ -159,8 +159,7 @@ class PensionScreenDataProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin PensionScreenDataRef
-    on AutoDisposeFutureProviderRef<List<PensionAccountItem>> {
+mixin PensionScreenDataRef on FutureProviderRef<List<PensionAccountItem>> {
   /// The parameter `currentYearMonth` of this provider.
   String get currentYearMonth;
 
@@ -169,7 +168,7 @@ mixin PensionScreenDataRef
 }
 
 class _PensionScreenDataProviderElement
-    extends AutoDisposeFutureProviderElement<List<PensionAccountItem>>
+    extends FutureProviderElement<List<PensionAccountItem>>
     with PensionScreenDataRef {
   _PensionScreenDataProviderElement(super.provider);
 

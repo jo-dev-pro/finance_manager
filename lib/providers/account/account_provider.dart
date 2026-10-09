@@ -4,11 +4,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers/firestore_provider.dart';
+import '../../core/utils/collection_name.dart';
 import '../../models/account/account.dart';
 
 part 'account_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class AccountNotifier extends _$AccountNotifier {
   @override
   Future<List<Account>> build() async {
@@ -18,7 +19,7 @@ class AccountNotifier extends _$AccountNotifier {
   // 1. 전체 계좌 목록 조회
   Future<List<Account>> _fetchAccounts() async {
     final firestore = ref.read(firestoreProvider);
-    final snapshot = await firestore.collection('account').get();
+    final snapshot = await firestore.collection(accountDBName).get();
 
     return snapshot.docs.map((doc) {
       final data = doc.data();
@@ -62,7 +63,7 @@ class AccountNotifier extends _$AccountNotifier {
       final updatedAccount = account.copyWith(logoUrl: logoUrl);
       final accountData = updatedAccount.toJson()..remove('id');
 
-      await firestore.collection('account').add(accountData);
+      await firestore.collection(accountDBName).add(accountData);
       return _fetchAccounts();
     });
   }
@@ -114,7 +115,7 @@ class AccountNotifier extends _$AccountNotifier {
       final updatedAccount = account.copyWith(logoUrl: logoUrl);
       final accountData = updatedAccount.toJson()..remove('id');
 
-      await firestore.collection('account').doc(account.id).set(
+      await firestore.collection(accountDBName).doc(account.id).set(
             accountData,
             SetOptions(merge: true),
           );
@@ -129,7 +130,7 @@ class AccountNotifier extends _$AccountNotifier {
     state = await AsyncValue.guard(() async {
       final firestore = ref.read(firestoreProvider);
       
-      await firestore.collection('account').doc(accountId).update({
+      await firestore.collection(accountDBName).doc(accountId).update({
         'status': status,
       });
 
@@ -144,7 +145,7 @@ class AccountNotifier extends _$AccountNotifier {
       final firestore = ref.read(firestoreProvider);
       final storage = ref.read(firebaseStorageProvider);
 
-      final docRef = firestore.collection('account').doc(id);
+      final docRef = firestore.collection(accountDBName).doc(id);
       final docSnapshot = await docRef.get();
 
       if (docSnapshot.exists) {

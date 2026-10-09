@@ -1,10 +1,11 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/providers/firestore_provider.dart';
+import '../../core/utils/collection_name.dart';
 import '../../models/monthly_data/monthly_pension_balance.dart';
 
 part 'monthly_pension_balance_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
   @override
   Future<List<MonthlyPensionBalance>> build(String yearMonth) async {
@@ -14,7 +15,7 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
   Future<List<MonthlyPensionBalance>> fetchBalances(String yearMonth) async {
     final firestore = ref.read(firestoreProvider);
     final snapshot = await firestore
-        .collection('monthly_pension_balance')
+        .collection(monthlyPensionBalanceDBName)
         .where('year_month', isEqualTo: yearMonth)
         .get();
 
@@ -41,10 +42,10 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
     final data = balance.toJson()..remove('id');
 
     if (balance.id == null) {
-      await firestore.collection('monthly_pension_balance').add(data);
+      await firestore.collection(monthlyPensionBalanceDBName).add(data);
     } else {
       await firestore
-          .collection('monthly_pension_balance')
+          .collection(monthlyPensionBalanceDBName)
           .doc(balance.id)
           .update(data);
     }
@@ -53,7 +54,7 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
 
   Future<void> deleteBalance(String id) async {
     final firestore = ref.read(firestoreProvider);
-    await firestore.collection('monthly_pension_balance').doc(id).delete();
+    await firestore.collection(monthlyPensionBalanceDBName).doc(id).delete();
     ref.invalidateSelf();
   }
 }

@@ -184,10 +184,10 @@ class _MonthlyPensionBalancesByAccountProviderElement
 }
 
 String _$monthlyPensionBalanceNotifierHash() =>
-    r'cd0e2da02ec0f783235d07325d4871ab84cc1dac';
+    r'8acb8ff2ba4bccf33063f90f2121d4f58e131760';
 
 abstract class _$MonthlyPensionBalanceNotifier
-    extends BuildlessAutoDisposeAsyncNotifier<List<MonthlyPensionBalance>> {
+    extends BuildlessAsyncNotifier<List<MonthlyPensionBalance>> {
   late final String yearMonth;
 
   FutureOr<List<MonthlyPensionBalance>> build(String yearMonth);
@@ -234,7 +234,7 @@ class MonthlyPensionBalanceNotifierFamily
 /// See also [MonthlyPensionBalanceNotifier].
 class MonthlyPensionBalanceNotifierProvider
     extends
-        AutoDisposeAsyncNotifierProviderImpl<
+        AsyncNotifierProviderImpl<
           MonthlyPensionBalanceNotifier,
           List<MonthlyPensionBalance>
         > {
@@ -290,7 +290,7 @@ class MonthlyPensionBalanceNotifierProvider
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<
+  AsyncNotifierProviderElement<
     MonthlyPensionBalanceNotifier,
     List<MonthlyPensionBalance>
   >
@@ -316,14 +316,14 @@ class MonthlyPensionBalanceNotifierProvider
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 mixin MonthlyPensionBalanceNotifierRef
-    on AutoDisposeAsyncNotifierProviderRef<List<MonthlyPensionBalance>> {
+    on AsyncNotifierProviderRef<List<MonthlyPensionBalance>> {
   /// The parameter `yearMonth` of this provider.
   String get yearMonth;
 }
 
 class _MonthlyPensionBalanceNotifierProviderElement
     extends
-        AutoDisposeAsyncNotifierProviderElement<
+        AsyncNotifierProviderElement<
           MonthlyPensionBalanceNotifier,
           List<MonthlyPensionBalance>
         >

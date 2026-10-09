@@ -2,11 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/providers/firestore_provider.dart';
 
+import '../../core/utils/collection_name.dart';
 import '../../models/stock/stock_transaction_type.dart';
 
 part 'stock_transaction_type_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class StockTransactionTypeNotifier extends _$StockTransactionTypeNotifier {
   @override
   Future<List<StockTransactionType>> build() async {
@@ -17,7 +18,7 @@ class StockTransactionTypeNotifier extends _$StockTransactionTypeNotifier {
   Future<List<StockTransactionType>> fetchStockTransactionTypes() async {
     final firestore = ref.read(firestoreProvider);
     final snapshot = await firestore
-        .collection('stock_transaction_type')
+        .collection(stockTransactionTypeDBName)
         .orderBy('typeName', descending: false) // ascending: true -> descending: false 변경
         .get();
 
@@ -37,7 +38,7 @@ class StockTransactionTypeNotifier extends _$StockTransactionTypeNotifier {
 
     data['created_at'] = FieldValue.serverTimestamp();
 
-    await firestore.collection('stock_transaction_type').add(data);
+    await firestore.collection(stockTransactionTypeDBName).add(data);
     ref.invalidateSelf();
   }
 
@@ -48,7 +49,7 @@ class StockTransactionTypeNotifier extends _$StockTransactionTypeNotifier {
     final data = item.toJson()..remove('id');
 
     await firestore
-        .collection('stock_transaction_type')
+        .collection(stockTransactionTypeDBName)
         .doc(item.id)
         .update(data);
     ref.invalidateSelf();
@@ -58,7 +59,7 @@ class StockTransactionTypeNotifier extends _$StockTransactionTypeNotifier {
   Future<void> deleteStockTransactionType(String id) async {
     final firestore = ref.read(firestoreProvider);
     await firestore
-        .collection('stock_transaction_type')
+        .collection(stockTransactionTypeDBName)
         .doc(id)
         .delete();
     ref.invalidateSelf();

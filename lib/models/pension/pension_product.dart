@@ -9,12 +9,7 @@ part 'pension_product.g.dart';
 class PensionProduct with _$PensionProduct {
   const factory PensionProduct({
     String? id,
-    @JsonKey(name: 'account_id') required String accountId,
     @JsonKey(name: 'product_name') required String productName,
-    @Default('활동') String status,
-    @JsonKey(name: 'created_at')
-    @TimestampConverter() // 👈 이 줄을 추가합니다.
-    DateTime? createdAt,
   }) = _Product;
 
   factory PensionProduct.fromJson(Map<String, dynamic> json) =>

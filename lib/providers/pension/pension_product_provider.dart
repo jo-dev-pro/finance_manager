@@ -1,10 +1,12 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import '../../core/providers/firestore_provider.dart';
+import '../../core/utils/collection_name.dart';
 import '../../models/pension/pension_product.dart';
 
 part 'pension_product_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class PensionProductNotifier extends _$PensionProductNotifier {
   @override
   Future<List<PensionProduct>> build() async {
@@ -13,20 +15,17 @@ class PensionProductNotifier extends _$PensionProductNotifier {
 
   Future<List<PensionProduct>> fetchPensionProducts() async {
     final firestore = ref.read(firestoreProvider);
-    final snapshot = await firestore.collection('pension_product').get();
+    final snapshot = await firestore.collection(pensionProductDBName).get();
 
-    final products = snapshot.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return PensionProduct.fromJson(data);
-    }).toList();
+    final products =
+        snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return PensionProduct.fromJson(data);
+        }).toList();
 
-    // accountId -> productName 순으로 정렬
-    products.sort((a, b) {
-      int compareAccountId = a.accountId.compareTo(b.accountId);
-      if (compareAccountId != 0) return compareAccountId;
-      return a.productName.compareTo(b.productName);
-    });
+    // 💡 상품명(productName) 순으로 정렬
+    products.sort((a, b) => a.productName.compareTo(b.productName));
 
     return products;
   }
@@ -35,7 +34,7 @@ class PensionProductNotifier extends _$PensionProductNotifier {
     final firestore = ref.read(firestoreProvider);
     final data = product.toJson()..remove('id');
 
-    await firestore.collection('pension_product').add(data);
+    await firestore.collection(pensionProductDBName).add(data);
     ref.invalidateSelf();
   }
 
@@ -44,24 +43,13 @@ class PensionProductNotifier extends _$PensionProductNotifier {
     final firestore = ref.read(firestoreProvider);
     final data = product.toJson()..remove('id');
 
-    await firestore.collection('pension_product').doc(product.id).update(data);
+    await firestore.collection(pensionProductDBName).doc(product.id).update(data);
     ref.invalidateSelf();
   }
 
   Future<void> deletePensionProduct(String id) async {
     final firestore = ref.read(firestoreProvider);
-    await firestore.collection('pension_product').doc(id).delete();
+    await firestore.collection(pensionProductDBName).doc(id).delete();
     ref.invalidateSelf();
   }
-}
-
-@riverpod
-Future<List<PensionProduct>> pensionProductsByAccount(
-  PensionProductsByAccountRef ref,
-  String accountId,
-) async {
-  if (accountId.isEmpty) return [];
-
-  final allProducts = await ref.watch(pensionProductNotifierProvider.future);
-  return allProducts.where((p) => p.accountId == accountId).toList();
 }

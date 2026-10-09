@@ -296,11 +296,11 @@ class _PensionTransactionsByProductProviderElement
 }
 
 String _$pensionTransactionNotifierHash() =>
-    r'480e095a47a0e0e7bb9d5938889b60ae8aa45458';
+    r'f126c3c92998eb652664fe2cfc7b0dcbdfd7d54d';
 
 /// See also [PensionTransactionNotifier].
 @ProviderFor(PensionTransactionNotifier)
-final pensionTransactionNotifierProvider = AutoDisposeAsyncNotifierProvider<
+final pensionTransactionNotifierProvider = AsyncNotifierProvider<
   PensionTransactionNotifier,
   List<PensionTransaction>
 >.internal(
@@ -314,7 +314,6 @@ final pensionTransactionNotifierProvider = AutoDisposeAsyncNotifierProvider<
   allTransitiveDependencies: null,
 );
 
-typedef _$PensionTransactionNotifier =
-    AutoDisposeAsyncNotifier<List<PensionTransaction>>;
+typedef _$PensionTransactionNotifier = AsyncNotifier<List<PensionTransaction>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

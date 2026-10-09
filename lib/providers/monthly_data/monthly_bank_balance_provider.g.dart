@@ -28,7 +28,7 @@ final allMonthlyBankBalancesProvider =
 typedef AllMonthlyBankBalancesRef =
     AutoDisposeFutureProviderRef<List<MonthlyBankBalanceWithAccount>>;
 String _$monthlyBankBalanceNotifierHash() =>
-    r'f3cccba96e394f547df591ae0279fb795fb5d5a3';
+    r'775fab3f280625c1b3c20b2afb4b365c51a0ca3e';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -52,7 +52,7 @@ class _SystemHash {
 }
 
 abstract class _$MonthlyBankBalanceNotifier
-    extends BuildlessAutoDisposeAsyncNotifier<List<MonthlyBankBalance>> {
+    extends BuildlessAsyncNotifier<List<MonthlyBankBalance>> {
   late final String yearMonth;
 
   FutureOr<List<MonthlyBankBalance>> build(String yearMonth);
@@ -98,7 +98,7 @@ class MonthlyBankBalanceNotifierFamily
 /// See also [MonthlyBankBalanceNotifier].
 class MonthlyBankBalanceNotifierProvider
     extends
-        AutoDisposeAsyncNotifierProviderImpl<
+        AsyncNotifierProviderImpl<
           MonthlyBankBalanceNotifier,
           List<MonthlyBankBalance>
         > {
@@ -154,7 +154,7 @@ class MonthlyBankBalanceNotifierProvider
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<
+  AsyncNotifierProviderElement<
     MonthlyBankBalanceNotifier,
     List<MonthlyBankBalance>
   >
@@ -180,14 +180,14 @@ class MonthlyBankBalanceNotifierProvider
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 mixin MonthlyBankBalanceNotifierRef
-    on AutoDisposeAsyncNotifierProviderRef<List<MonthlyBankBalance>> {
+    on AsyncNotifierProviderRef<List<MonthlyBankBalance>> {
   /// The parameter `yearMonth` of this provider.
   String get yearMonth;
 }
 
 class _MonthlyBankBalanceNotifierProviderElement
     extends
-        AutoDisposeAsyncNotifierProviderElement<
+        AsyncNotifierProviderElement<
           MonthlyBankBalanceNotifier,
           List<MonthlyBankBalance>
         >

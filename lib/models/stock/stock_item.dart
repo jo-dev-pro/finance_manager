@@ -13,9 +13,6 @@ class StockItem with _$StockItem {
     required String name,
     @Default('KOSPI') String market,
     String? memo,
-    @JsonKey(name: 'created_at')
-    @TimestampConverter() // 👈 이 줄을 추가합니다.
-    DateTime? createdAt,
   }) = _StockItem;
 
   factory StockItem.fromJson(Map<String, dynamic> json) =>

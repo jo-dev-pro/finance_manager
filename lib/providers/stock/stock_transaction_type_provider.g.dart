@@ -7,11 +7,11 @@ part of 'stock_transaction_type_provider.dart';
 // **************************************************************************
 
 String _$stockTransactionTypeNotifierHash() =>
-    r'16636a454f1c80b1903f2f7f2f56184bb20480a9';
+    r'395b9d57d583dfa223e8f257494ab24763f6bcad';
 
 /// See also [StockTransactionTypeNotifier].
 @ProviderFor(StockTransactionTypeNotifier)
-final stockTransactionTypeNotifierProvider = AutoDisposeAsyncNotifierProvider<
+final stockTransactionTypeNotifierProvider = AsyncNotifierProvider<
   StockTransactionTypeNotifier,
   List<StockTransactionType>
 >.internal(
@@ -26,6 +26,6 @@ final stockTransactionTypeNotifierProvider = AutoDisposeAsyncNotifierProvider<
 );
 
 typedef _$StockTransactionTypeNotifier =
-    AutoDisposeAsyncNotifier<List<StockTransactionType>>;
+    AsyncNotifier<List<StockTransactionType>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

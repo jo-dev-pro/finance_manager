@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers/firestore_provider.dart';
+import '../../core/utils/collection_name.dart';
 import '../../models/investment/investment.dart';
 
 part 'investment_provider.g.dart';
@@ -16,7 +17,7 @@ class InvestmentNotifier extends _$InvestmentNotifier {
   Future<List<Investment>> fetchInvestments() async {
     final firestore = ref.read(firestoreProvider);
     final snapshot = await firestore
-        .collection('investment')
+        .collection(investmentDBName)
         .orderBy('created_at', descending: true)
         .get();
 
@@ -38,7 +39,7 @@ class InvestmentNotifier extends _$InvestmentNotifier {
         ? Timestamp.fromDate(investment.createdAt!)
         : FieldValue.serverTimestamp();
 
-    await firestore.collection('investment').add(data);
+    await firestore.collection(investmentDBName).add(data);
     ref.invalidateSelf();
   }
 
@@ -52,13 +53,13 @@ class InvestmentNotifier extends _$InvestmentNotifier {
       data['created_at'] = Timestamp.fromDate(investment.createdAt!);
     }
 
-    await firestore.collection('investment').doc(investment.id).update(data);
+    await firestore.collection(investmentDBName).doc(investment.id).update(data);
     ref.invalidateSelf();
   }
 
   Future<void> deleteInvestment(String id) async {
     final firestore = ref.read(firestoreProvider);
-    await firestore.collection('investment').doc(id).delete();
+    await firestore.collection(investmentDBName).doc(id).delete();
     ref.invalidateSelf();
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers/firestore_provider.dart';
+import '../../core/utils/collection_name.dart';
 import '../../core/utils/number_formatter.dart';
 import '../monthly_data/monthly_bank_balance_provider.dart';
 
@@ -11,10 +12,10 @@ part 'dashboard_provider.g.dart';
 Future<List<String>> availableYearMonths(AvailableYearMonthsRef ref) async {
   final firestore = ref.watch(firestoreProvider);
 
-  final bankSnap = await firestore.collection('monthly_bank_balance').get();
-  final stockSnap = await firestore.collection('monthly_stock_balance').get();
+  final bankSnap = await firestore.collection(monthlyBankBalanceDBName).get();
+  final stockSnap = await firestore.collection(monthlyStockBalanceDBName).get();
   final pensionSnap =
-      await firestore.collection('monthly_pension_balance').get();
+      await firestore.collection(monthlyPensionBalanceDBName).get();
 
   final Set<String> months = {};
   for (var doc in bankSnap.docs) {
@@ -110,7 +111,7 @@ class DashboardSummary {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
   String? selectedMonth = ref.watch(selectedYearMonthProvider);
 

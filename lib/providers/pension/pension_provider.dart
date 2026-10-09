@@ -17,7 +17,7 @@ class PensionAccountItem {
   });
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<PensionAccountItem>> pensionScreenData(
   PensionScreenDataRef ref, {
   required String currentYearMonth,

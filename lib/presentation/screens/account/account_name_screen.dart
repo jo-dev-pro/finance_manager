@@ -33,7 +33,6 @@ class AccountNameScreen extends ConsumerWidget {
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
-                  side: BorderSide(color: Colors.grey.shade200),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(

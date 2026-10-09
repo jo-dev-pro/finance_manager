@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import '../../core/providers/firestore_provider.dart';
+import '../../core/utils/collection_name.dart';
 import '../../models/stock/stock_item.dart';
 
 part 'stock_item_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class StockItemNotifier extends _$StockItemNotifier {
   @override
   Future<List<StockItem>> build() async {
@@ -16,7 +18,7 @@ class StockItemNotifier extends _$StockItemNotifier {
   Future<List<StockItem>> fetchStockItems() async {
     final firestore = ref.read(firestoreProvider);
     final snapshot = await firestore
-        .collection('stock_item')
+        .collection(stockItemDBName)
         .orderBy('name', descending: false) // ascending: true -> descending: false 변경
         .get();
 
@@ -36,7 +38,7 @@ class StockItemNotifier extends _$StockItemNotifier {
 
     data['created_at'] = FieldValue.serverTimestamp();
 
-    await firestore.collection('stock_item').add(data);
+    await firestore.collection(stockItemDBName).add(data);
     ref.invalidateSelf();
   }
 
@@ -47,7 +49,7 @@ class StockItemNotifier extends _$StockItemNotifier {
     final data = item.toJson()..remove('id');
 
     await firestore
-        .collection('stock_item')
+        .collection(stockItemDBName)
         .doc(item.id)
         .update(data);
     ref.invalidateSelf();
@@ -57,7 +59,7 @@ class StockItemNotifier extends _$StockItemNotifier {
   Future<void> deleteStockItem(String id) async {
     final firestore = ref.read(firestoreProvider);
     await firestore
-        .collection('stock_item')
+        .collection(stockItemDBName)
         .doc(id)
         .delete();
     ref.invalidateSelf();

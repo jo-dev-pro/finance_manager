@@ -8,7 +8,7 @@ class StockTransactionType with _$StockTransactionType {
   const factory StockTransactionType({
     String? id,
     required String typeName,
-    required String amountSign,
+    required String amountSign,  // "+", "-"
     required String quantitySign,
   }) = _StockTransactionType;
 

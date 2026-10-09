@@ -1,6 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import '../../core/providers/firestore_provider.dart';
+import '../../core/utils/collection_name.dart';
 import '../../models/account/account.dart';
 import '../../models/account/account_name.dart';
 import '../../models/monthly_data/monthly_bank_balance.dart';
@@ -32,7 +34,7 @@ Future<List<MonthlyBankBalanceWithAccount>> allMonthlyBankBalances(
   final accounts = await ref.watch(accountNotifierProvider.future);
   final accountNames = await ref.watch(accountNameNotifierProvider.future);
 
-  final snapshot = await firestore.collection('monthly_bank_balance').get();
+  final snapshot = await firestore.collection(monthlyBankBalanceDBName).get();
 
   final balances =
       snapshot.docs.map((doc) {
@@ -59,7 +61,7 @@ Future<List<MonthlyBankBalanceWithAccount>> allMonthlyBankBalances(
   }).toList();
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class MonthlyBankBalanceNotifier extends _$MonthlyBankBalanceNotifier {
   @override
   Future<List<MonthlyBankBalance>> build(String yearMonth) async {
@@ -70,7 +72,7 @@ class MonthlyBankBalanceNotifier extends _$MonthlyBankBalanceNotifier {
     final firestore = ref.read(firestoreProvider);
     final snapshot =
         await firestore
-            .collection('monthly_bank_balance')
+            .collection(monthlyBankBalanceDBName)
             .where('year_month', isEqualTo: yearMonth)
             .get();
 
@@ -86,12 +88,9 @@ class MonthlyBankBalanceNotifier extends _$MonthlyBankBalanceNotifier {
     final data = balance.toJson()..remove('id');
 
     if (balance.id == null) {
-      await firestore.collection('monthly_bank_balance').add(data);
+      await firestore.collection(monthlyBankBalanceDBName).add(data);
     } else {
-      await firestore
-          .collection('monthly_bank_balance')
-          .doc(balance.id)
-          .update(data);
+      await firestore.collection(monthlyBankBalanceDBName).doc(balance.id).update(data);
     }
     ref.invalidateSelf();
     ref.invalidate(allMonthlyBankBalancesProvider);
@@ -99,7 +98,7 @@ class MonthlyBankBalanceNotifier extends _$MonthlyBankBalanceNotifier {
 
   Future<void> deleteBalance(String id) async {
     final firestore = ref.read(firestoreProvider);
-    await firestore.collection('monthly_bank_balance').doc(id).delete();
+    await firestore.collection(monthlyBankBalanceDBName).doc(id).delete();
     ref.invalidateSelf();
     ref.invalidate(allMonthlyBankBalancesProvider);
   }

@@ -30,6 +30,7 @@ class PensionTransactionTypeScreen extends ConsumerWidget {
             itemCount: types.length,
             itemBuilder: (context, index) {
               final type = types[index];
+              final isPlus = type.amountSign == '+';
 
               return Card(
                 elevation: 1,
@@ -45,6 +46,35 @@ class PensionTransactionTypeScreen extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
+                      // 💡 금액 부호 표시 뱃지 (+ / -)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isPlus
+                              ? Colors.red.shade50
+                              : Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: isPlus
+                                ? Colors.red.shade200
+                                : Colors.blue.shade200,
+                          ),
+                        ),
+                        child: Text(
+                          type.amountSign,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isPlus
+                                ? Colors.red.shade700
+                                : Colors.blue.shade700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
                       Expanded(
                         child: Text(
                           type.name,

@@ -11,8 +11,9 @@ _$PensionTransactionTypeImpl _$$PensionTransactionTypeImplFromJson(
 ) => _$PensionTransactionTypeImpl(
   id: json['id'] as String?,
   name: json['name'] as String,
-  displayOrder: (json['displayOrder'] as num?)?.toInt() ?? 0,
-  isActive: json['isActive'] as bool? ?? true,
+  amountSign: json['amount_sign'] as String? ?? '+',
+  isActive: json['is_active'] as bool? ?? true,
+  displayOrder: (json['display_order'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$$PensionTransactionTypeImplToJson(
@@ -20,6 +21,7 @@ Map<String, dynamic> _$$PensionTransactionTypeImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
-  'displayOrder': instance.displayOrder,
-  'isActive': instance.isActive,
+  'amount_sign': instance.amountSign,
+  'is_active': instance.isActive,
+  'display_order': instance.displayOrder,
 };

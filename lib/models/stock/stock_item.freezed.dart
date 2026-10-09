@@ -27,9 +27,6 @@ mixin _$StockItem {
   String get name => throw _privateConstructorUsedError;
   String get market => throw _privateConstructorUsedError;
   String? get memo => throw _privateConstructorUsedError;
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this StockItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -52,7 +49,6 @@ abstract class $StockItemCopyWith<$Res> {
     String name,
     String market,
     String? memo,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -76,7 +72,6 @@ class _$StockItemCopyWithImpl<$Res, $Val extends StockItem>
     Object? name = null,
     Object? market = null,
     Object? memo = freezed,
-    Object? createdAt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -105,11 +100,6 @@ class _$StockItemCopyWithImpl<$Res, $Val extends StockItem>
                     ? _value.memo
                     : memo // ignore: cast_nullable_to_non_nullable
                         as String?,
-            createdAt:
-                freezed == createdAt
-                    ? _value.createdAt
-                    : createdAt // ignore: cast_nullable_to_non_nullable
-                        as DateTime?,
           )
           as $Val,
     );
@@ -131,7 +121,6 @@ abstract class _$$StockItemImplCopyWith<$Res>
     String name,
     String market,
     String? memo,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
   });
 }
 
@@ -154,7 +143,6 @@ class __$$StockItemImplCopyWithImpl<$Res>
     Object? name = null,
     Object? market = null,
     Object? memo = freezed,
-    Object? createdAt = freezed,
   }) {
     return _then(
       _$StockItemImpl(
@@ -183,11 +171,6 @@ class __$$StockItemImplCopyWithImpl<$Res>
                 ? _value.memo
                 : memo // ignore: cast_nullable_to_non_nullable
                     as String?,
-        createdAt:
-            freezed == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                    as DateTime?,
       ),
     );
   }
@@ -202,7 +185,6 @@ class _$StockItemImpl implements _StockItem {
     required this.name,
     this.market = 'KOSPI',
     this.memo,
-    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
   });
 
   factory _$StockItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -220,14 +202,10 @@ class _$StockItemImpl implements _StockItem {
   final String market;
   @override
   final String? memo;
-  @override
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  final DateTime? createdAt;
 
   @override
   String toString() {
-    return 'StockItem(id: $id, symbolCode: $symbolCode, name: $name, market: $market, memo: $memo, createdAt: $createdAt)';
+    return 'StockItem(id: $id, symbolCode: $symbolCode, name: $name, market: $market, memo: $memo)';
   }
 
   @override
@@ -240,15 +218,13 @@ class _$StockItemImpl implements _StockItem {
                 other.symbolCode == symbolCode) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.market, market) || other.market == market) &&
-            (identical(other.memo, memo) || other.memo == memo) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+            (identical(other.memo, memo) || other.memo == memo));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, symbolCode, name, market, memo, createdAt);
+      Object.hash(runtimeType, id, symbolCode, name, market, memo);
 
   /// Create a copy of StockItem
   /// with the given fields replaced by the non-null parameter values.
@@ -271,9 +247,6 @@ abstract class _StockItem implements StockItem {
     required final String name,
     final String market,
     final String? memo,
-    @JsonKey(name: 'created_at')
-    @TimestampConverter()
-    final DateTime? createdAt,
   }) = _$StockItemImpl;
 
   factory _StockItem.fromJson(Map<String, dynamic> json) =
@@ -290,10 +263,6 @@ abstract class _StockItem implements StockItem {
   String get market;
   @override
   String? get memo;
-  @override
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt;
 
   /// Create a copy of StockItem
   /// with the given fields replaced by the non-null parameter values.
