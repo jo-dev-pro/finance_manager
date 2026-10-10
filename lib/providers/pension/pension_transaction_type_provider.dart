@@ -20,7 +20,6 @@ class PensionTransactionTypeNotifier extends _$PensionTransactionTypeNotifier {
     final snapshot =
         await firestore
             .collection(pensionTransactionTypeDBName)
-            .orderBy('displayOrder', descending: false)
             .get();
 
     return snapshot.docs.map((doc) {

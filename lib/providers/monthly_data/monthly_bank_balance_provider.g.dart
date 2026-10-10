@@ -7,7 +7,7 @@ part of 'monthly_bank_balance_provider.dart';
 // **************************************************************************
 
 String _$allMonthlyBankBalancesHash() =>
-    r'1bd2fe0486896f58e7fb746259f23c730ddc3f83';
+    r'b2e7913c9b1e60df4f1e766666ba0941380c20be';
 
 /// See also [allMonthlyBankBalances].
 @ProviderFor(allMonthlyBankBalances)
@@ -28,7 +28,7 @@ final allMonthlyBankBalancesProvider =
 typedef AllMonthlyBankBalancesRef =
     AutoDisposeFutureProviderRef<List<MonthlyBankBalanceWithAccount>>;
 String _$monthlyBankBalanceNotifierHash() =>
-    r'775fab3f280625c1b3c20b2afb4b365c51a0ca3e';
+    r'6423efbf90ebe75bc2c4759dbed92eeb91b278b7';
 
 /// Copied from Dart SDK
 class _SystemHash {

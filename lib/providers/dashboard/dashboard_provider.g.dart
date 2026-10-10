@@ -7,7 +7,7 @@ part of 'dashboard_provider.dart';
 // **************************************************************************
 
 String _$availableYearMonthsHash() =>
-    r'bcac3ed664910933f10b75a70bd620dc3dd20830';
+    r'aeaab12ac59a71d756f0e7248aa25e49651f2b87';
 
 /// See also [availableYearMonths].
 @ProviderFor(availableYearMonths)

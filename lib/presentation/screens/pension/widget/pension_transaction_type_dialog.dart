@@ -18,25 +18,18 @@ class _PensionTransactionTypeFormDialogState
     extends ConsumerState<PensionTransactionTypeFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _orderController;
-  late bool _isActive;
-  late String _amountSign; // 💡 금액 부호 상태 추가 ('+' 또는 '-')
+  late String _amountSign; // 💡 금액 부호 상태 추가 ('PLUS' 또는 'MINUS')
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.type?.name ?? '');
-    _orderController = TextEditingController(
-      text: (widget.type?.displayOrder ?? 0).toString(),
-    );
-    _isActive = widget.type?.isActive ?? true;
-    _amountSign = widget.type?.amountSign ?? '+'; // 💡 초기 부호 설정 (기본값 '+')
+    _nameController = TextEditingController(text: widget.type?.typeName ?? '');
+    _amountSign = widget.type?.amountSign ?? 'PLUS'; // 💡 초기 부호 설정 (기본값 'PLUS')
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _orderController.dispose();
     super.dispose();
   }
 
@@ -75,12 +68,12 @@ class _PensionTransactionTypeFormDialogState
                 child: SegmentedButton<String>(
                   segments: const [
                     ButtonSegment<String>(
-                      value: '+',
+                      value: 'PLUS',
                       label: Text('+ (증가/입금)'),
                       icon: Icon(Icons.add, color: Colors.red),
                     ),
                     ButtonSegment<String>(
-                      value: '-',
+                      value: 'MINUS',
                       label: Text('- (감소/출금)'),
                       icon: Icon(Icons.remove, color: Colors.blue),
                     ),
@@ -95,18 +88,6 @@ class _PensionTransactionTypeFormDialogState
               ),
               const SizedBox(height: 16),
 
-              TextFormField(
-                controller: _orderController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: '표시 순서'),
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                title: const Text('사용 여부'),
-                contentPadding: EdgeInsets.zero,
-                value: _isActive,
-                onChanged: (val) => setState(() => _isActive = val),
-              ),
             ],
           ),
         ),
@@ -125,24 +106,19 @@ class _PensionTransactionTypeFormDialogState
     if (!_formKey.currentState!.validate()) return;
 
     final name = _nameController.text.trim();
-    final order = int.tryParse(_orderController.text) ?? 0;
     final notifier = ref.read(pensionTransactionTypeNotifierProvider.notifier);
 
     if (widget.type != null) {
       final updated = widget.type!.copyWith(
-        name: name,
+        typeName: name,
         amountSign: _amountSign, // 💡 변경된 금액 부호 반영
-        displayOrder: order,
-        isActive: _isActive,
       );
       await notifier.updatePensionTransactionType(updated);
     } else {
       await notifier.addPensionTransactionType(
         PensionTransactionType(
-          name: name,
+          typeName: name,
           amountSign: _amountSign, // 💡 금액 부호 전달
-          displayOrder: order,
-          isActive: _isActive,
         ),
       );
     }

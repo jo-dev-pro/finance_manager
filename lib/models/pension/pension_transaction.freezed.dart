@@ -24,19 +24,18 @@ mixin _$PensionTransaction {
   String? get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'transaction_date')
   String get transactionDate => throw _privateConstructorUsedError;
-  @JsonKey(name: 'financial_institution')
-  String? get financialInstitution => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_id')
   String get accountId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'transaction_type_id')
+  String get transactionTypeId => throw _privateConstructorUsedError;
   @JsonKey(name: 'product_id')
   String? get productId => throw _privateConstructorUsedError;
-  @JsonKey(name: 'transaction_type')
-  String get transactionType => throw _privateConstructorUsedError;
   double get amount => throw _privateConstructorUsedError;
   String? get memo => throw _privateConstructorUsedError;
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'purchase_date')
+  String? get purchaseDate => throw _privateConstructorUsedError;
+  @JsonKey(name: 'sort_order')
+  int get sortOrder => throw _privateConstructorUsedError;
 
   /// Serializes this PensionTransaction to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -58,13 +57,13 @@ abstract class $PensionTransactionCopyWith<$Res> {
   $Res call({
     String? id,
     @JsonKey(name: 'transaction_date') String transactionDate,
-    @JsonKey(name: 'financial_institution') String? financialInstitution,
     @JsonKey(name: 'account_id') String accountId,
+    @JsonKey(name: 'transaction_type_id') String transactionTypeId,
     @JsonKey(name: 'product_id') String? productId,
-    @JsonKey(name: 'transaction_type') String transactionType,
     double amount,
     String? memo,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
+    @JsonKey(name: 'purchase_date') String? purchaseDate,
+    @JsonKey(name: 'sort_order') int sortOrder,
   });
 }
 
@@ -85,13 +84,13 @@ class _$PensionTransactionCopyWithImpl<$Res, $Val extends PensionTransaction>
   $Res call({
     Object? id = freezed,
     Object? transactionDate = null,
-    Object? financialInstitution = freezed,
     Object? accountId = null,
+    Object? transactionTypeId = null,
     Object? productId = freezed,
-    Object? transactionType = null,
     Object? amount = null,
     Object? memo = freezed,
-    Object? createdAt = freezed,
+    Object? purchaseDate = freezed,
+    Object? sortOrder = null,
   }) {
     return _then(
       _value.copyWith(
@@ -105,26 +104,21 @@ class _$PensionTransactionCopyWithImpl<$Res, $Val extends PensionTransaction>
                     ? _value.transactionDate
                     : transactionDate // ignore: cast_nullable_to_non_nullable
                         as String,
-            financialInstitution:
-                freezed == financialInstitution
-                    ? _value.financialInstitution
-                    : financialInstitution // ignore: cast_nullable_to_non_nullable
-                        as String?,
             accountId:
                 null == accountId
                     ? _value.accountId
                     : accountId // ignore: cast_nullable_to_non_nullable
+                        as String,
+            transactionTypeId:
+                null == transactionTypeId
+                    ? _value.transactionTypeId
+                    : transactionTypeId // ignore: cast_nullable_to_non_nullable
                         as String,
             productId:
                 freezed == productId
                     ? _value.productId
                     : productId // ignore: cast_nullable_to_non_nullable
                         as String?,
-            transactionType:
-                null == transactionType
-                    ? _value.transactionType
-                    : transactionType // ignore: cast_nullable_to_non_nullable
-                        as String,
             amount:
                 null == amount
                     ? _value.amount
@@ -135,11 +129,16 @@ class _$PensionTransactionCopyWithImpl<$Res, $Val extends PensionTransaction>
                     ? _value.memo
                     : memo // ignore: cast_nullable_to_non_nullable
                         as String?,
-            createdAt:
-                freezed == createdAt
-                    ? _value.createdAt
-                    : createdAt // ignore: cast_nullable_to_non_nullable
-                        as DateTime?,
+            purchaseDate:
+                freezed == purchaseDate
+                    ? _value.purchaseDate
+                    : purchaseDate // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            sortOrder:
+                null == sortOrder
+                    ? _value.sortOrder
+                    : sortOrder // ignore: cast_nullable_to_non_nullable
+                        as int,
           )
           as $Val,
     );
@@ -158,13 +157,13 @@ abstract class _$$PensionTransactionImplCopyWith<$Res>
   $Res call({
     String? id,
     @JsonKey(name: 'transaction_date') String transactionDate,
-    @JsonKey(name: 'financial_institution') String? financialInstitution,
     @JsonKey(name: 'account_id') String accountId,
+    @JsonKey(name: 'transaction_type_id') String transactionTypeId,
     @JsonKey(name: 'product_id') String? productId,
-    @JsonKey(name: 'transaction_type') String transactionType,
     double amount,
     String? memo,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
+    @JsonKey(name: 'purchase_date') String? purchaseDate,
+    @JsonKey(name: 'sort_order') int sortOrder,
   });
 }
 
@@ -184,13 +183,13 @@ class __$$PensionTransactionImplCopyWithImpl<$Res>
   $Res call({
     Object? id = freezed,
     Object? transactionDate = null,
-    Object? financialInstitution = freezed,
     Object? accountId = null,
+    Object? transactionTypeId = null,
     Object? productId = freezed,
-    Object? transactionType = null,
     Object? amount = null,
     Object? memo = freezed,
-    Object? createdAt = freezed,
+    Object? purchaseDate = freezed,
+    Object? sortOrder = null,
   }) {
     return _then(
       _$PensionTransactionImpl(
@@ -204,26 +203,21 @@ class __$$PensionTransactionImplCopyWithImpl<$Res>
                 ? _value.transactionDate
                 : transactionDate // ignore: cast_nullable_to_non_nullable
                     as String,
-        financialInstitution:
-            freezed == financialInstitution
-                ? _value.financialInstitution
-                : financialInstitution // ignore: cast_nullable_to_non_nullable
-                    as String?,
         accountId:
             null == accountId
                 ? _value.accountId
                 : accountId // ignore: cast_nullable_to_non_nullable
+                    as String,
+        transactionTypeId:
+            null == transactionTypeId
+                ? _value.transactionTypeId
+                : transactionTypeId // ignore: cast_nullable_to_non_nullable
                     as String,
         productId:
             freezed == productId
                 ? _value.productId
                 : productId // ignore: cast_nullable_to_non_nullable
                     as String?,
-        transactionType:
-            null == transactionType
-                ? _value.transactionType
-                : transactionType // ignore: cast_nullable_to_non_nullable
-                    as String,
         amount:
             null == amount
                 ? _value.amount
@@ -234,11 +228,16 @@ class __$$PensionTransactionImplCopyWithImpl<$Res>
                 ? _value.memo
                 : memo // ignore: cast_nullable_to_non_nullable
                     as String?,
-        createdAt:
-            freezed == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                    as DateTime?,
+        purchaseDate:
+            freezed == purchaseDate
+                ? _value.purchaseDate
+                : purchaseDate // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        sortOrder:
+            null == sortOrder
+                ? _value.sortOrder
+                : sortOrder // ignore: cast_nullable_to_non_nullable
+                    as int,
       ),
     );
   }
@@ -250,13 +249,13 @@ class _$PensionTransactionImpl implements _PensionTransaction {
   const _$PensionTransactionImpl({
     this.id,
     @JsonKey(name: 'transaction_date') required this.transactionDate,
-    @JsonKey(name: 'financial_institution') this.financialInstitution,
     @JsonKey(name: 'account_id') required this.accountId,
+    @JsonKey(name: 'transaction_type_id') required this.transactionTypeId,
     @JsonKey(name: 'product_id') this.productId,
-    @JsonKey(name: 'transaction_type') required this.transactionType,
     this.amount = 0,
     this.memo,
-    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
+    @JsonKey(name: 'purchase_date') this.purchaseDate,
+    @JsonKey(name: 'sort_order') this.sortOrder = 0,
   });
 
   factory _$PensionTransactionImpl.fromJson(Map<String, dynamic> json) =>
@@ -268,30 +267,29 @@ class _$PensionTransactionImpl implements _PensionTransaction {
   @JsonKey(name: 'transaction_date')
   final String transactionDate;
   @override
-  @JsonKey(name: 'financial_institution')
-  final String? financialInstitution;
-  @override
   @JsonKey(name: 'account_id')
   final String accountId;
   @override
+  @JsonKey(name: 'transaction_type_id')
+  final String transactionTypeId;
+  @override
   @JsonKey(name: 'product_id')
   final String? productId;
-  @override
-  @JsonKey(name: 'transaction_type')
-  final String transactionType;
   @override
   @JsonKey()
   final double amount;
   @override
   final String? memo;
   @override
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  final DateTime? createdAt;
+  @JsonKey(name: 'purchase_date')
+  final String? purchaseDate;
+  @override
+  @JsonKey(name: 'sort_order')
+  final int sortOrder;
 
   @override
   String toString() {
-    return 'PensionTransaction(id: $id, transactionDate: $transactionDate, financialInstitution: $financialInstitution, accountId: $accountId, productId: $productId, transactionType: $transactionType, amount: $amount, memo: $memo, createdAt: $createdAt)';
+    return 'PensionTransaction(id: $id, transactionDate: $transactionDate, accountId: $accountId, transactionTypeId: $transactionTypeId, productId: $productId, amount: $amount, memo: $memo, purchaseDate: $purchaseDate, sortOrder: $sortOrder)';
   }
 
   @override
@@ -302,18 +300,18 @@ class _$PensionTransactionImpl implements _PensionTransaction {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.transactionDate, transactionDate) ||
                 other.transactionDate == transactionDate) &&
-            (identical(other.financialInstitution, financialInstitution) ||
-                other.financialInstitution == financialInstitution) &&
             (identical(other.accountId, accountId) ||
                 other.accountId == accountId) &&
+            (identical(other.transactionTypeId, transactionTypeId) ||
+                other.transactionTypeId == transactionTypeId) &&
             (identical(other.productId, productId) ||
                 other.productId == productId) &&
-            (identical(other.transactionType, transactionType) ||
-                other.transactionType == transactionType) &&
             (identical(other.amount, amount) || other.amount == amount) &&
             (identical(other.memo, memo) || other.memo == memo) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+            (identical(other.purchaseDate, purchaseDate) ||
+                other.purchaseDate == purchaseDate) &&
+            (identical(other.sortOrder, sortOrder) ||
+                other.sortOrder == sortOrder));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -322,13 +320,13 @@ class _$PensionTransactionImpl implements _PensionTransaction {
     runtimeType,
     id,
     transactionDate,
-    financialInstitution,
     accountId,
+    transactionTypeId,
     productId,
-    transactionType,
     amount,
     memo,
-    createdAt,
+    purchaseDate,
+    sortOrder,
   );
 
   /// Create a copy of PensionTransaction
@@ -352,15 +350,14 @@ abstract class _PensionTransaction implements PensionTransaction {
   const factory _PensionTransaction({
     final String? id,
     @JsonKey(name: 'transaction_date') required final String transactionDate,
-    @JsonKey(name: 'financial_institution') final String? financialInstitution,
     @JsonKey(name: 'account_id') required final String accountId,
+    @JsonKey(name: 'transaction_type_id')
+    required final String transactionTypeId,
     @JsonKey(name: 'product_id') final String? productId,
-    @JsonKey(name: 'transaction_type') required final String transactionType,
     final double amount,
     final String? memo,
-    @JsonKey(name: 'created_at')
-    @TimestampConverter()
-    final DateTime? createdAt,
+    @JsonKey(name: 'purchase_date') final String? purchaseDate,
+    @JsonKey(name: 'sort_order') final int sortOrder,
   }) = _$PensionTransactionImpl;
 
   factory _PensionTransaction.fromJson(Map<String, dynamic> json) =
@@ -372,25 +369,24 @@ abstract class _PensionTransaction implements PensionTransaction {
   @JsonKey(name: 'transaction_date')
   String get transactionDate;
   @override
-  @JsonKey(name: 'financial_institution')
-  String? get financialInstitution;
-  @override
   @JsonKey(name: 'account_id')
   String get accountId;
   @override
+  @JsonKey(name: 'transaction_type_id')
+  String get transactionTypeId;
+  @override
   @JsonKey(name: 'product_id')
   String? get productId;
-  @override
-  @JsonKey(name: 'transaction_type')
-  String get transactionType;
   @override
   double get amount;
   @override
   String? get memo;
   @override
-  @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt;
+  @JsonKey(name: 'purchase_date')
+  String? get purchaseDate;
+  @override
+  @JsonKey(name: 'sort_order')
+  int get sortOrder;
 
   /// Create a copy of PensionTransaction
   /// with the given fields replaced by the non-null parameter values.

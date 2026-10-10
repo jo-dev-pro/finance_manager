@@ -1,7 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../core/utils/date_time_converter.dart';
-
 part 'pension_product.freezed.dart';
 part 'pension_product.g.dart';
 

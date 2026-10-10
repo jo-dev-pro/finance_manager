@@ -64,7 +64,7 @@ class DashboardSummary {
   final double stockBalance;
   final double pensionBalance;
 
-  double get totalValuation => bankBalance + stockBalance + pensionBalance;
+  double get totalValuation => bankBalance + stockBalance;
   double get profitOrLoss => totalValuation - totalInvested;
   double get returnRate =>
       totalInvested > 0 ? (profitOrLoss / totalInvested) * 100 : 0.0;
@@ -170,7 +170,7 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
   final pensionBalance = pensionSnap.docs.fold<double>(
     0,
     (sum, doc) =>
-        sum + ((doc.data()['evaluation_amount'] ?? 0) as num).toDouble(),
+        sum + ((doc.data()['balance'] ?? 0) as num).toDouble(),
   );
 
   return DashboardSummary(

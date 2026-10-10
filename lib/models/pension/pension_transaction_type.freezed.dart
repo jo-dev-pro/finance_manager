@@ -24,13 +24,9 @@ PensionTransactionType _$PensionTransactionTypeFromJson(
 /// @nodoc
 mixin _$PensionTransactionType {
   String? get id => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
+  String get typeName => throw _privateConstructorUsedError;
   @JsonKey(name: 'amount_sign')
-  String get amountSign => throw _privateConstructorUsedError; // 💡 금액 부호 (+ 또는 -)
-  @JsonKey(name: 'is_active')
-  bool get isActive => throw _privateConstructorUsedError;
-  @JsonKey(name: 'display_order')
-  int get displayOrder => throw _privateConstructorUsedError;
+  String get amountSign => throw _privateConstructorUsedError;
 
   /// Serializes this PensionTransactionType to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -51,10 +47,8 @@ abstract class $PensionTransactionTypeCopyWith<$Res> {
   @useResult
   $Res call({
     String? id,
-    String name,
+    String typeName,
     @JsonKey(name: 'amount_sign') String amountSign,
-    @JsonKey(name: 'is_active') bool isActive,
-    @JsonKey(name: 'display_order') int displayOrder,
   });
 }
 
@@ -77,10 +71,8 @@ class _$PensionTransactionTypeCopyWithImpl<
   @override
   $Res call({
     Object? id = freezed,
-    Object? name = null,
+    Object? typeName = null,
     Object? amountSign = null,
-    Object? isActive = null,
-    Object? displayOrder = null,
   }) {
     return _then(
       _value.copyWith(
@@ -89,26 +81,16 @@ class _$PensionTransactionTypeCopyWithImpl<
                     ? _value.id
                     : id // ignore: cast_nullable_to_non_nullable
                         as String?,
-            name:
-                null == name
-                    ? _value.name
-                    : name // ignore: cast_nullable_to_non_nullable
+            typeName:
+                null == typeName
+                    ? _value.typeName
+                    : typeName // ignore: cast_nullable_to_non_nullable
                         as String,
             amountSign:
                 null == amountSign
                     ? _value.amountSign
                     : amountSign // ignore: cast_nullable_to_non_nullable
                         as String,
-            isActive:
-                null == isActive
-                    ? _value.isActive
-                    : isActive // ignore: cast_nullable_to_non_nullable
-                        as bool,
-            displayOrder:
-                null == displayOrder
-                    ? _value.displayOrder
-                    : displayOrder // ignore: cast_nullable_to_non_nullable
-                        as int,
           )
           as $Val,
     );
@@ -126,10 +108,8 @@ abstract class _$$PensionTransactionTypeImplCopyWith<$Res>
   @useResult
   $Res call({
     String? id,
-    String name,
+    String typeName,
     @JsonKey(name: 'amount_sign') String amountSign,
-    @JsonKey(name: 'is_active') bool isActive,
-    @JsonKey(name: 'display_order') int displayOrder,
   });
 }
 
@@ -149,10 +129,8 @@ class __$$PensionTransactionTypeImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = freezed,
-    Object? name = null,
+    Object? typeName = null,
     Object? amountSign = null,
-    Object? isActive = null,
-    Object? displayOrder = null,
   }) {
     return _then(
       _$PensionTransactionTypeImpl(
@@ -161,26 +139,16 @@ class __$$PensionTransactionTypeImplCopyWithImpl<$Res>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                     as String?,
-        name:
-            null == name
-                ? _value.name
-                : name // ignore: cast_nullable_to_non_nullable
+        typeName:
+            null == typeName
+                ? _value.typeName
+                : typeName // ignore: cast_nullable_to_non_nullable
                     as String,
         amountSign:
             null == amountSign
                 ? _value.amountSign
                 : amountSign // ignore: cast_nullable_to_non_nullable
                     as String,
-        isActive:
-            null == isActive
-                ? _value.isActive
-                : isActive // ignore: cast_nullable_to_non_nullable
-                    as bool,
-        displayOrder:
-            null == displayOrder
-                ? _value.displayOrder
-                : displayOrder // ignore: cast_nullable_to_non_nullable
-                    as int,
       ),
     );
   }
@@ -191,10 +159,8 @@ class __$$PensionTransactionTypeImplCopyWithImpl<$Res>
 class _$PensionTransactionTypeImpl implements _PensionTransactionType {
   const _$PensionTransactionTypeImpl({
     this.id,
-    required this.name,
+    required this.typeName,
     @JsonKey(name: 'amount_sign') this.amountSign = '+',
-    @JsonKey(name: 'is_active') this.isActive = true,
-    @JsonKey(name: 'display_order') this.displayOrder = 0,
   });
 
   factory _$PensionTransactionTypeImpl.fromJson(Map<String, dynamic> json) =>
@@ -203,21 +169,14 @@ class _$PensionTransactionTypeImpl implements _PensionTransactionType {
   @override
   final String? id;
   @override
-  final String name;
+  final String typeName;
   @override
   @JsonKey(name: 'amount_sign')
   final String amountSign;
-  // 💡 금액 부호 (+ 또는 -)
-  @override
-  @JsonKey(name: 'is_active')
-  final bool isActive;
-  @override
-  @JsonKey(name: 'display_order')
-  final int displayOrder;
 
   @override
   String toString() {
-    return 'PensionTransactionType(id: $id, name: $name, amountSign: $amountSign, isActive: $isActive, displayOrder: $displayOrder)';
+    return 'PensionTransactionType(id: $id, typeName: $typeName, amountSign: $amountSign)';
   }
 
   @override
@@ -226,19 +185,15 @@ class _$PensionTransactionTypeImpl implements _PensionTransactionType {
         (other.runtimeType == runtimeType &&
             other is _$PensionTransactionTypeImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.name, name) || other.name == name) &&
+            (identical(other.typeName, typeName) ||
+                other.typeName == typeName) &&
             (identical(other.amountSign, amountSign) ||
-                other.amountSign == amountSign) &&
-            (identical(other.isActive, isActive) ||
-                other.isActive == isActive) &&
-            (identical(other.displayOrder, displayOrder) ||
-                other.displayOrder == displayOrder));
+                other.amountSign == amountSign));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, name, amountSign, isActive, displayOrder);
+  int get hashCode => Object.hash(runtimeType, id, typeName, amountSign);
 
   /// Create a copy of PensionTransactionType
   /// with the given fields replaced by the non-null parameter values.
@@ -261,10 +216,8 @@ class _$PensionTransactionTypeImpl implements _PensionTransactionType {
 abstract class _PensionTransactionType implements PensionTransactionType {
   const factory _PensionTransactionType({
     final String? id,
-    required final String name,
+    required final String typeName,
     @JsonKey(name: 'amount_sign') final String amountSign,
-    @JsonKey(name: 'is_active') final bool isActive,
-    @JsonKey(name: 'display_order') final int displayOrder,
   }) = _$PensionTransactionTypeImpl;
 
   factory _PensionTransactionType.fromJson(Map<String, dynamic> json) =
@@ -273,16 +226,10 @@ abstract class _PensionTransactionType implements PensionTransactionType {
   @override
   String? get id;
   @override
-  String get name;
+  String get typeName;
   @override
   @JsonKey(name: 'amount_sign')
-  String get amountSign; // 💡 금액 부호 (+ 또는 -)
-  @override
-  @JsonKey(name: 'is_active')
-  bool get isActive;
-  @override
-  @JsonKey(name: 'display_order')
-  int get displayOrder;
+  String get amountSign;
 
   /// Create a copy of PensionTransactionType
   /// with the given fields replaced by the non-null parameter values.

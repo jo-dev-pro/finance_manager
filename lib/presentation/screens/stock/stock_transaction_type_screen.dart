@@ -33,6 +33,8 @@ class StockTransactionTypeScreen extends ConsumerWidget {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
+              final isAmountSign = item.amountSign == 'PLUS';
+              final isQuantitySign = item.quantitySign == 'PLUS';
 
               return Card(
                 elevation: 1,
@@ -48,6 +50,75 @@ class StockTransactionTypeScreen extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
+                      // 💡 금액 부호 표시 뱃지 (+ / -)
+                      Column(
+                        children: [
+                          Container(
+                            width: 95,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  isAmountSign
+                                      ? Colors.red.shade50
+                                      : Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color:
+                                    isAmountSign
+                                        ? Colors.red.shade200
+                                        : Colors.blue.shade200,
+                              ),
+                            ),
+                            child: Text(
+                              '금액 ${item.amountSign}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color:
+                                    isAmountSign
+                                        ? Colors.red.shade700
+                                        : Colors.blue.shade700,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 8),
+
+                          Container(
+                            width: 95,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  isQuantitySign
+                                      ? Colors.red.shade50
+                                      : Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color:
+                                    isQuantitySign
+                                        ? Colors.red.shade200
+                                        : Colors.blue.shade200,
+                              ),
+                            ),
+                            child: Text(
+                              '수량 ${item.quantitySign}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color:
+                                    isQuantitySign
+                                        ? Colors.red.shade700
+                                        : Colors.blue.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+
                       Expanded(
                         child: Text(
                           item.typeName,

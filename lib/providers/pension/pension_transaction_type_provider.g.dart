@@ -7,7 +7,7 @@ part of 'pension_transaction_type_provider.dart';
 // **************************************************************************
 
 String _$pensionTransactionTypeNotifierHash() =>
-    r'ebd187ad7555ad8eeeefcbc568cc62be250e1157';
+    r'832fcdeee494547b8bb3c07ac7cd783a696ebdc4';
 
 /// See also [PensionTransactionTypeNotifier].
 @ProviderFor(PensionTransactionTypeNotifier)

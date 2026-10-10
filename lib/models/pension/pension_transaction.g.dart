@@ -11,13 +11,13 @@ _$PensionTransactionImpl _$$PensionTransactionImplFromJson(
 ) => _$PensionTransactionImpl(
   id: json['id'] as String?,
   transactionDate: json['transaction_date'] as String,
-  financialInstitution: json['financial_institution'] as String?,
   accountId: json['account_id'] as String,
+  transactionTypeId: json['transaction_type_id'] as String,
   productId: json['product_id'] as String?,
-  transactionType: json['transaction_type'] as String,
   amount: (json['amount'] as num?)?.toDouble() ?? 0,
   memo: json['memo'] as String?,
-  createdAt: const TimestampConverter().fromJson(json['created_at']),
+  purchaseDate: json['purchase_date'] as String?,
+  sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$$PensionTransactionImplToJson(
@@ -25,11 +25,11 @@ Map<String, dynamic> _$$PensionTransactionImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'transaction_date': instance.transactionDate,
-  'financial_institution': instance.financialInstitution,
   'account_id': instance.accountId,
+  'transaction_type_id': instance.transactionTypeId,
   'product_id': instance.productId,
-  'transaction_type': instance.transactionType,
   'amount': instance.amount,
   'memo': instance.memo,
-  'created_at': const TimestampConverter().toJson(instance.createdAt),
+  'purchase_date': instance.purchaseDate,
+  'sort_order': instance.sortOrder,
 };

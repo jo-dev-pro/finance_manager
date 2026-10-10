@@ -6,8 +6,29 @@ part of 'monthly_pension_balance_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$monthlyPensionBalancesByAccountHash() =>
-    r'b8f3c793c2487ba83b7abf85fb9d3a6d654ff6ed';
+String _$allMonthlyPensionBalancesHash() =>
+    r'7be09a91725fdc7d8cff81240570a79370bb8f9b';
+
+/// See also [AllMonthlyPensionBalances].
+@ProviderFor(AllMonthlyPensionBalances)
+final allMonthlyPensionBalancesProvider = AutoDisposeAsyncNotifierProvider<
+  AllMonthlyPensionBalances,
+  List<MonthlyPensionBalanceWithDetail>
+>.internal(
+  AllMonthlyPensionBalances.new,
+  name: r'allMonthlyPensionBalancesProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$allMonthlyPensionBalancesHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$AllMonthlyPensionBalances =
+    AutoDisposeAsyncNotifier<List<MonthlyPensionBalanceWithDetail>>;
+String _$monthlyPensionBalanceNotifierHash() =>
+    r'1e2d13576589fe7866d0268451c46f1d8f4286c3';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,162 +50,6 @@ class _SystemHash {
     return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
   }
 }
-
-/// See also [monthlyPensionBalancesByAccount].
-@ProviderFor(monthlyPensionBalancesByAccount)
-const monthlyPensionBalancesByAccountProvider =
-    MonthlyPensionBalancesByAccountFamily();
-
-/// See also [monthlyPensionBalancesByAccount].
-class MonthlyPensionBalancesByAccountFamily
-    extends Family<AsyncValue<List<MonthlyPensionBalance>>> {
-  /// See also [monthlyPensionBalancesByAccount].
-  const MonthlyPensionBalancesByAccountFamily();
-
-  /// See also [monthlyPensionBalancesByAccount].
-  MonthlyPensionBalancesByAccountProvider call({
-    required String yearMonth,
-    required String accountId,
-  }) {
-    return MonthlyPensionBalancesByAccountProvider(
-      yearMonth: yearMonth,
-      accountId: accountId,
-    );
-  }
-
-  @override
-  MonthlyPensionBalancesByAccountProvider getProviderOverride(
-    covariant MonthlyPensionBalancesByAccountProvider provider,
-  ) {
-    return call(yearMonth: provider.yearMonth, accountId: provider.accountId);
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'monthlyPensionBalancesByAccountProvider';
-}
-
-/// See also [monthlyPensionBalancesByAccount].
-class MonthlyPensionBalancesByAccountProvider
-    extends AutoDisposeFutureProvider<List<MonthlyPensionBalance>> {
-  /// See also [monthlyPensionBalancesByAccount].
-  MonthlyPensionBalancesByAccountProvider({
-    required String yearMonth,
-    required String accountId,
-  }) : this._internal(
-         (ref) => monthlyPensionBalancesByAccount(
-           ref as MonthlyPensionBalancesByAccountRef,
-           yearMonth: yearMonth,
-           accountId: accountId,
-         ),
-         from: monthlyPensionBalancesByAccountProvider,
-         name: r'monthlyPensionBalancesByAccountProvider',
-         debugGetCreateSourceHash:
-             const bool.fromEnvironment('dart.vm.product')
-                 ? null
-                 : _$monthlyPensionBalancesByAccountHash,
-         dependencies: MonthlyPensionBalancesByAccountFamily._dependencies,
-         allTransitiveDependencies:
-             MonthlyPensionBalancesByAccountFamily._allTransitiveDependencies,
-         yearMonth: yearMonth,
-         accountId: accountId,
-       );
-
-  MonthlyPensionBalancesByAccountProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.yearMonth,
-    required this.accountId,
-  }) : super.internal();
-
-  final String yearMonth;
-  final String accountId;
-
-  @override
-  Override overrideWith(
-    FutureOr<List<MonthlyPensionBalance>> Function(
-      MonthlyPensionBalancesByAccountRef provider,
-    )
-    create,
-  ) {
-    return ProviderOverride(
-      origin: this,
-      override: MonthlyPensionBalancesByAccountProvider._internal(
-        (ref) => create(ref as MonthlyPensionBalancesByAccountRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        yearMonth: yearMonth,
-        accountId: accountId,
-      ),
-    );
-  }
-
-  @override
-  AutoDisposeFutureProviderElement<List<MonthlyPensionBalance>>
-  createElement() {
-    return _MonthlyPensionBalancesByAccountProviderElement(this);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is MonthlyPensionBalancesByAccountProvider &&
-        other.yearMonth == yearMonth &&
-        other.accountId == accountId;
-  }
-
-  @override
-  int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, yearMonth.hashCode);
-    hash = _SystemHash.combine(hash, accountId.hashCode);
-
-    return _SystemHash.finish(hash);
-  }
-}
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin MonthlyPensionBalancesByAccountRef
-    on AutoDisposeFutureProviderRef<List<MonthlyPensionBalance>> {
-  /// The parameter `yearMonth` of this provider.
-  String get yearMonth;
-
-  /// The parameter `accountId` of this provider.
-  String get accountId;
-}
-
-class _MonthlyPensionBalancesByAccountProviderElement
-    extends AutoDisposeFutureProviderElement<List<MonthlyPensionBalance>>
-    with MonthlyPensionBalancesByAccountRef {
-  _MonthlyPensionBalancesByAccountProviderElement(super.provider);
-
-  @override
-  String get yearMonth =>
-      (origin as MonthlyPensionBalancesByAccountProvider).yearMonth;
-  @override
-  String get accountId =>
-      (origin as MonthlyPensionBalancesByAccountProvider).accountId;
-}
-
-String _$monthlyPensionBalanceNotifierHash() =>
-    r'8acb8ff2ba4bccf33063f90f2121d4f58e131760';
 
 abstract class _$MonthlyPensionBalanceNotifier
     extends BuildlessAsyncNotifier<List<MonthlyPensionBalance>> {

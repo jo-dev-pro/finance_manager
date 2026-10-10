@@ -7,7 +7,7 @@ part of 'stock_transaction_type_provider.dart';
 // **************************************************************************
 
 String _$stockTransactionTypeNotifierHash() =>
-    r'395b9d57d583dfa223e8f257494ab24763f6bcad';
+    r'6f9c5599731a72327d2493c7e13e57d46623c98f';
 
 /// See also [StockTransactionTypeNotifier].
 @ProviderFor(StockTransactionTypeNotifier)

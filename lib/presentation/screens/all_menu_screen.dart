@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/bank_manthly_upload.dart';
+import '../../core/bank_monthly_upload.dart';
+import '../../core/pension_monthly_upload.dart';
+import '../../core/pension_transaction_upload.dart';
 import '../../core/router/app_router_path.dart';
 
 class AllMenuScreen extends StatelessWidget {
@@ -62,6 +64,28 @@ class AllMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const BankMonthlyUploadScreen(),
+                    ),
+                  ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.savings_outlined),
+              title: const Text('(Batch)연금 월말자료 업로드'),
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PensionMonthlyUploadScreen(),
+                    ),
+                  ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.savings_outlined),
+              title: const Text('(Batch)연금 거래자료 업로드'),
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PensionTransactionUploadScreen(),
                     ),
                   ),
             ),

@@ -23,7 +23,7 @@ StockTransactionType _$StockTransactionTypeFromJson(Map<String, dynamic> json) {
 mixin _$StockTransactionType {
   String? get id => throw _privateConstructorUsedError;
   String get typeName => throw _privateConstructorUsedError;
-  String get amountSign => throw _privateConstructorUsedError;
+  String get amountSign => throw _privateConstructorUsedError; // "+", "-"
   String get quantitySign => throw _privateConstructorUsedError;
 
   /// Serializes this StockTransactionType to a JSON map.
@@ -184,6 +184,7 @@ class _$StockTransactionTypeImpl implements _StockTransactionType {
   final String typeName;
   @override
   final String amountSign;
+  // "+", "-"
   @override
   final String quantitySign;
 
@@ -245,7 +246,7 @@ abstract class _StockTransactionType implements StockTransactionType {
   @override
   String get typeName;
   @override
-  String get amountSign;
+  String get amountSign; // "+", "-"
   @override
   String get quantitySign;
 

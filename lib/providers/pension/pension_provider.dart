@@ -31,14 +31,14 @@ Future<List<PensionAccountItem>> pensionScreenData(
       monthlyPensionBalanceNotifierProvider(lastYearMonth).future);
 
   return accounts.map((account) {
-    // account.id 와 b.accountId 매핑
+    // 💡 evaluationAmount -> balance 로 변경
     final currentTotal = currentBalances
         .where((b) => b.accountId == account.id)
-        .fold<double>(0.0, (sum, b) => sum + b.evaluationAmount);
+        .fold<double>(0.0, (sum, b) => sum + b.balance);
 
     final lastTotal = lastBalances
         .where((b) => b.accountId == account.id)
-        .fold<double>(0.0, (sum, b) => sum + b.evaluationAmount);
+        .fold<double>(0.0, (sum, b) => sum + b.balance);
 
     final diffFromLastMonth = currentTotal - lastTotal;
 
