@@ -14,6 +14,8 @@ import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../providers/pension/pension_product_provider.dart';
 import '../../../providers/pension/pension_provider.dart';
+import '../../../providers/pension/pension_transaction_provider.dart';
+import '../../../providers/pension/pension_transaction_type_provider.dart';
 import '../monthly_data/monthly_pension_balance_screen.dart';
 import 'pension_transaction_screen.dart';
 
@@ -281,7 +283,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                               ),
                               const SizedBox(height: 28),
                               const Text(
-                                '계좌별 월말 평가액 추이',
+                                '계좌별 월말 수익률 추이 (%)',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -289,16 +291,18 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '💡 차트를 좌우로 드래그하거나 확대/축소(Pinch Zoom)하여 전기간 데이터를 확인하세요.',
+                                '💡 차트를 좌우로 드래그하거나 확대/축소하여 전기간 수익률 추이를 확인하세요.',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              _buildZoomableChartSection(
+                              _buildZoomableReturnRateChartSection(
                                 accountIds,
                                 activeMonths,
+                                accounts,
+                                accountNames,
                               ),
                               const SizedBox(height: 20),
                             ],
@@ -459,7 +463,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     List<dynamic> accountNames,
   ) {
     final accountNameMap = {for (var an in accountNames) an.id: an};
-    final accountMap = {for (var a in accounts) a.id!: a}; // 💡 계좌 ID로 계좌 객체를 바로 찾기 위한 맵
+    final accountMap = {for (var a in accounts) a.id!: a};
 
     return GridView.builder(
       shrinkWrap: true,
@@ -468,7 +472,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.15,
+        childAspectRatio: 1.4, // 💡 카드 높이를 줄여서 공백을 없애고 컴팩트하게 조정
       ),
       itemCount: accountIds.length,
       itemBuilder: (context, index) {
@@ -479,12 +483,11 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
           (sum, item) => sum + item.balance,
         );
 
-        final matchedAcc = accountMap[accountId]; // 💡 맵에서 안전하게 계좌 조회
+        final matchedAcc = accountMap[accountId];
         final matchedAccountName = matchedAcc != null
             ? accountNameMap[matchedAcc.accountNameId]
             : null;
 
-        // 💡 계좌 정보에서 금융기관명을 가져오고, 없으면 기본값 처리
         final institution = matchedAcc?.financialInstitution ?? '기타';
         final accountName = matchedAccountName?.accountName ?? accountId;
 
@@ -514,7 +517,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     double totalBalance,
   ) {
     final accountNameMap = {for (var an in accountNames) an.id: an};
-    final accountMap = {for (var a in accounts) a.id!: a}; // 💡 계좌 ID로 계좌 객체를 매핑하는 맵 추가
+    final accountMap = {for (var a in accounts) a.id!: a};
 
     return Card(
       elevation: 1.5,
@@ -570,7 +573,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             ? (accountTotal / totalBalance) * 100
                             : 0.0;
 
-                    final matchedAcc = accountMap[accId]; // 💡 안전하게 계좌 조회
+                    final matchedAcc = accountMap[accId];
                     final matchedAccountName =
                         matchedAcc != null
                             ? accountNameMap[matchedAcc.accountNameId]
@@ -578,7 +581,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
 
                     final displayName =
                         matchedAccountName?.accountName ?? accId;
-                    // 💡 accountMap에서 금융기관명을 가져오도록 수정
                     final labelText =
                         '${matchedAcc?.financialInstitution ?? "기타"} - $displayName';
 
@@ -628,13 +630,43 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     );
   }
 
-  Widget _buildZoomableChartSection(
+  // 💡 계좌별 월말 '수익률' 추이 차트 섹션
+  Widget _buildZoomableReturnRateChartSection(
     List<String> accountIds,
     List<String> months,
+    List<Account> accounts,
+    List<dynamic> accountNames,
   ) {
     if (months.isEmpty) return const SizedBox.shrink();
 
-    final sortedMonths = months.reversed.toList();
+    final sortedMonths = months.reversed.toList(); // 과거 -> 최신 순 정렬
+    final accountMap = {for (var a in accounts) a.id!: a};
+    final accountNameMap = {for (var an in accountNames) an.id: an};
+
+    // 거래내역을 통해 계좌별 현재 순 원금 집계 (또는 월별 추이 계산 기반 마련)
+    final transactionsAsync = ref.watch(pensionTransactionNotifierProvider);
+    final typesAsync = ref.watch(pensionTransactionTypeNotifierProvider);
+    final transactions = transactionsAsync.value ?? [];
+    final types = typesAsync.value ?? [];
+    final signMap = {for (var t in types) t.id ?? '': t.amountSign};
+
+    // 계좌별 총 투입 원금 계산 (매수/입금 - 연금지급/인출)
+    final Map<String, double> accountPrincipals = {};
+    for (var t in transactions) {
+      if (t.accountId.isNotEmpty) {
+        final sign = signMap[t.transactionTypeId] ?? 'PLUS';
+        final signedAmount = (sign == 'MINUS') ? -t.amount : t.amount;
+        accountPrincipals.update(
+          t.accountId,
+          (val) => val + signedAmount,
+          ifAbsent: () => signedAmount,
+        );
+      }
+    }
+
+    // 전체 월별 평가액 데이터 가져오기
+    final allBalancesAsync = ref.watch(allMonthlyPensionBalancesProvider);
+    final allBalances = allBalancesAsync.value ?? [];
 
     return Card(
       elevation: 1.5,
@@ -642,23 +674,49 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
         child: SizedBox(
-          height: 280,
+          height: 300,
           child: ClipRect(
             child: InteractiveViewer(
               transformationController: _transformationController,
-              boundaryMargin: const EdgeInsets.all(20),
+              boundaryMargin: const EdgeInsets.symmetric(horizontal: 40),
               minScale: 1.0,
               maxScale: 4.0,
               panEnabled: true,
               scaleEnabled: true,
               child: Container(
+                // 💡 월 간격을 넉넉히 주어 글씨가 겹치지 않도록 너비 확장
                 width: max(
                   MediaQuery.of(context).size.width - 64,
-                  sortedMonths.length * 40.0,
+                  sortedMonths.length * 60.0,
                 ),
-                padding: const EdgeInsets.only(right: 20, top: 10),
+                padding: const EdgeInsets.only(right: 30, top: 10, left: 10),
                 child: LineChart(
                   LineChartData(
+                    // 💡 터치 시 툴팁 설정 (배경색과 가독성 개선, 화면 밖 넘침 방지)
+                    lineTouchData: LineTouchData(
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (_) => Colors.grey.shade900,
+                        tooltipRoundedRadius: 8,
+                        tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            final accId = accountIds[spot.barIndex];
+                            final acc = accountMap[accId];
+                            final accNameObj = acc != null ? accountNameMap[acc.accountNameId] : null;
+                            final name = accNameObj?.accountName ?? '계좌';
+                            
+                            return LineTooltipItem(
+                              '$name\n수익률: ${spot.y.toStringAsFixed(1)}%',
+                              const TextStyle(
+                                color: Colors.white, // 💡 밝은 흰색 텍스트로 가독성 확보
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
                     gridData: const FlGridData(
                       show: true,
                       drawVerticalLine: false,
@@ -670,6 +728,18 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                       rightTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false),
                       ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 45,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              '${value.toInt()}%',
+                              style: const TextStyle(fontSize: 10, color: Colors.grey),
+                            );
+                          },
+                        ),
+                      ),
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
@@ -679,12 +749,10 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             final int index = value.toInt();
                             if (index >= 0 && index < sortedMonths.length) {
                               final ym = sortedMonths[index];
-                              final display =
-                                  ym.length >= 7 ? ym.substring(2) : ym;
                               return Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
                                 child: Text(
-                                  display,
+                                  ym, // YYYY-MM 형태로 명확히 표시
                                   style: const TextStyle(fontSize: 10),
                                 ),
                               );
@@ -701,21 +769,36 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                     lineBarsData:
                         accountIds.asMap().entries.map((entry) {
                           final colorIdx = entry.key;
+                          final accId = entry.value;
+                          final principal = accountPrincipals[accId] ?? 1.0; // 0 나누기 방지
+
+                          // 해당 계좌의 월별 수익률 스팟 계산
+                          final spots = sortedMonths.asMap().entries.map((mEntry) {
+                            final idx = mEntry.key;
+                            final ym = mEntry.value;
+
+                            // 해당 월의 해당 계좌 평가액 총합 계산
+                            final monthItems = allBalances.where(
+                              (b) => b.balanceItem.yearMonth == ym && b.balanceItem.accountId == accId,
+                            );
+                            final monthBalance = monthItems.fold<double>(
+                              0.0,
+                              (sum, item) => sum + item.balanceItem.balance,
+                            );
+
+                            // 수익률(%) 산출: ((평가액 - 원금) / 원금) * 100
+                            final profit = monthBalance - principal;
+                            final returnRate = principal > 0 ? (profit / principal) * 100 : 0.0;
+
+                            return FlSpot(idx.toDouble(), returnRate);
+                          }).toList();
+
                           return LineChartBarData(
-                            spots:
-                                sortedMonths.asMap().entries.map((mEntry) {
-                                  final idx = mEntry.key;
-                                  final baseVal = (colorIdx + 1) * 1000000.0;
-                                  final randomOffset = (idx * 50000);
-                                  return FlSpot(
-                                    idx.toDouble(),
-                                    baseVal + randomOffset,
-                                  );
-                                }).toList(),
+                            spots: spots,
                             isCurved: true,
                             color: _chartColors[colorIdx % _chartColors.length],
                             barWidth: 2.5,
-                            dotData: const FlDotData(show: false),
+                            dotData: const FlDotData(show: true),
                           );
                         }).toList(),
                   ),
@@ -734,9 +817,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     required String accountName,
     required List<MonthlyPensionBalance> products,
   }) {
-    // 상품 이름을 조회하기 위한 프로바이더 데이터 가져오기
-    // (바텀 시트 내부에서 ref를 쓰기 위해 Consumer 위젯이나 부모의 데이터를 활용)
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -749,7 +829,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
             final productsAsync = ref.watch(pensionProductNotifierProvider);
             final productMap = productsAsync.maybeWhen(
               data: (list) => {for (var p in list) p.id!: p.productName},
-              orElse: () => <String, String>{}, // 로딩 중이거나 에러일 때 빈 맵 반환
+              orElse: () => <String, String>{},
             );
 
             return DraggableScrollableSheet(
@@ -794,22 +874,20 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                           separatorBuilder: (_, __) => const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final balanceItem = products[index];
-                            // 상품 ID로 실제 상품명 조회 (없으면 '기타 상품')
                             final productName =
                                 productMap[balanceItem.productId] ?? '연금 상품';
 
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               title: Text(
-                                productName, // 💡 계좌명 대신 실제 상품명 표시
+                                productName,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15,
                                 ),
                               ),
                               trailing: Text(
-                                balanceItem.balance
-                                    .toWon(), // 💡 필드명 확인 (balance 또는 evaluationAmount)
+                                balanceItem.balance.toWon(),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
@@ -831,6 +909,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
   }
 }
 
+// 💡 공백을 줄이고 깔끔하게 개선된 계좌 카드 위젯
 class _AccountCard extends StatelessWidget {
   final String institution;
   final String accountName;
@@ -849,33 +928,35 @@ class _AccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 1.5,
+      elevation: 1.0,
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // 상단: 금융기관 및 계좌명
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     institution,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Colors.grey[600],
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     accountName,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
@@ -883,29 +964,30 @@ class _AccountCard extends StatelessWidget {
                   ),
                 ],
               ),
+              // 하단: 총 평가액 및 보유상품 개수
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     totalBalance.toWon(),
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.indigo,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        '기록 $itemCount개',
+                        '보유상품 $itemCount개', // 💡 기록 -> 보유상품으로 변경
                         style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                       ),
                       const Icon(
                         Icons.chevron_right,
-                        size: 16,
+                        size: 14,
                         color: Colors.grey,
                       ),
                     ],
