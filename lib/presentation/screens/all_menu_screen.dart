@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/bank_monthly_upload.dart';
-import '../../core/pension_monthly_upload.dart';
-import '../../core/pension_transaction_upload.dart';
+import '../../core/raw_upload/bank_monthly_upload.dart';
+import '../../core/raw_upload/pension_monthly_upload.dart';
+import '../../core/raw_upload/pension_transaction_upload.dart';
 import '../../core/router/app_router_path.dart';
 
 class AllMenuScreen extends StatelessWidget {

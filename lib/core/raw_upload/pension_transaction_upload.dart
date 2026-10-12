@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spreadsheet_decoder/spreadsheet_decoder.dart';
 
-import '../models/pension/pension_transaction.dart';
-import '../providers/pension/pension_transaction_provider.dart';
+import '../../models/pension/pension_transaction.dart';
+import '../../providers/pension/pension_transaction_provider.dart';
 
 class PensionTransactionUploadScreen extends ConsumerStatefulWidget {
   const PensionTransactionUploadScreen({super.key});
