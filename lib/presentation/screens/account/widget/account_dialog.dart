@@ -22,6 +22,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
   late final TextEditingController _numberController;
 
   String? _selectedAccountNameId;
+  String? _selectedAccountName;
   late String _selectedType;
 
   XFile? _selectedImage;
@@ -42,6 +43,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
     );
 
     _selectedAccountNameId = widget.initialAccount?.accountNameId;
+    _selectedAccountName = widget.initialAccount?.accountName;
 
     _selectedType = widget.initialAccount?.accountType ?? '은행';
     if (!_accountTypes.contains(_selectedType)) {
@@ -79,6 +81,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
           financialInstitution: institution,
           accountType: _selectedType,
           accountNameId: _selectedAccountNameId!,
+          accountName: _selectedAccountName!,
           accountNumber: number.isEmpty ? null : number,
         );
         ref
@@ -89,6 +92,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
           financialInstitution: institution,
           accountType: _selectedType,
           accountNameId: _selectedAccountNameId!,
+          accountName: _selectedAccountName!,
           accountNumber: number.isEmpty ? null : number,
         );
         ref

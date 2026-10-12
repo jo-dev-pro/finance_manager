@@ -10,6 +10,7 @@ class Account with _$Account {
     @JsonKey(name: 'financial_institution')
     required String financialInstitution,
     @JsonKey(name: 'account_name_id') String? accountNameId,
+    @JsonKey(name: 'account_name') String? accountName,
     @JsonKey(name: 'account_type') required String accountType,
     @JsonKey(name: 'account_number') String? accountNumber, // 💡 계좌번호 필드 추가
     @JsonKey(name: 'logo_url') String? logoUrl,

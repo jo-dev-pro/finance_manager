@@ -7,7 +7,7 @@ part of 'monthly_pension_balance_provider.dart';
 // **************************************************************************
 
 String _$allMonthlyPensionBalancesHash() =>
-    r'7be09a91725fdc7d8cff81240570a79370bb8f9b';
+    r'0209c9a1ff6d518dc9c221e3f0b7688c56b68c8d';
 
 /// See also [AllMonthlyPensionBalances].
 @ProviderFor(AllMonthlyPensionBalances)

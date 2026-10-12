@@ -26,6 +26,8 @@ mixin _$Account {
   String get financialInstitution => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_name_id')
   String? get accountNameId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_name')
+  String? get accountName => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_type')
   String get accountType => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_number')
@@ -52,6 +54,7 @@ abstract class $AccountCopyWith<$Res> {
     String? id,
     @JsonKey(name: 'financial_institution') String financialInstitution,
     @JsonKey(name: 'account_name_id') String? accountNameId,
+    @JsonKey(name: 'account_name') String? accountName,
     @JsonKey(name: 'account_type') String accountType,
     @JsonKey(name: 'account_number') String? accountNumber,
     @JsonKey(name: 'logo_url') String? logoUrl,
@@ -77,6 +80,7 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
     Object? id = freezed,
     Object? financialInstitution = null,
     Object? accountNameId = freezed,
+    Object? accountName = freezed,
     Object? accountType = null,
     Object? accountNumber = freezed,
     Object? logoUrl = freezed,
@@ -98,6 +102,11 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
                 freezed == accountNameId
                     ? _value.accountNameId
                     : accountNameId // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            accountName:
+                freezed == accountName
+                    ? _value.accountName
+                    : accountName // ignore: cast_nullable_to_non_nullable
                         as String?,
             accountType:
                 null == accountType
@@ -137,6 +146,7 @@ abstract class _$$AccountImplCopyWith<$Res> implements $AccountCopyWith<$Res> {
     String? id,
     @JsonKey(name: 'financial_institution') String financialInstitution,
     @JsonKey(name: 'account_name_id') String? accountNameId,
+    @JsonKey(name: 'account_name') String? accountName,
     @JsonKey(name: 'account_type') String accountType,
     @JsonKey(name: 'account_number') String? accountNumber,
     @JsonKey(name: 'logo_url') String? logoUrl,
@@ -161,6 +171,7 @@ class __$$AccountImplCopyWithImpl<$Res>
     Object? id = freezed,
     Object? financialInstitution = null,
     Object? accountNameId = freezed,
+    Object? accountName = freezed,
     Object? accountType = null,
     Object? accountNumber = freezed,
     Object? logoUrl = freezed,
@@ -182,6 +193,11 @@ class __$$AccountImplCopyWithImpl<$Res>
             freezed == accountNameId
                 ? _value.accountNameId
                 : accountNameId // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        accountName:
+            freezed == accountName
+                ? _value.accountName
+                : accountName // ignore: cast_nullable_to_non_nullable
                     as String?,
         accountType:
             null == accountType
@@ -215,6 +231,7 @@ class _$AccountImpl implements _Account {
     this.id,
     @JsonKey(name: 'financial_institution') required this.financialInstitution,
     @JsonKey(name: 'account_name_id') this.accountNameId,
+    @JsonKey(name: 'account_name') this.accountName,
     @JsonKey(name: 'account_type') required this.accountType,
     @JsonKey(name: 'account_number') this.accountNumber,
     @JsonKey(name: 'logo_url') this.logoUrl,
@@ -233,6 +250,9 @@ class _$AccountImpl implements _Account {
   @JsonKey(name: 'account_name_id')
   final String? accountNameId;
   @override
+  @JsonKey(name: 'account_name')
+  final String? accountName;
+  @override
   @JsonKey(name: 'account_type')
   final String accountType;
   @override
@@ -248,7 +268,7 @@ class _$AccountImpl implements _Account {
 
   @override
   String toString() {
-    return 'Account(id: $id, financialInstitution: $financialInstitution, accountNameId: $accountNameId, accountType: $accountType, accountNumber: $accountNumber, logoUrl: $logoUrl, status: $status)';
+    return 'Account(id: $id, financialInstitution: $financialInstitution, accountNameId: $accountNameId, accountName: $accountName, accountType: $accountType, accountNumber: $accountNumber, logoUrl: $logoUrl, status: $status)';
   }
 
   @override
@@ -261,6 +281,8 @@ class _$AccountImpl implements _Account {
                 other.financialInstitution == financialInstitution) &&
             (identical(other.accountNameId, accountNameId) ||
                 other.accountNameId == accountNameId) &&
+            (identical(other.accountName, accountName) ||
+                other.accountName == accountName) &&
             (identical(other.accountType, accountType) ||
                 other.accountType == accountType) &&
             (identical(other.accountNumber, accountNumber) ||
@@ -276,6 +298,7 @@ class _$AccountImpl implements _Account {
     id,
     financialInstitution,
     accountNameId,
+    accountName,
     accountType,
     accountNumber,
     logoUrl,
@@ -302,6 +325,7 @@ abstract class _Account implements Account {
     @JsonKey(name: 'financial_institution')
     required final String financialInstitution,
     @JsonKey(name: 'account_name_id') final String? accountNameId,
+    @JsonKey(name: 'account_name') final String? accountName,
     @JsonKey(name: 'account_type') required final String accountType,
     @JsonKey(name: 'account_number') final String? accountNumber,
     @JsonKey(name: 'logo_url') final String? logoUrl,
@@ -318,6 +342,9 @@ abstract class _Account implements Account {
   @override
   @JsonKey(name: 'account_name_id')
   String? get accountNameId;
+  @override
+  @JsonKey(name: 'account_name')
+  String? get accountName;
   @override
   @JsonKey(name: 'account_type')
   String get accountType;

@@ -26,7 +26,7 @@ final availableYearMonthsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AvailableYearMonthsRef = AutoDisposeFutureProviderRef<List<String>>;
-String _$dashboardSummaryHash() => r'9b27ab8c2f7f8065e5dfbe6e3f1948f6cbd8eec2';
+String _$dashboardSummaryHash() => r'089f246f2df58db861fccfe6bbdf11583e113049';
 
 /// See also [dashboardSummary].
 @ProviderFor(dashboardSummary)
