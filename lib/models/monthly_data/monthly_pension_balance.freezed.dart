@@ -29,8 +29,11 @@ mixin _$MonthlyPensionBalance {
   @JsonKey(name: 'account_id')
   String get accountId => throw _privateConstructorUsedError;
   @JsonKey(name: 'product_id')
-  String get productId => throw _privateConstructorUsedError; // 💡 연금상품 ID 추가
-  double get balance => throw _privateConstructorUsedError;
+  String get productId => throw _privateConstructorUsedError;
+  double get balance => throw _privateConstructorUsedError; // 월말 평가액
+  double get principal => throw _privateConstructorUsedError; // 투자 원금
+  @JsonKey(name: 'purchase_date')
+  String? get purchaseDate => throw _privateConstructorUsedError;
 
   /// Serializes this MonthlyPensionBalance to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -55,6 +58,8 @@ abstract class $MonthlyPensionBalanceCopyWith<$Res> {
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_id') String productId,
     double balance,
+    double principal,
+    @JsonKey(name: 'purchase_date') String? purchaseDate,
   });
 }
 
@@ -81,6 +86,8 @@ class _$MonthlyPensionBalanceCopyWithImpl<
     Object? accountId = null,
     Object? productId = null,
     Object? balance = null,
+    Object? principal = null,
+    Object? purchaseDate = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -109,6 +116,16 @@ class _$MonthlyPensionBalanceCopyWithImpl<
                     ? _value.balance
                     : balance // ignore: cast_nullable_to_non_nullable
                         as double,
+            principal:
+                null == principal
+                    ? _value.principal
+                    : principal // ignore: cast_nullable_to_non_nullable
+                        as double,
+            purchaseDate:
+                freezed == purchaseDate
+                    ? _value.purchaseDate
+                    : purchaseDate // ignore: cast_nullable_to_non_nullable
+                        as String?,
           )
           as $Val,
     );
@@ -130,6 +147,8 @@ abstract class _$$MonthlyPensionBalanceImplCopyWith<$Res>
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_id') String productId,
     double balance,
+    double principal,
+    @JsonKey(name: 'purchase_date') String? purchaseDate,
   });
 }
 
@@ -153,6 +172,8 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
     Object? accountId = null,
     Object? productId = null,
     Object? balance = null,
+    Object? principal = null,
+    Object? purchaseDate = freezed,
   }) {
     return _then(
       _$MonthlyPensionBalanceImpl(
@@ -181,6 +202,16 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
                 ? _value.balance
                 : balance // ignore: cast_nullable_to_non_nullable
                     as double,
+        principal:
+            null == principal
+                ? _value.principal
+                : principal // ignore: cast_nullable_to_non_nullable
+                    as double,
+        purchaseDate:
+            freezed == purchaseDate
+                ? _value.purchaseDate
+                : purchaseDate // ignore: cast_nullable_to_non_nullable
+                    as String?,
       ),
     );
   }
@@ -188,14 +219,16 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
+class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
   const _$MonthlyPensionBalanceImpl({
     this.id,
     @JsonKey(name: 'year_month') required this.yearMonth,
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'product_id') required this.productId,
     this.balance = 0.0,
-  });
+    this.principal = 0.0,
+    @JsonKey(name: 'purchase_date') this.purchaseDate,
+  }) : super._();
 
   factory _$MonthlyPensionBalanceImpl.fromJson(Map<String, dynamic> json) =>
       _$$MonthlyPensionBalanceImplFromJson(json);
@@ -211,14 +244,21 @@ class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
   @override
   @JsonKey(name: 'product_id')
   final String productId;
-  // 💡 연금상품 ID 추가
   @override
   @JsonKey()
   final double balance;
+  // 월말 평가액
+  @override
+  @JsonKey()
+  final double principal;
+  // 투자 원금
+  @override
+  @JsonKey(name: 'purchase_date')
+  final String? purchaseDate;
 
   @override
   String toString() {
-    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, productId: $productId, balance: $balance)';
+    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, productId: $productId, balance: $balance, principal: $principal, purchaseDate: $purchaseDate)';
   }
 
   @override
@@ -233,13 +273,25 @@ class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
                 other.accountId == accountId) &&
             (identical(other.productId, productId) ||
                 other.productId == productId) &&
-            (identical(other.balance, balance) || other.balance == balance));
+            (identical(other.balance, balance) || other.balance == balance) &&
+            (identical(other.principal, principal) ||
+                other.principal == principal) &&
+            (identical(other.purchaseDate, purchaseDate) ||
+                other.purchaseDate == purchaseDate));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, yearMonth, accountId, productId, balance);
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    yearMonth,
+    accountId,
+    productId,
+    balance,
+    principal,
+    purchaseDate,
+  );
 
   /// Create a copy of MonthlyPensionBalance
   /// with the given fields replaced by the non-null parameter values.
@@ -259,14 +311,17 @@ class _$MonthlyPensionBalanceImpl implements _MonthlyPensionBalance {
   }
 }
 
-abstract class _MonthlyPensionBalance implements MonthlyPensionBalance {
+abstract class _MonthlyPensionBalance extends MonthlyPensionBalance {
   const factory _MonthlyPensionBalance({
     final String? id,
     @JsonKey(name: 'year_month') required final String yearMonth,
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'product_id') required final String productId,
     final double balance,
+    final double principal,
+    @JsonKey(name: 'purchase_date') final String? purchaseDate,
   }) = _$MonthlyPensionBalanceImpl;
+  const _MonthlyPensionBalance._() : super._();
 
   factory _MonthlyPensionBalance.fromJson(Map<String, dynamic> json) =
       _$MonthlyPensionBalanceImpl.fromJson;
@@ -281,9 +336,14 @@ abstract class _MonthlyPensionBalance implements MonthlyPensionBalance {
   String get accountId;
   @override
   @JsonKey(name: 'product_id')
-  String get productId; // 💡 연금상품 ID 추가
+  String get productId;
   @override
-  double get balance;
+  double get balance; // 월말 평가액
+  @override
+  double get principal; // 투자 원금
+  @override
+  @JsonKey(name: 'purchase_date')
+  String? get purchaseDate;
 
   /// Create a copy of MonthlyPensionBalance
   /// with the given fields replaced by the non-null parameter values.

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -151,5 +152,26 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
     await firestore.collection(monthlyPensionBalanceDBName).doc(id).delete();
     ref.invalidateSelf();
     ref.invalidate(allMonthlyPensionBalancesProvider);
+  }
+
+  // 💡 여러 개의 월말 연금 데이터를 한 번에 묶어서(Batch) 저장하는 메서드
+  Future<void> saveBatchBalances(List<MonthlyPensionBalance> items) async {
+    final firestore = ref.read(firestoreProvider);
+    final batch = firestore.batch();
+    
+    // 컬렉션 이름 상수는 프로젝트에 맞게 지정되어 있는 것을 사용하시면 됩니다 (예: monthlyPensionBalanceDBName)
+    final collectionRef = firestore.collection(monthlyPensionBalanceDBName);
+
+    for (var item in items) {
+      // 기준월_계좌ID_상품ID 조합으로 문서 ID를 고정하여 덮어쓰기 및 관리가 용이하도록 설정
+      final docId = '${item.yearMonth}_${item.accountId}_${item.productId}';
+      final docRef = collectionRef.doc(docId);
+
+      final data = item.toJson()..remove('id');
+      batch.set(docRef, data, SetOptions(merge: true));
+    }
+
+    await batch.commit();
+    ref.invalidateSelf(); // 상태 갱신
   }
 }

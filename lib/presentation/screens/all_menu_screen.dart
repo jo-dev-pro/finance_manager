@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/raw_upload/bank_monthly_upload.dart';
 import '../../core/raw_upload/pension_monthly_upload.dart';
-import '../../core/raw_upload/pension_transaction_upload.dart';
 import '../../core/router/app_router_path.dart';
 
 class AllMenuScreen extends StatelessWidget {
@@ -48,13 +47,13 @@ class AllMenuScreen extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.savings_outlined),
+              title: const Text('연금 계좌별 상품 관리'),
+              onTap: () => context.push(AppRoutePath.pensionAccountProduct),
+            ),
+            ListTile(
+              leading: const Icon(Icons.savings_outlined),
               title: const Text('연금 상품명 관리'),
               onTap: () => context.push(AppRoutePath.pensionProduct),
-            ),
-                        ListTile(
-              leading: const Icon(Icons.swap_horiz_outlined),
-              title: const Text('연금 거래구분 관리'),
-              onTap: () => context.push(AppRoutePath.pensionTransactionType),
             ),
             ListTile(
               leading: const Icon(Icons.savings_outlined),
@@ -75,17 +74,6 @@ class AllMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const PensionMonthlyUploadScreen(),
-                    ),
-                  ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.savings_outlined),
-              title: const Text('(Batch)연금 거래자료 업로드'),
-              onTap:
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PensionTransactionUploadScreen(),
                     ),
                   ),
             ),

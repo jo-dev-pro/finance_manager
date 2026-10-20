@@ -1,8 +1,7 @@
 final String accountDBName = 'account';
 final String accountNameDBName = 'account_name';
 final String pensionProductDBName = 'pension_product';
-final String pensionTransactionDBName = 'pension_transaction';
-final String pensionTransactionTypeDBName = 'pension_transaction_type';
+final String pensionAccountProductDBName = 'pension_account_product';
 final String investmentDBName = 'investment';
 final String monthlyPensionBalanceDBName = 'monthly_pension_balance';
 final String monthlyBankBalanceDBName = 'monthly_bank_balance';

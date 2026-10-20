@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,10 +6,9 @@ import '../../../../core/utils/number_formatter.dart';
 import '../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
-import '../../../../providers/pension/pension_product_provider.dart';
-import '../../../../providers/pension/pension_transaction_provider.dart';
-import '../../../../providers/pension/pension_transaction_type_provider.dart';
 import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
+import '../../../../providers/pension/pension_account_product_provider.dart';
+import '../../../../providers/pension/pension_product_provider.dart';
 
 class MonthlyPensionDialog extends ConsumerStatefulWidget {
   final String yearMonth;
@@ -18,13 +16,16 @@ class MonthlyPensionDialog extends ConsumerStatefulWidget {
   const MonthlyPensionDialog({super.key, required this.yearMonth});
 
   @override
-  ConsumerState<MonthlyPensionDialog> createState() => _MonthlyPensionDialogState();
+  ConsumerState<MonthlyPensionDialog> createState() =>
+      _MonthlyPensionDialogState();
 }
 
 class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
   late String _selectedYearMonth;
-  final Map<String, TextEditingController> _controllers = {};
-  final Map<String, String> _itemAccountMap = {};
+  String? _selectedAccountId;
+
+  // 상품별 평가액 컨트롤러 (Key: "${accountId}_${productId}")
+  final Map<String, TextEditingController> _balanceControllers = {};
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -35,24 +36,27 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
 
   @override
   void dispose() {
-    for (var controller in _controllers.values) {
-      controller.dispose();
+    for (var c in _balanceControllers.values) {
+      c.dispose();
     }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final productsAsync = ref.watch(pensionProductNotifierProvider);
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final transactionsAsync = ref.watch(pensionTransactionNotifierProvider);
-    final typesAsync = ref.watch(pensionTransactionTypeNotifierProvider);
+    final accountProductsAsync =
+        ref.watch(pensionAccountProductNotifierProvider);
+    final productsAsync = ref.watch(pensionProductNotifierProvider);
+    final existingBalancesAsync = ref.watch(
+      monthlyPensionBalanceNotifierProvider(_selectedYearMonth),
+    );
 
     return AlertDialog(
-      title: const Text('연금 월말 평가액 일괄 입력'),
+      title: const Text('연금 월말 평가액 입력'),
       content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.8,
+        width: MediaQuery.of(context).size.width * 0.85,
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -60,181 +64,208 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 1. 기준월 입력창
                 TextFormField(
                   initialValue: _selectedYearMonth,
                   decoration: const InputDecoration(
-                    labelText: '기준월 (YYYY-MM)',
+                    labelText: '기준월',
+                    hintText: 'YYYY-MM',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.calendar_today),
-                  ),
-                  onChanged: (val) {
-                    _selectedYearMonth = val.trim();
-                  },
-                  validator: (val) {
-                    if (val == null || val.isEmpty) {
-                      return '기준월을 입력해주세요.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  '계좌별 보유 상품 평가액 입력',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 12),
-                productsAsync.when(
-                  loading: () => const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: CircularProgressIndicator(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
                     ),
                   ),
-                  error: (err, stack) => Text('상품 목록 불러오기 실패: $err'),
-                  data: (products) {
-                    return accountsAsync.when(
-                      loading: () => const LinearProgressIndicator(),
-                      error: (err, _) => Text('계좌 로딩 실패: $err'),
-                      data: (accounts) {
-                        return transactionsAsync.when(
-                          loading: () => const LinearProgressIndicator(),
-                          error: (err, _) => Text('거래내역 로딩 실패: $err'),
-                          data: (transactions) {
-                            final types = typesAsync.value ?? [];
-                            final accountNames = accountNamesAsync.value ?? [];
-                            
-                            // 거래구분별 sign 맵 생성 (PLUS / MINUS)
-                            final signMap = {for (var t in types) t.id ?? '': t.amountSign};
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedYearMonth = val.trim();
+                    });
+                  },
+                  validator: (val) =>
+                      val == null || val.isEmpty ? '기준월을 입력해주세요.' : null,
+                ),
+                const SizedBox(height: 16),
 
-                            // '활동' 상태인 연금 계좌 ID 추출
-                            final activePensionAccountIds = accounts
-                                .where((a) => a.accountType.toUpperCase() == '연금' && a.status == '활동')
-                                .map((a) => a.id!)
-                                .toSet();
+                // 2. 계좌 및 보유 상품 목록
+                accountsAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (err, _) => Text('계좌 로딩 실패: $err'),
+                  data: (accounts) {
+                    final accountNames = accountNamesAsync.value ?? [];
+                    final pensionAccounts = accounts
+                        .where((a) =>
+                            a.accountType.toUpperCase() == '연금' &&
+                            a.status == '활동')
+                        .toList();
 
-                            final accountMap = {for (var a in accounts) a.id!: a};
-                            final accountNameMap = {for (var an in accountNames) an.id: an};
-                            final productMap = {for (var p in products) p.id!: p};
+                    if (pensionAccounts.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Text('활동 중인 연금 계좌가 없습니다.'),
+                      );
+                    }
 
-                            // 1. 계좌별로 상품별 순 원금 및 보유 여부 집계
-                            // Map<accountId, Map<productId, principal>>
-                            final Map<String, Map<String, double>> accountProductPrincipals = {};
+                    final accountNameMap = {
+                      for (var an in accountNames) an.id: an
+                    };
 
-                            for (var t in transactions) {
-                              if (activePensionAccountIds.contains(t.accountId) &&
-                                  t.productId != null &&
-                                  t.productId!.isNotEmpty) {
-                                final sign = signMap[t.transactionTypeId] ?? 'PLUS';
-                                final signedAmount = (sign == 'MINUS') ? -t.amount : t.amount;
+                    if (_selectedAccountId == null ||
+                        !pensionAccounts
+                            .any((a) => a.id == _selectedAccountId)) {
+                      _selectedAccountId = pensionAccounts.first.id;
+                    }
 
-                                accountProductPrincipals
-                                    .putIfAbsent(t.accountId, () => {})
-                                    .update(t.productId!, (val) => val + signedAmount, ifAbsent: () => signedAmount);
-                              }
-                            }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 계좌 선택 드롭다운
+                        DropdownButtonFormField<String>(
+                          initialValue: _selectedAccountId,
+                          decoration: const InputDecoration(
+                            labelText: '입력할 계좌 선택',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                          ),
+                          items: pensionAccounts.map((acc) {
+                            final institution = acc.financialInstitution;
+                            final nameObj = accountNameMap[acc.accountNameId];
+                            final nameDisplay = nameObj?.accountName ?? '계좌';
+                            return DropdownMenuItem(
+                              value: acc.id,
+                              child: Text('$institution - $nameDisplay'),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedAccountId = val;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 20),
 
-                            if (accountProductPrincipals.isEmpty) {
+                        // 선택된 계좌의 등록된 상품들만 조회하여 렌더링
+                        accountProductsAsync.when(
+                          loading: () => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                          error: (err, _) => Text('보유 상품 로딩 실패: $err'),
+                          data: (accountProducts) {
+                            final products = productsAsync.value ?? [];
+                            final productMap = {
+                              for (var p in products) p.id!: p.productName
+                            };
+
+                            // 현재 선택된 계좌에 매칭된 보유 상품만 필터링
+                            final matchedHoldingProducts = accountProducts
+                                .where((ap) => ap.accountId == _selectedAccountId)
+                                .toList();
+
+                            if (matchedHoldingProducts.isEmpty) {
                               return const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Text('입력 가능한 활동 중인 연금 보유 상품이 없습니다.'),
+                                child: Text('해당 계좌에 매칭된 연금 상품이 없습니다.'),
                               );
                             }
 
-                            // 2. 계좌 단위로 그룹화하여 UI 렌더링 구성
+                            final existingBalances =
+                                existingBalancesAsync.value ?? [];
+                            final balanceMap = {
+                              for (var b in existingBalances)
+                                '${b.accountId}_${b.productId}': b
+                            };
+
                             return ListView.separated(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: accountProductPrincipals.keys.length,
-                              separatorBuilder: (context, index) => const SizedBox(height: 20),
+                              itemCount: matchedHoldingProducts.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 12),
                               itemBuilder: (context, index) {
-                                final accountId = accountProductPrincipals.keys.elementAt(index);
-                                final productMapForAccount = accountProductPrincipals[accountId]!;
+                                final holdingItem = matchedHoldingProducts[index];
+                                final prodId = holdingItem.productId;
+                                final productName =
+                                    productMap[prodId] ?? '연금 상품';
+                                final key = '${_selectedAccountId}_$prodId';
 
-                                final account = accountMap[accountId];
-                                if (account == null) return const SizedBox.shrink();
+                                if (!_balanceControllers.containsKey(key)) {
+                                  final existing = balanceMap[key];
+                                  final initialVal = existing?.balance ?? 0.0;
+                                  _balanceControllers[key] =
+                                      TextEditingController(
+                                    text: initialVal > 0
+                                        ? initialVal.toCommaString()
+                                        : '',
+                                  );
+                                }
 
-                                final institution = account.financialInstitution;
-                                final accountNameObj = accountNameMap[account.accountNameId];
-                                final accountNameDisplay = accountNameObj?.accountName ?? '계좌';
-
-                                return Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey.shade300),
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: Colors.grey.shade50,
+                                return Card(
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    side: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // 💡 계좌 타이틀 영역
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.account_balance_wallet, size: 18, color: Colors.indigo),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            '$institution - $accountNameDisplay',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                              color: Colors.indigo,
-                                            ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 3,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                productName,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '원금: ${holdingItem.principal.toWon()}',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                      const Divider(height: 16),
-                                      
-                                      // 해당 계좌가 보유한 상품 리스트
-                                      ListView.separated(
-                                        shrinkWrap: true,
-                                        physics: const NeverScrollableScrollPhysics(),
-                                        itemCount: productMapForAccount.keys.length,
-                                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                        itemBuilder: (context, prodIndex) {
-                                          final prodId = productMapForAccount.keys.elementAt(prodIndex);
-                                          final principal = productMapForAccount[prodId] ?? 0.0;
-                                          final product = productMap[prodId];
-
-                                          if (product == null) return const SizedBox.shrink();
-
-                                          final key = '${accountId}_$prodId';
-                                          _itemAccountMap[key] = accountId;
-
-                                          if (!_controllers.containsKey(key)) {
-                                            _controllers[key] = TextEditingController();
-                                          }
-
-                                          return TextFormField(
-                                            controller: _controllers[key],
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          flex: 4,
+                                          child: TextFormField(
+                                            controller: _balanceControllers[key],
                                             keyboardType: TextInputType.number,
                                             inputFormatters: [
-                                              FilteringTextInputFormatter.digitsOnly,
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly,
                                               ThousandsSeparatorInputFormatter(),
                                             ],
-                                            decoration: InputDecoration(
-                                              labelText: product.productName,
-                                              // 💡 상품별 원금 안내
-                                              helperText: '투자 원금: ${principal.toWon()}',
+                                            decoration: const InputDecoration(
+                                              labelText: '월말 평가액',
                                               suffixText: '원',
-                                              border: const OutlineInputBorder(),
-                                              filled: true,
-                                              fillColor: Colors.white,
-                                              contentPadding: const EdgeInsets.symmetric(
-                                                horizontal: 12,
-                                                vertical: 12,
-                                              ),
+                                              border: OutlineInputBorder(),
+                                              isDense: true,
                                             ),
-                                          );
-                                        },
-                                      ),
-                                    ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 );
                               },
                             );
                           },
-                        );
-                      },
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -249,43 +280,59 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
           child: const Text('취소'),
         ),
         ElevatedButton(
-          onPressed: _saveAllBalances,
-          child: const Text('전체 저장'),
+          onPressed: _saveBalances,
+          child: const Text('저장'),
         ),
       ],
     );
   }
 
-  Future<void> _saveAllBalances() async {
+  Future<void> _saveBalances() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_selectedAccountId == null) return;
 
     final notifier = ref.read(
       monthlyPensionBalanceNotifierProvider(_selectedYearMonth).notifier,
     );
 
-    for (var entry in _controllers.entries) {
-      final key = entry.key; // "accountId_productId"
-      final controller = entry.value;
-      final accountId = _itemAccountMap[key];
+    final accountProducts =
+        ref.read(pensionAccountProductNotifierProvider).value ?? [];
+    final matchedHoldingProducts = accountProducts
+        .where((ap) => ap.accountId == _selectedAccountId)
+        .toList();
 
-      final parts = key.split('_');
-      if (parts.length == 2 && accountId != null && controller.text.isNotEmpty) {
-        final prodId = parts[1];
-        final cleanText = controller.text.replaceAll(RegExp(r'[^0-9]'), '');
-        final balanceVal = double.tryParse(cleanText) ?? 0.0;
+    final List<MonthlyPensionBalance> itemsToSave = [];
 
-        final newBalanceItem = MonthlyPensionBalance(
-          yearMonth: _selectedYearMonth,
-          accountId: accountId,
-          productId: prodId,
-          balance: balanceVal,
-        );
-        await notifier.saveBalance(newBalanceItem);
+    for (var holdingItem in matchedHoldingProducts) {
+      final prodId = holdingItem.productId;
+      final key = '${_selectedAccountId}_$prodId';
+      final controller = _balanceControllers[key];
+
+      if (controller != null && controller.text.isNotEmpty) {
+        final balanceText =
+            controller.text.replaceAll(RegExp(r'[^0-9]'), '').trim();
+        final balanceVal = double.tryParse(balanceText) ?? 0.0;
+
+        if (balanceVal > 0) {
+          itemsToSave.add(
+            MonthlyPensionBalance(
+              yearMonth: _selectedYearMonth,
+              accountId: _selectedAccountId!,
+              productId: prodId,
+              balance: balanceVal,
+              principal: holdingItem.principal, // 매칭 정보의 원금 자동 연동
+              purchaseDate: holdingItem.purchaseDate, // 매칭 정보의 최초 매수일 자동 연동
+            ),
+          );
+        }
       }
     }
 
-    ref.invalidate(monthlyPensionBalanceNotifierProvider(_selectedYearMonth));
-    ref.invalidate(allMonthlyPensionBalancesProvider);
+    //5개의 상품 데이터를 메모리 상에서 하나의 Batch(장바구니 같은 개념)에 차곡차곡 담습니다
+    if (itemsToSave.isNotEmpty) {
+      // 배치 처리 저장
+      await notifier.saveBatchBalances(itemsToSave);
+    }
 
     if (mounted) {
       Navigator.pop(context);
