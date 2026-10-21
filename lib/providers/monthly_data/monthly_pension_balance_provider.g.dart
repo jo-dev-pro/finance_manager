@@ -28,7 +28,7 @@ final allMonthlyPensionBalancesProvider = AutoDisposeAsyncNotifierProvider<
 typedef _$AllMonthlyPensionBalances =
     AutoDisposeAsyncNotifier<List<MonthlyPensionBalanceWithDetail>>;
 String _$monthlyPensionBalanceNotifierHash() =>
-    r'1e2d13576589fe7866d0268451c46f1d8f4286c3';
+    r'd25b52802b1bbd924c9ef70b36a39954b245d8b6';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -13,22 +13,23 @@ class MonthlyPensionBalance with _$MonthlyPensionBalance {
     @JsonKey(name: 'year_month') required String yearMonth,
     @JsonKey(name: 'account_id') required String accountId,
     @JsonKey(name: 'product_id') required String productId,
-    @Default(0.0) double balance,     // 월말 평가액
-    @Default(0.0) double principal,   // 투자 원금
-    @JsonKey(name: 'purchase_date') String? purchaseDate, // 상품 최초 매수일 (YYYY-MM-dd)
+    @Default(0.0) double balance,               // 당월 말 평가액
+    @Default(0.0) double principal,             // 최종 누적 투자 원금
+    @JsonKey(name: 'total_payout') @Default(0.0) double totalPayout, // 최종 누적 연금 수령액
+    @JsonKey(name: 'purchase_date') String? purchaseDate, // 최초 매수일
   }) = _MonthlyPensionBalance;
 
   factory MonthlyPensionBalance.fromJson(Map<String, dynamic> json) =>
       _$MonthlyPensionBalanceFromJson(json);
 
-  // 1. 평가 손익 계산
-  double get profitOrLoss => balance - principal;
+  // 💡 [총 평가 손익] = (현재 평가액 + 누적 연금 수령액) - 누적 투자 원금
+  double get profitOrLoss => (balance + totalPayout) - principal;
 
-  // 2. 누적 수익률 (%) 계산
+  // 💡 [누적 수익률 (%)]
   double get returnRate =>
       principal > 0 ? (profitOrLoss / principal) * 100 : 0.0;
 
-  // 3. 연환산 수익률 (CAGR %) 계산
+  // 💡 [연환산 수익률 (CAGR %)]
   double get annualizedReturnRate {
     if (principal <= 0 || purchaseDate == null || purchaseDate!.isEmpty) {
       return 0.0;
@@ -47,7 +48,8 @@ class MonthlyPensionBalance with _$MonthlyPensionBalance {
       if (days <= 0) return returnRate;
 
       final years = days / 365.0;
-      final totalRatio = balance / principal;
+      final totalValue = balance + totalPayout; // 수령액 포함 총 가치
+      final totalRatio = totalValue / principal;
 
       if (totalRatio <= 0) return -100.0;
 

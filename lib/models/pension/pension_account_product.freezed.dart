@@ -28,9 +28,13 @@ mixin _$PensionAccountProduct {
   String get accountId => throw _privateConstructorUsedError; // 연금 계좌 ID
   @JsonKey(name: 'product_id')
   String get productId => throw _privateConstructorUsedError; // 공용 상품 ID
-  double get principal => throw _privateConstructorUsedError; // 투자 원금
+  double get principal => throw _privateConstructorUsedError; // 총 투자 원금
   @JsonKey(name: 'purchase_date')
-  String? get purchaseDate => throw _privateConstructorUsedError;
+  String? get purchaseDate => throw _privateConstructorUsedError; // 최초 매수일 (YYYY-MM-DD)
+  @JsonKey(name: 'total_payout')
+  double get totalPayout => throw _privateConstructorUsedError; // 💡 누적 연금 수령(지급)액
+  @JsonKey(name: 'is_terminated')
+  bool get isTerminated => throw _privateConstructorUsedError;
 
   /// Serializes this PensionAccountProduct to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -55,6 +59,8 @@ abstract class $PensionAccountProductCopyWith<$Res> {
     @JsonKey(name: 'product_id') String productId,
     double principal,
     @JsonKey(name: 'purchase_date') String? purchaseDate,
+    @JsonKey(name: 'total_payout') double totalPayout,
+    @JsonKey(name: 'is_terminated') bool isTerminated,
   });
 }
 
@@ -81,6 +87,8 @@ class _$PensionAccountProductCopyWithImpl<
     Object? productId = null,
     Object? principal = null,
     Object? purchaseDate = freezed,
+    Object? totalPayout = null,
+    Object? isTerminated = null,
   }) {
     return _then(
       _value.copyWith(
@@ -109,6 +117,16 @@ class _$PensionAccountProductCopyWithImpl<
                     ? _value.purchaseDate
                     : purchaseDate // ignore: cast_nullable_to_non_nullable
                         as String?,
+            totalPayout:
+                null == totalPayout
+                    ? _value.totalPayout
+                    : totalPayout // ignore: cast_nullable_to_non_nullable
+                        as double,
+            isTerminated:
+                null == isTerminated
+                    ? _value.isTerminated
+                    : isTerminated // ignore: cast_nullable_to_non_nullable
+                        as bool,
           )
           as $Val,
     );
@@ -130,6 +148,8 @@ abstract class _$$PensionAccountProductImplCopyWith<$Res>
     @JsonKey(name: 'product_id') String productId,
     double principal,
     @JsonKey(name: 'purchase_date') String? purchaseDate,
+    @JsonKey(name: 'total_payout') double totalPayout,
+    @JsonKey(name: 'is_terminated') bool isTerminated,
   });
 }
 
@@ -153,6 +173,8 @@ class __$$PensionAccountProductImplCopyWithImpl<$Res>
     Object? productId = null,
     Object? principal = null,
     Object? purchaseDate = freezed,
+    Object? totalPayout = null,
+    Object? isTerminated = null,
   }) {
     return _then(
       _$PensionAccountProductImpl(
@@ -181,6 +203,16 @@ class __$$PensionAccountProductImplCopyWithImpl<$Res>
                 ? _value.purchaseDate
                 : purchaseDate // ignore: cast_nullable_to_non_nullable
                     as String?,
+        totalPayout:
+            null == totalPayout
+                ? _value.totalPayout
+                : totalPayout // ignore: cast_nullable_to_non_nullable
+                    as double,
+        isTerminated:
+            null == isTerminated
+                ? _value.isTerminated
+                : isTerminated // ignore: cast_nullable_to_non_nullable
+                    as bool,
       ),
     );
   }
@@ -188,14 +220,16 @@ class __$$PensionAccountProductImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$PensionAccountProductImpl implements _PensionAccountProduct {
+class _$PensionAccountProductImpl extends _PensionAccountProduct {
   const _$PensionAccountProductImpl({
     this.id,
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'product_id') required this.productId,
     this.principal = 0.0,
     @JsonKey(name: 'purchase_date') this.purchaseDate,
-  });
+    @JsonKey(name: 'total_payout') this.totalPayout = 0.0,
+    @JsonKey(name: 'is_terminated') this.isTerminated = false,
+  }) : super._();
 
   factory _$PensionAccountProductImpl.fromJson(Map<String, dynamic> json) =>
       _$$PensionAccountProductImplFromJson(json);
@@ -213,14 +247,22 @@ class _$PensionAccountProductImpl implements _PensionAccountProduct {
   @override
   @JsonKey()
   final double principal;
-  // 투자 원금
+  // 총 투자 원금
   @override
   @JsonKey(name: 'purchase_date')
   final String? purchaseDate;
+  // 최초 매수일 (YYYY-MM-DD)
+  @override
+  @JsonKey(name: 'total_payout')
+  final double totalPayout;
+  // 💡 누적 연금 수령(지급)액
+  @override
+  @JsonKey(name: 'is_terminated')
+  final bool isTerminated;
 
   @override
   String toString() {
-    return 'PensionAccountProduct(id: $id, accountId: $accountId, productId: $productId, principal: $principal, purchaseDate: $purchaseDate)';
+    return 'PensionAccountProduct(id: $id, accountId: $accountId, productId: $productId, principal: $principal, purchaseDate: $purchaseDate, totalPayout: $totalPayout, isTerminated: $isTerminated)';
   }
 
   @override
@@ -236,7 +278,11 @@ class _$PensionAccountProductImpl implements _PensionAccountProduct {
             (identical(other.principal, principal) ||
                 other.principal == principal) &&
             (identical(other.purchaseDate, purchaseDate) ||
-                other.purchaseDate == purchaseDate));
+                other.purchaseDate == purchaseDate) &&
+            (identical(other.totalPayout, totalPayout) ||
+                other.totalPayout == totalPayout) &&
+            (identical(other.isTerminated, isTerminated) ||
+                other.isTerminated == isTerminated));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -248,6 +294,8 @@ class _$PensionAccountProductImpl implements _PensionAccountProduct {
     productId,
     principal,
     purchaseDate,
+    totalPayout,
+    isTerminated,
   );
 
   /// Create a copy of PensionAccountProduct
@@ -268,14 +316,17 @@ class _$PensionAccountProductImpl implements _PensionAccountProduct {
   }
 }
 
-abstract class _PensionAccountProduct implements PensionAccountProduct {
+abstract class _PensionAccountProduct extends PensionAccountProduct {
   const factory _PensionAccountProduct({
     final String? id,
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'product_id') required final String productId,
     final double principal,
     @JsonKey(name: 'purchase_date') final String? purchaseDate,
+    @JsonKey(name: 'total_payout') final double totalPayout,
+    @JsonKey(name: 'is_terminated') final bool isTerminated,
   }) = _$PensionAccountProductImpl;
+  const _PensionAccountProduct._() : super._();
 
   factory _PensionAccountProduct.fromJson(Map<String, dynamic> json) =
       _$PensionAccountProductImpl.fromJson;
@@ -289,10 +340,16 @@ abstract class _PensionAccountProduct implements PensionAccountProduct {
   @JsonKey(name: 'product_id')
   String get productId; // 공용 상품 ID
   @override
-  double get principal; // 투자 원금
+  double get principal; // 총 투자 원금
   @override
   @JsonKey(name: 'purchase_date')
-  String? get purchaseDate;
+  String? get purchaseDate; // 최초 매수일 (YYYY-MM-DD)
+  @override
+  @JsonKey(name: 'total_payout')
+  double get totalPayout; // 💡 누적 연금 수령(지급)액
+  @override
+  @JsonKey(name: 'is_terminated')
+  bool get isTerminated;
 
   /// Create a copy of PensionAccountProduct
   /// with the given fields replaced by the non-null parameter values.
