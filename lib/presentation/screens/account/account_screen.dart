@@ -11,31 +11,36 @@ class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
   void _showDeleteConfirmDialog(
-      BuildContext context, WidgetRef ref, Account account, String productName) {
+    BuildContext context,
+    WidgetRef ref,
+    Account account,
+    String productName,
+  ) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('계좌 삭제'),
-        content: Text('\'$productName\' 계좌를 정말 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('취소'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('계좌 삭제'),
+            content: Text('\'$productName\' 계좌를 정말 삭제하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('취소'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (account.id != null) {
+                    ref
+                        .read(accountNotifierProvider.notifier)
+                        .deleteAccount(account.id!);
+                  }
+                  Navigator.of(ctx).pop();
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('삭제'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              if (account.id != null) {
-                ref
-                    .read(accountNotifierProvider.notifier)
-                    .deleteAccount(account.id!);
-              }
-              Navigator.of(ctx).pop();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -65,19 +70,26 @@ class AccountScreen extends ConsumerWidget {
         data: (accounts) {
           if (accounts.isEmpty) {
             return const Center(
-              child: Text('등록된 계좌가 없습니다.\n하단 버튼을 눌러 계좌를 추가해보세요.',
-                  textAlign: TextAlign.center),
+              child: Text(
+                '등록된 계좌가 없습니다.\n하단 버튼을 눌러 계좌를 추가해보세요.',
+                textAlign: TextAlign.center,
+              ),
             );
           }
+
+          final sortedAccounts =
+              accounts.toList()
+                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
           return accountNamesAsync.when(
             data: (accountNames) {
               return ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: accounts.length,
+                itemCount: sortedAccounts.length,
                 itemBuilder: (context, index) {
-                  final account = accounts[index];
-                  final hasNumber = account.accountNumber != null &&
+                  final account = sortedAccounts[index];
+                  final hasNumber =
+                      account.accountNumber != null &&
                       account.accountNumber!.isNotEmpty;
 
                   // 안전하게 null 체크 적용
@@ -95,28 +107,32 @@ class AccountScreen extends ConsumerWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       child: Row(
                         children: [
                           CircleAvatar(
                             radius: 18,
                             backgroundColor: Colors.white,
-                            backgroundImage: account.logoUrl != null &&
-                                    account.logoUrl!.isNotEmpty
-                                ? NetworkImage(account.logoUrl!)
-                                : null,
-                            child: account.logoUrl == null ||
-                                    account.logoUrl!.isEmpty
-                                ? Text(
-                                    account.financialInstitution.isNotEmpty
-                                        ? account.financialInstitution[0]
-                                        : '?',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue.shade800,
-                                    ),
-                                  )
-                                : null,
+                            backgroundImage:
+                                account.logoUrl != null &&
+                                        account.logoUrl!.isNotEmpty
+                                    ? NetworkImage(account.logoUrl!)
+                                    : null,
+                            child:
+                                account.logoUrl == null ||
+                                        account.logoUrl!.isEmpty
+                                    ? Text(
+                                      account.financialInstitution.isNotEmpty
+                                          ? account.financialInstitution[0]
+                                          : '?',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue.shade800,
+                                      ),
+                                    )
+                                    : null,
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -124,7 +140,8 @@ class AccountScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
                                   textBaseline: TextBaseline.alphabetic,
                                   children: [
                                     Text(
@@ -159,7 +176,8 @@ class AccountScreen extends ConsumerWidget {
                                     ),
                                     Container(
                                       margin: const EdgeInsets.symmetric(
-                                          horizontal: 6),
+                                        horizontal: 6,
+                                      ),
                                       width: 3,
                                       height: 3,
                                       decoration: BoxDecoration(
@@ -185,6 +203,39 @@ class AccountScreen extends ConsumerWidget {
                                         ),
                                       ),
                                     ),
+
+                                    Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                      ),
+                                      width: 3,
+                                      height: 3,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade400,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Colors
+                                                .indigo
+                                                .shade50, // 눈에 띄도록 포인트 색상 적용
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '순서: ${account.sortOrder}',
+                                        style: TextStyle(
+                                          color: Colors.indigo.shade700,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -198,8 +249,13 @@ class AccountScreen extends ConsumerWidget {
                           IconButton(
                             icon: const Icon(Icons.delete_outline, size: 20),
                             color: Colors.red.shade400,
-                            onPressed: () => _showDeleteConfirmDialog(
-                                context, ref, account, accountName),
+                            onPressed:
+                                () => _showDeleteConfirmDialog(
+                                  context,
+                                  ref,
+                                  account,
+                                  accountName,
+                                ),
                           ),
                         ],
                       ),

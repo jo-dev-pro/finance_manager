@@ -8,8 +8,26 @@ import '../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
-import '../../../../providers/pension/pension_account_product_provider.dart';
+import '../../../../providers/pension/pension_holding_product_provider.dart';
 import '../../../../providers/pension/pension_product_provider.dart';
+
+class _GroupedPensionItem {
+  final String accountId;
+  final String productId;
+  double principal;
+  double totalPayout;
+  double totalWithdrawal; // 💡 누적 중도 인출금 추가
+  String? purchaseDate;
+
+  _GroupedPensionItem({
+    required this.accountId,
+    required this.productId,
+    required this.principal,
+    required this.totalPayout,
+    required this.totalWithdrawal,
+    this.purchaseDate,
+  });
+}
 
 class MonthlyPensionDialog extends ConsumerStatefulWidget {
   final String yearMonth;
@@ -25,10 +43,10 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
   late String _selectedYearMonth;
   String? _selectedAccountId;
 
-  // 상품별 입력 컨트롤러 (Key: "${accountId}_${productId}")
-  final Map<String, TextEditingController> _balanceControllers = {}; // 당월 평가액
-  final Map<String, TextEditingController> _addPrincipalControllers = {}; // 당월 추가 투자금
-  final Map<String, TextEditingController> _addPayoutControllers = {}; // 당월 연금 수령액
+  final Map<String, TextEditingController> _balanceControllers = {};
+  final Map<String, TextEditingController> _addPrincipalControllers = {};
+  final Map<String, TextEditingController> _addPayoutControllers = {};
+  final Map<String, TextEditingController> _addWithdrawalControllers = {}; // 💡 인출금 컨트롤러
 
   final _formKey = GlobalKey<FormState>();
 
@@ -40,19 +58,13 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
 
   @override
   void dispose() {
-    for (var c in _balanceControllers.values) {
-      c.dispose();
-    }
-    for (var c in _addPrincipalControllers.values) {
-      c.dispose();
-    }
-    for (var c in _addPayoutControllers.values) {
-      c.dispose();
-    }
+    for (var c in _balanceControllers.values) { c.dispose(); }
+    for (var c in _addPrincipalControllers.values) { c.dispose(); }
+    for (var c in _addPayoutControllers.values) { c.dispose(); }
+    for (var c in _addWithdrawalControllers.values) { c.dispose(); }
     super.dispose();
   }
 
-  // 이전 달 YYYY-MM 문자열 구하기
   String _getPreviousYearMonth(String ym) {
     try {
       final parts = ym.split('-');
@@ -69,11 +81,9 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final accountProductsAsync =
-        ref.watch(pensionAccountProductNotifierProvider);
+    final accountProductsAsync = ref.watch(pensionHoldingProductNotifierProvider);
     final productsAsync = ref.watch(pensionProductNotifierProvider);
 
-    // 현재달 및 전달 평가 데이터 조회
     final existingCurrentBalancesAsync = ref.watch(
       monthlyPensionBalanceNotifierProvider(_selectedYearMonth),
     );
@@ -93,7 +103,8 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. 기준월 선택
+                SizedBox(height: 16),
+                
                 TextFormField(
                   initialValue: _selectedYearMonth,
                   decoration: const InputDecoration(
@@ -101,9 +112,10 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                     hintText: 'YYYY-MM',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.calendar_today),
+                    isDense: true,
                     contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
+                      horizontal: 12,
+                      vertical: 14,
                     ),
                   ),
                   onChanged: (val) {
@@ -121,11 +133,16 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                   error: (err, _) => Text('계좌 로딩 실패: $err'),
                   data: (accounts) {
                     final accountNames = accountNamesAsync.value ?? [];
+                    final accountNameMap = {
+                      for (var an in accountNames) an.id: an
+                    };
+
                     final pensionAccounts = accounts
                         .where((a) =>
                             a.accountType.toUpperCase() == '연금' &&
                             a.status == '활동')
-                        .toList();
+                        .toList()
+                      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
                     if (pensionAccounts.isEmpty) {
                       return const Padding(
@@ -133,10 +150,6 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                         child: Text('활동 중인 연금 계좌가 없습니다.'),
                       );
                     }
-
-                    final accountNameMap = {
-                      for (var an in accountNames) an.id: an
-                    };
 
                     if (_selectedAccountId == null ||
                         !pensionAccounts
@@ -147,14 +160,14 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 계좌 선택 드롭다운
                         DropdownButtonFormField<String>(
-                          value: _selectedAccountId,
+                          initialValue: _selectedAccountId,
                           decoration: const InputDecoration(
                             labelText: '계좌 선택',
                             border: OutlineInputBorder(),
+                            isDense: true,
                             contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
+                              horizontal: 12,
                               vertical: 14,
                             ),
                           ),
@@ -186,50 +199,73 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                               for (var p in products) p.id!: p.productName
                             };
 
+                            final Map<String, _GroupedPensionItem> groupedMap = {};
+                            
                             final matchedHoldingProducts = accountProducts
                                 .where((ap) => ap.accountId == _selectedAccountId)
                                 .toList();
-
-                            if (matchedHoldingProducts.isEmpty) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Text('해당 계좌에 매칭된 연금 상품이 없습니다.'),
-                              );
-                            }
 
                             final currentBalances =
                                 existingCurrentBalancesAsync.value ?? [];
                             final prevBalances =
                                 existingPrevBalancesAsync.value ?? [];
 
-                            final currentBalanceMap = {
-                              for (var b in currentBalances)
-                                '${b.accountId}_${b.productId}': b
-                            };
                             final prevBalanceMap = {
                               for (var b in prevBalances)
+                                '${b.accountId}_${b.productId}': b
+                            };
+
+                            for (var ap in matchedHoldingProducts) {
+                              final prodId = ap.productId;
+                              final prevData = prevBalanceMap['${ap.accountId}_$prodId'];
+                              final basePrincipal = prevData?.principal ?? ap.principal;
+                              final basePayout = prevData?.totalPayout ?? ap.totalPayout;
+                              final baseWithdrawal = prevData?.totalWithdrawal ?? 0.0;
+
+                              if (groupedMap.containsKey(prodId)) {
+                                groupedMap[prodId]!.principal += basePrincipal;
+                                groupedMap[prodId]!.totalPayout += basePayout;
+                                groupedMap[prodId]!.totalWithdrawal += baseWithdrawal;
+                              } else {
+                                groupedMap[prodId] = _GroupedPensionItem(
+                                  accountId: ap.accountId,
+                                  productId: prodId,
+                                  principal: basePrincipal,
+                                  totalPayout: basePayout,
+                                  totalWithdrawal: baseWithdrawal,
+                                  purchaseDate: ap.purchaseDate,
+                                );
+                              }
+                            }
+
+                            final groupedItems = groupedMap.values.toList();
+
+                            if (groupedItems.isEmpty) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Text('해당 계좌에 매칭된 연금 상품이 없습니다.'),
+                              );
+                            }
+
+                            final currentBalanceMap = {
+                              for (var b in currentBalances)
                                 '${b.accountId}_${b.productId}': b
                             };
 
                             return ListView.separated(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: matchedHoldingProducts.length,
+                              itemCount: groupedItems.length,
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: 12),
                               itemBuilder: (context, index) {
-                                final holdingItem = matchedHoldingProducts[index];
-                                final prodId = holdingItem.productId;
+                                final groupItem = groupedItems[index];
+                                final prodId = groupItem.productId;
                                 final productName =
                                     productMap[prodId] ?? '연금 상품';
                                 final key = '${_selectedAccountId}_$prodId';
 
                                 final currentData = currentBalanceMap[key];
-                                final prevData = prevBalanceMap[key];
-
-                                // 직전 달 누적액 (없으면 기본 매칭 정보 사용)
-                                final prevPrincipal = prevData?.principal ?? holdingItem.principal;
-                                final prevPayout = prevData?.totalPayout ?? holdingItem.totalPayout;
 
                                 if (!_balanceControllers.containsKey(key)) {
                                   _balanceControllers[key] =
@@ -238,10 +274,9 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                         ? currentData.balance.toCommaString()
                                         : '',
                                   );
-                                  _addPrincipalControllers[key] =
-                                      TextEditingController();
-                                  _addPayoutControllers[key] =
-                                      TextEditingController();
+                                  _addPrincipalControllers[key] = TextEditingController();
+                                  _addPayoutControllers[key] = TextEditingController();
+                                  _addWithdrawalControllers[key] = TextEditingController();
                                 }
 
                                 return Card(
@@ -267,7 +302,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          '이전 누적원금: ${prevPrincipal.toWon()} | 이전 누적수령액: ${prevPayout.toWon()}',
+                                          '누적원금: ${groupItem.principal.toWon()} | 수령액: ${groupItem.totalPayout.toWon()} | 인출금: ${groupItem.totalWithdrawal.toWon()}',
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: Colors.grey.shade600,
@@ -275,7 +310,6 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                         ),
                                         const Divider(height: 16),
                                         
-                                        // 1. 당월 말 평가액 (필수)
                                         TextFormField(
                                           controller: _balanceControllers[key],
                                           keyboardType: TextInputType.number,
@@ -292,7 +326,6 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                         ),
                                         const SizedBox(height: 10),
 
-                                        // 2. 당월 추가 매수액 & 당월 연금 수령액 (선택 입력)
                                         Row(
                                           children: [
                                             Expanded(
@@ -312,7 +345,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                                 ),
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
+                                            const SizedBox(width: 6),
                                             Expanded(
                                               child: TextFormField(
                                                 controller: _addPayoutControllers[key],
@@ -323,6 +356,24 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                                 ],
                                                 decoration: const InputDecoration(
                                                   labelText: '당월 수령 연금액',
+                                                  hintText: '없으면 0',
+                                                  suffixText: '원',
+                                                  border: OutlineInputBorder(),
+                                                  isDense: true,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: TextFormField(
+                                                controller: _addWithdrawalControllers[key],
+                                                keyboardType: TextInputType.number,
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter.digitsOnly,
+                                                  ThousandsSeparatorInputFormatter(),
+                                                ],
+                                                decoration: const InputDecoration(
+                                                  labelText: '당월 중도 인출금',
                                                   hintText: '없으면 0',
                                                   suffixText: '원',
                                                   border: OutlineInputBorder(),
@@ -371,12 +422,13 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
     );
 
     final accountProducts =
-        ref.read(pensionAccountProductNotifierProvider).value ?? [];
+        ref.read(pensionHoldingProductNotifierProvider).value ?? [];
+    
+    final Map<String, _GroupedPensionItem> groupedMap = {};
     final matchedHoldingProducts = accountProducts
         .where((ap) => ap.accountId == _selectedAccountId)
         .toList();
 
-    // 직전 달 데이터 조회
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
     final prevBalances = ref.read(
           monthlyPensionBalanceNotifierProvider(prevYearMonth),
@@ -385,28 +437,50 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
       for (var b in prevBalances) '${b.accountId}_${b.productId}': b
     };
 
+    for (var ap in matchedHoldingProducts) {
+      final prodId = ap.productId;
+      final prevData = prevBalanceMap['${ap.accountId}_$prodId'];
+      final basePrincipal = prevData?.principal ?? ap.principal;
+      final basePayout = prevData?.totalPayout ?? ap.totalPayout;
+      final baseWithdrawal = prevData?.totalWithdrawal ?? 0.0;
+
+      if (groupedMap.containsKey(prodId)) {
+        groupedMap[prodId]!.principal += basePrincipal;
+        groupedMap[prodId]!.totalPayout += basePayout;
+        groupedMap[prodId]!.totalWithdrawal += baseWithdrawal;
+      } else {
+        groupedMap[prodId] = _GroupedPensionItem(
+          accountId: ap.accountId,
+          productId: prodId,
+          principal: basePrincipal,
+          totalPayout: basePayout,
+          totalWithdrawal: baseWithdrawal,
+          purchaseDate: ap.purchaseDate,
+        );
+      }
+    }
+
     final List<MonthlyPensionBalance> itemsToSave = [];
 
-    for (var holdingItem in matchedHoldingProducts) {
-      final prodId = holdingItem.productId;
+    for (var entry in groupedMap.entries) {
+      final prodId = entry.key;
+      final groupItem = entry.value;
       final key = '${_selectedAccountId}_$prodId';
       
       final balCtrl = _balanceControllers[key];
       final addPrinCtrl = _addPrincipalControllers[key];
       final addPayoutCtrl = _addPayoutControllers[key];
+      final addWithdrawalCtrl = _addWithdrawalControllers[key];
 
       if (balCtrl != null && balCtrl.text.isNotEmpty) {
         final balVal = double.tryParse(balCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
         final addPrinVal = double.tryParse(addPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
         final addPayoutVal = double.tryParse(addPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
+        final addWithdrawalVal = double.tryParse(addWithdrawalCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
 
-        final prevData = prevBalanceMap[key];
-        final prevPrincipal = prevData?.principal ?? holdingItem.principal;
-        final prevPayout = prevData?.totalPayout ?? holdingItem.totalPayout;
-
-        // 💡 [핵심] 직전 달 누적액 + 이번 달 새로 입력한 금액
-        final finalPrincipal = prevPrincipal + addPrinVal;
-        final finalPayout = prevPayout + addPayoutVal;
+        final finalPrincipal = groupItem.principal + addPrinVal;
+        final finalPayout = groupItem.totalPayout + addPayoutVal;
+        final finalWithdrawal = groupItem.totalWithdrawal + addWithdrawalVal;
 
         if (balVal > 0 || finalPrincipal > 0) {
           itemsToSave.add(
@@ -415,9 +489,10 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
               accountId: _selectedAccountId!,
               productId: prodId,
               balance: balVal,
-              principal: finalPrincipal,   // 누적 합산된 원금 저장
-              totalPayout: finalPayout,     // 누적 합산된 수령액 저장
-              purchaseDate: holdingItem.purchaseDate,
+              principal: finalPrincipal,
+              totalPayout: finalPayout,
+              totalWithdrawal: finalWithdrawal, // 💡 최종 누적 인출금 저장
+              purchaseDate: groupItem.purchaseDate,
             ),
           );
         }

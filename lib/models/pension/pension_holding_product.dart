@@ -1,13 +1,13 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'pension_account_product.freezed.dart';
-part 'pension_account_product.g.dart';
+part 'pension_holding_product.freezed.dart';
+part 'pension_holding_product.g.dart';
 
 @freezed
-class PensionAccountProduct with _$PensionAccountProduct {
-  const PensionAccountProduct._();
+class PensionHoldingProduct with _$PensionHoldingProduct {
+  const PensionHoldingProduct._();
 
-  const factory PensionAccountProduct({
+  const factory PensionHoldingProduct({
     String? id,
     @JsonKey(name: 'account_id') required String accountId,   // 연금 계좌 ID
     @JsonKey(name: 'product_id') required String productId,   // 공용 상품 ID
@@ -15,10 +15,10 @@ class PensionAccountProduct with _$PensionAccountProduct {
     @JsonKey(name: 'purchase_date') String? purchaseDate,     // 최초 매수일 (YYYY-MM-DD)
     @JsonKey(name: 'total_payout') @Default(0.0) double totalPayout, // 💡 누적 연금 수령(지급)액
     @JsonKey(name: 'is_terminated') @Default(false) bool isTerminated, // 💡 연금 수령 완료(종료) 여부
-  }) = _PensionAccountProduct;
+  }) = _PensionHoldingProduct;
 
-  factory PensionAccountProduct.fromJson(Map<String, dynamic> json) =>
-      _$PensionAccountProductFromJson(json);
+  factory PensionHoldingProduct.fromJson(Map<String, dynamic> json) =>
+      _$PensionHoldingProductFromJson(json);
 
   // 💡 [핵심] 현재 평가액이 들어왔을 때, 누적 수령액을 포함한 총 평가손익 계산
   // 총 손익 = (현재 평가액 + 누적 연금 수령액) - 총 투자 원금

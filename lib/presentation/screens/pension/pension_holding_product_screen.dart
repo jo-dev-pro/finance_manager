@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/number_formatter.dart';
-import '../../../../models/pension/pension_account_product.dart';
+import '../../../models/pension/pension_holding_product.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
-import '../../../../providers/pension/pension_account_product_provider.dart';
+import '../../../../providers/pension/pension_holding_product_provider.dart';
 import '../../../../providers/pension/pension_product_provider.dart';
-import 'widget/pension_account_product_dialog.dart';
+import 'widget/pension_holding_product_dialog.dart';
 
-class PensionAccountProductScreen extends ConsumerWidget {
-  const PensionAccountProductScreen({super.key});
+class PensionHoldingProductScreen extends ConsumerWidget {
+  const PensionHoldingProductScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accountProductsAsync = ref.watch(pensionAccountProductNotifierProvider);
+    final accountProductsAsync = ref.watch(pensionHoldingProductNotifierProvider);
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
     final productsAsync = ref.watch(pensionProductNotifierProvider);
@@ -135,18 +135,18 @@ class PensionAccountProductScreen extends ConsumerWidget {
   void _showAddDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => const PensionAccountProductDialog(),
+      builder: (_) => const PensionHoldingProductDialog(),
     );
   }
 
-  void _showEditDialog(BuildContext context, PensionAccountProduct item) {
+  void _showEditDialog(BuildContext context, PensionHoldingProduct item) {
     showDialog(
       context: context,
-      builder: (_) => PensionAccountProductDialog(initialData: item),
+      builder: (_) => PensionHoldingProductDialog(initialData: item),
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, PensionAccountProduct item) {
+  void _confirmDelete(BuildContext context, WidgetRef ref, PensionHoldingProduct item) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -161,8 +161,8 @@ class PensionAccountProductScreen extends ConsumerWidget {
             onPressed: () async {
               if (item.id != null) {
                 await ref
-                    .read(pensionAccountProductNotifierProvider.notifier)
-                    .deletePensionAccountProduct(item.id!);
+                    .read(pensionHoldingProductNotifierProvider.notifier)
+                    .deletePensionHoldingProduct(item.id!);
               }
               if (ctx.mounted) Navigator.of(ctx).pop();
             },

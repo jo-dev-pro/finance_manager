@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'pension_account_product.dart';
+part of 'pension_holding_product.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -15,14 +15,14 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
-PensionAccountProduct _$PensionAccountProductFromJson(
+PensionHoldingProduct _$PensionHoldingProductFromJson(
   Map<String, dynamic> json,
 ) {
-  return _PensionAccountProduct.fromJson(json);
+  return _PensionHoldingProduct.fromJson(json);
 }
 
 /// @nodoc
-mixin _$PensionAccountProduct {
+mixin _$PensionHoldingProduct {
   String? get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_id')
   String get accountId => throw _privateConstructorUsedError; // 연금 계좌 ID
@@ -36,22 +36,22 @@ mixin _$PensionAccountProduct {
   @JsonKey(name: 'is_terminated')
   bool get isTerminated => throw _privateConstructorUsedError;
 
-  /// Serializes this PensionAccountProduct to a JSON map.
+  /// Serializes this PensionHoldingProduct to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-  /// Create a copy of PensionAccountProduct
+  /// Create a copy of PensionHoldingProduct
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $PensionAccountProductCopyWith<PensionAccountProduct> get copyWith =>
+  $PensionHoldingProductCopyWith<PensionHoldingProduct> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $PensionAccountProductCopyWith<$Res> {
-  factory $PensionAccountProductCopyWith(
-    PensionAccountProduct value,
-    $Res Function(PensionAccountProduct) then,
-  ) = _$PensionAccountProductCopyWithImpl<$Res, PensionAccountProduct>;
+abstract class $PensionHoldingProductCopyWith<$Res> {
+  factory $PensionHoldingProductCopyWith(
+    PensionHoldingProduct value,
+    $Res Function(PensionHoldingProduct) then,
+  ) = _$PensionHoldingProductCopyWithImpl<$Res, PensionHoldingProduct>;
   @useResult
   $Res call({
     String? id,
@@ -65,19 +65,19 @@ abstract class $PensionAccountProductCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$PensionAccountProductCopyWithImpl<
+class _$PensionHoldingProductCopyWithImpl<
   $Res,
-  $Val extends PensionAccountProduct
+  $Val extends PensionHoldingProduct
 >
-    implements $PensionAccountProductCopyWith<$Res> {
-  _$PensionAccountProductCopyWithImpl(this._value, this._then);
+    implements $PensionHoldingProductCopyWith<$Res> {
+  _$PensionHoldingProductCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of PensionAccountProduct
+  /// Create a copy of PensionHoldingProduct
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -134,12 +134,12 @@ class _$PensionAccountProductCopyWithImpl<
 }
 
 /// @nodoc
-abstract class _$$PensionAccountProductImplCopyWith<$Res>
-    implements $PensionAccountProductCopyWith<$Res> {
-  factory _$$PensionAccountProductImplCopyWith(
-    _$PensionAccountProductImpl value,
-    $Res Function(_$PensionAccountProductImpl) then,
-  ) = __$$PensionAccountProductImplCopyWithImpl<$Res>;
+abstract class _$$PensionHoldingProductImplCopyWith<$Res>
+    implements $PensionHoldingProductCopyWith<$Res> {
+  factory _$$PensionHoldingProductImplCopyWith(
+    _$PensionHoldingProductImpl value,
+    $Res Function(_$PensionHoldingProductImpl) then,
+  ) = __$$PensionHoldingProductImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({
@@ -154,16 +154,16 @@ abstract class _$$PensionAccountProductImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$PensionAccountProductImplCopyWithImpl<$Res>
+class __$$PensionHoldingProductImplCopyWithImpl<$Res>
     extends
-        _$PensionAccountProductCopyWithImpl<$Res, _$PensionAccountProductImpl>
-    implements _$$PensionAccountProductImplCopyWith<$Res> {
-  __$$PensionAccountProductImplCopyWithImpl(
-    _$PensionAccountProductImpl _value,
-    $Res Function(_$PensionAccountProductImpl) _then,
+        _$PensionHoldingProductCopyWithImpl<$Res, _$PensionHoldingProductImpl>
+    implements _$$PensionHoldingProductImplCopyWith<$Res> {
+  __$$PensionHoldingProductImplCopyWithImpl(
+    _$PensionHoldingProductImpl _value,
+    $Res Function(_$PensionHoldingProductImpl) _then,
   ) : super(_value, _then);
 
-  /// Create a copy of PensionAccountProduct
+  /// Create a copy of PensionHoldingProduct
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -177,7 +177,7 @@ class __$$PensionAccountProductImplCopyWithImpl<$Res>
     Object? isTerminated = null,
   }) {
     return _then(
-      _$PensionAccountProductImpl(
+      _$PensionHoldingProductImpl(
         id:
             freezed == id
                 ? _value.id
@@ -220,8 +220,8 @@ class __$$PensionAccountProductImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$PensionAccountProductImpl extends _PensionAccountProduct {
-  const _$PensionAccountProductImpl({
+class _$PensionHoldingProductImpl extends _PensionHoldingProduct {
+  const _$PensionHoldingProductImpl({
     this.id,
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'product_id') required this.productId,
@@ -231,8 +231,8 @@ class _$PensionAccountProductImpl extends _PensionAccountProduct {
     @JsonKey(name: 'is_terminated') this.isTerminated = false,
   }) : super._();
 
-  factory _$PensionAccountProductImpl.fromJson(Map<String, dynamic> json) =>
-      _$$PensionAccountProductImplFromJson(json);
+  factory _$PensionHoldingProductImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PensionHoldingProductImplFromJson(json);
 
   @override
   final String? id;
@@ -262,14 +262,14 @@ class _$PensionAccountProductImpl extends _PensionAccountProduct {
 
   @override
   String toString() {
-    return 'PensionAccountProduct(id: $id, accountId: $accountId, productId: $productId, principal: $principal, purchaseDate: $purchaseDate, totalPayout: $totalPayout, isTerminated: $isTerminated)';
+    return 'PensionHoldingProduct(id: $id, accountId: $accountId, productId: $productId, principal: $principal, purchaseDate: $purchaseDate, totalPayout: $totalPayout, isTerminated: $isTerminated)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$PensionAccountProductImpl &&
+            other is _$PensionHoldingProductImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.accountId, accountId) ||
                 other.accountId == accountId) &&
@@ -298,26 +298,26 @@ class _$PensionAccountProductImpl extends _PensionAccountProduct {
     isTerminated,
   );
 
-  /// Create a copy of PensionAccountProduct
+  /// Create a copy of PensionHoldingProduct
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PensionAccountProductImplCopyWith<_$PensionAccountProductImpl>
+  _$$PensionHoldingProductImplCopyWith<_$PensionHoldingProductImpl>
   get copyWith =>
-      __$$PensionAccountProductImplCopyWithImpl<_$PensionAccountProductImpl>(
+      __$$PensionHoldingProductImplCopyWithImpl<_$PensionHoldingProductImpl>(
         this,
         _$identity,
       );
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$PensionAccountProductImplToJson(this);
+    return _$$PensionHoldingProductImplToJson(this);
   }
 }
 
-abstract class _PensionAccountProduct extends PensionAccountProduct {
-  const factory _PensionAccountProduct({
+abstract class _PensionHoldingProduct extends PensionHoldingProduct {
+  const factory _PensionHoldingProduct({
     final String? id,
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'product_id') required final String productId,
@@ -325,11 +325,11 @@ abstract class _PensionAccountProduct extends PensionAccountProduct {
     @JsonKey(name: 'purchase_date') final String? purchaseDate,
     @JsonKey(name: 'total_payout') final double totalPayout,
     @JsonKey(name: 'is_terminated') final bool isTerminated,
-  }) = _$PensionAccountProductImpl;
-  const _PensionAccountProduct._() : super._();
+  }) = _$PensionHoldingProductImpl;
+  const _PensionHoldingProduct._() : super._();
 
-  factory _PensionAccountProduct.fromJson(Map<String, dynamic> json) =
-      _$PensionAccountProductImpl.fromJson;
+  factory _PensionHoldingProduct.fromJson(Map<String, dynamic> json) =
+      _$PensionHoldingProductImpl.fromJson;
 
   @override
   String? get id;
@@ -351,10 +351,10 @@ abstract class _PensionAccountProduct extends PensionAccountProduct {
   @JsonKey(name: 'is_terminated')
   bool get isTerminated;
 
-  /// Create a copy of PensionAccountProduct
+  /// Create a copy of PensionHoldingProduct
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PensionAccountProductImplCopyWith<_$PensionAccountProductImpl>
+  _$$PensionHoldingProductImplCopyWith<_$PensionHoldingProductImpl>
   get copyWith => throw _privateConstructorUsedError;
 }

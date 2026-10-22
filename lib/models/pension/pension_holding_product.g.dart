@@ -1,14 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'pension_account_product.dart';
+part of 'pension_holding_product.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PensionAccountProductImpl _$$PensionAccountProductImplFromJson(
+_$PensionHoldingProductImpl _$$PensionHoldingProductImplFromJson(
   Map<String, dynamic> json,
-) => _$PensionAccountProductImpl(
+) => _$PensionHoldingProductImpl(
   id: json['id'] as String?,
   accountId: json['account_id'] as String,
   productId: json['product_id'] as String,
@@ -18,8 +18,8 @@ _$PensionAccountProductImpl _$$PensionAccountProductImplFromJson(
   isTerminated: json['is_terminated'] as bool? ?? false,
 );
 
-Map<String, dynamic> _$$PensionAccountProductImplToJson(
-  _$PensionAccountProductImpl instance,
+Map<String, dynamic> _$$PensionHoldingProductImplToJson(
+  _$PensionHoldingProductImpl instance,
 ) => <String, dynamic>{
   'id': instance.id,
   'account_id': instance.accountId,

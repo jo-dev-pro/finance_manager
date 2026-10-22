@@ -16,6 +16,7 @@ _$AccountImpl _$$AccountImplFromJson(Map<String, dynamic> json) =>
       accountNumber: json['account_number'] as String?,
       logoUrl: json['logo_url'] as String?,
       status: json['status'] as String? ?? '활동',
+      sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$AccountImplToJson(_$AccountImpl instance) =>
@@ -28,4 +29,5 @@ Map<String, dynamic> _$$AccountImplToJson(_$AccountImpl instance) =>
       'account_number': instance.accountNumber,
       'logo_url': instance.logoUrl,
       'status': instance.status,
+      'sort_order': instance.sortOrder,
     };

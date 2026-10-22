@@ -31,10 +31,12 @@ mixin _$Account {
   @JsonKey(name: 'account_type')
   String get accountType => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_number')
-  String? get accountNumber => throw _privateConstructorUsedError; // 💡 계좌번호 필드 추가
+  String? get accountNumber => throw _privateConstructorUsedError;
   @JsonKey(name: 'logo_url')
   String? get logoUrl => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
+  @JsonKey(name: 'sort_order')
+  int get sortOrder => throw _privateConstructorUsedError;
 
   /// Serializes this Account to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -59,6 +61,7 @@ abstract class $AccountCopyWith<$Res> {
     @JsonKey(name: 'account_number') String? accountNumber,
     @JsonKey(name: 'logo_url') String? logoUrl,
     String status,
+    @JsonKey(name: 'sort_order') int sortOrder,
   });
 }
 
@@ -85,6 +88,7 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
     Object? accountNumber = freezed,
     Object? logoUrl = freezed,
     Object? status = null,
+    Object? sortOrder = null,
   }) {
     return _then(
       _value.copyWith(
@@ -128,6 +132,11 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
                     ? _value.status
                     : status // ignore: cast_nullable_to_non_nullable
                         as String,
+            sortOrder:
+                null == sortOrder
+                    ? _value.sortOrder
+                    : sortOrder // ignore: cast_nullable_to_non_nullable
+                        as int,
           )
           as $Val,
     );
@@ -151,6 +160,7 @@ abstract class _$$AccountImplCopyWith<$Res> implements $AccountCopyWith<$Res> {
     @JsonKey(name: 'account_number') String? accountNumber,
     @JsonKey(name: 'logo_url') String? logoUrl,
     String status,
+    @JsonKey(name: 'sort_order') int sortOrder,
   });
 }
 
@@ -176,6 +186,7 @@ class __$$AccountImplCopyWithImpl<$Res>
     Object? accountNumber = freezed,
     Object? logoUrl = freezed,
     Object? status = null,
+    Object? sortOrder = null,
   }) {
     return _then(
       _$AccountImpl(
@@ -219,6 +230,11 @@ class __$$AccountImplCopyWithImpl<$Res>
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                     as String,
+        sortOrder:
+            null == sortOrder
+                ? _value.sortOrder
+                : sortOrder // ignore: cast_nullable_to_non_nullable
+                    as int,
       ),
     );
   }
@@ -236,6 +252,7 @@ class _$AccountImpl implements _Account {
     @JsonKey(name: 'account_number') this.accountNumber,
     @JsonKey(name: 'logo_url') this.logoUrl,
     this.status = '활동',
+    @JsonKey(name: 'sort_order') this.sortOrder = 0,
   });
 
   factory _$AccountImpl.fromJson(Map<String, dynamic> json) =>
@@ -258,17 +275,19 @@ class _$AccountImpl implements _Account {
   @override
   @JsonKey(name: 'account_number')
   final String? accountNumber;
-  // 💡 계좌번호 필드 추가
   @override
   @JsonKey(name: 'logo_url')
   final String? logoUrl;
   @override
   @JsonKey()
   final String status;
+  @override
+  @JsonKey(name: 'sort_order')
+  final int sortOrder;
 
   @override
   String toString() {
-    return 'Account(id: $id, financialInstitution: $financialInstitution, accountNameId: $accountNameId, accountName: $accountName, accountType: $accountType, accountNumber: $accountNumber, logoUrl: $logoUrl, status: $status)';
+    return 'Account(id: $id, financialInstitution: $financialInstitution, accountNameId: $accountNameId, accountName: $accountName, accountType: $accountType, accountNumber: $accountNumber, logoUrl: $logoUrl, status: $status, sortOrder: $sortOrder)';
   }
 
   @override
@@ -288,7 +307,9 @@ class _$AccountImpl implements _Account {
             (identical(other.accountNumber, accountNumber) ||
                 other.accountNumber == accountNumber) &&
             (identical(other.logoUrl, logoUrl) || other.logoUrl == logoUrl) &&
-            (identical(other.status, status) || other.status == status));
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.sortOrder, sortOrder) ||
+                other.sortOrder == sortOrder));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -303,6 +324,7 @@ class _$AccountImpl implements _Account {
     accountNumber,
     logoUrl,
     status,
+    sortOrder,
   );
 
   /// Create a copy of Account
@@ -330,6 +352,7 @@ abstract class _Account implements Account {
     @JsonKey(name: 'account_number') final String? accountNumber,
     @JsonKey(name: 'logo_url') final String? logoUrl,
     final String status,
+    @JsonKey(name: 'sort_order') final int sortOrder,
   }) = _$AccountImpl;
 
   factory _Account.fromJson(Map<String, dynamic> json) = _$AccountImpl.fromJson;
@@ -350,12 +373,15 @@ abstract class _Account implements Account {
   String get accountType;
   @override
   @JsonKey(name: 'account_number')
-  String? get accountNumber; // 💡 계좌번호 필드 추가
+  String? get accountNumber;
   @override
   @JsonKey(name: 'logo_url')
   String? get logoUrl;
   @override
   String get status;
+  @override
+  @JsonKey(name: 'sort_order')
+  int get sortOrder;
 
   /// Create a copy of Account
   /// with the given fields replaced by the non-null parameter values.

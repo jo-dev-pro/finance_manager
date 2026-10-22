@@ -10,13 +10,13 @@ import '../../presentation/screens/bank/bank_screen.dart';
 import '../../presentation/screens/dashboard_screen.dart';
 import '../../presentation/screens/investment/investment_screen.dart';
 import '../../presentation/screens/monthly_data/monthly_bank_balance_screen.dart';
-import '../../presentation/screens/pension/pension_account_product_screen.dart';
+import '../../presentation/screens/pension/pension_holding_product_screen.dart';
 import '../../presentation/screens/pension/pension_product_screen.dart';
 import '../../presentation/screens/pension/pension_screen.dart';
 import '../../presentation/screens/stock/stock_item_screen.dart';
 import '../../presentation/screens/stock/stock_screen.dart';
 import '../../presentation/screens/stock/stock_transaction_type_screen.dart';
-import '../../presentation/widgets/responsive_scaffold.dart';
+import '../../presentation/responsive/responsive_scaffold.dart';
 import 'app_router_path.dart';
 
 part 'app_router.g.dart';
@@ -112,7 +112,7 @@ GoRouter router(RouterRef ref) {
                   ),
                   GoRoute(
                     path: AppRoutePath.pensionAccountProductSub,
-                    builder: (context, state) => const PensionAccountProductScreen(),
+                    builder: (context, state) => const PensionHoldingProductScreen(),
                   ),
                   GoRoute(
                     path: AppRoutePath.pensionProductSub,

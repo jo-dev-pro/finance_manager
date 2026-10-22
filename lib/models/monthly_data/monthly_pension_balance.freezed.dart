@@ -31,9 +31,11 @@ mixin _$MonthlyPensionBalance {
   @JsonKey(name: 'product_id')
   String get productId => throw _privateConstructorUsedError;
   double get balance => throw _privateConstructorUsedError; // 당월 말 평가액
-  double get principal => throw _privateConstructorUsedError; // 최종 누적 투자 원금
+  double get principal => throw _privateConstructorUsedError; // 누적 투자 원금
   @JsonKey(name: 'total_payout')
-  double get totalPayout => throw _privateConstructorUsedError; // 최종 누적 연금 수령액
+  double get totalPayout => throw _privateConstructorUsedError; // 누적 연금 수령액
+  @JsonKey(name: 'total_withdrawal')
+  double get totalWithdrawal => throw _privateConstructorUsedError; // 💡 누적 중도 인출금
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate => throw _privateConstructorUsedError;
 
@@ -62,6 +64,7 @@ abstract class $MonthlyPensionBalanceCopyWith<$Res> {
     double balance,
     double principal,
     @JsonKey(name: 'total_payout') double totalPayout,
+    @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
     @JsonKey(name: 'purchase_date') String? purchaseDate,
   });
 }
@@ -91,6 +94,7 @@ class _$MonthlyPensionBalanceCopyWithImpl<
     Object? balance = null,
     Object? principal = null,
     Object? totalPayout = null,
+    Object? totalWithdrawal = null,
     Object? purchaseDate = freezed,
   }) {
     return _then(
@@ -130,6 +134,11 @@ class _$MonthlyPensionBalanceCopyWithImpl<
                     ? _value.totalPayout
                     : totalPayout // ignore: cast_nullable_to_non_nullable
                         as double,
+            totalWithdrawal:
+                null == totalWithdrawal
+                    ? _value.totalWithdrawal
+                    : totalWithdrawal // ignore: cast_nullable_to_non_nullable
+                        as double,
             purchaseDate:
                 freezed == purchaseDate
                     ? _value.purchaseDate
@@ -158,6 +167,7 @@ abstract class _$$MonthlyPensionBalanceImplCopyWith<$Res>
     double balance,
     double principal,
     @JsonKey(name: 'total_payout') double totalPayout,
+    @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
     @JsonKey(name: 'purchase_date') String? purchaseDate,
   });
 }
@@ -184,6 +194,7 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
     Object? balance = null,
     Object? principal = null,
     Object? totalPayout = null,
+    Object? totalWithdrawal = null,
     Object? purchaseDate = freezed,
   }) {
     return _then(
@@ -223,6 +234,11 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
                 ? _value.totalPayout
                 : totalPayout // ignore: cast_nullable_to_non_nullable
                     as double,
+        totalWithdrawal:
+            null == totalWithdrawal
+                ? _value.totalWithdrawal
+                : totalWithdrawal // ignore: cast_nullable_to_non_nullable
+                    as double,
         purchaseDate:
             freezed == purchaseDate
                 ? _value.purchaseDate
@@ -244,6 +260,7 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
     this.balance = 0.0,
     this.principal = 0.0,
     @JsonKey(name: 'total_payout') this.totalPayout = 0.0,
+    @JsonKey(name: 'total_withdrawal') this.totalWithdrawal = 0.0,
     @JsonKey(name: 'purchase_date') this.purchaseDate,
   }) : super._();
 
@@ -268,18 +285,22 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
   @override
   @JsonKey()
   final double principal;
-  // 최종 누적 투자 원금
+  // 누적 투자 원금
   @override
   @JsonKey(name: 'total_payout')
   final double totalPayout;
-  // 최종 누적 연금 수령액
+  // 누적 연금 수령액
+  @override
+  @JsonKey(name: 'total_withdrawal')
+  final double totalWithdrawal;
+  // 💡 누적 중도 인출금
   @override
   @JsonKey(name: 'purchase_date')
   final String? purchaseDate;
 
   @override
   String toString() {
-    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, productId: $productId, balance: $balance, principal: $principal, totalPayout: $totalPayout, purchaseDate: $purchaseDate)';
+    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, productId: $productId, balance: $balance, principal: $principal, totalPayout: $totalPayout, totalWithdrawal: $totalWithdrawal, purchaseDate: $purchaseDate)';
   }
 
   @override
@@ -299,6 +320,8 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
                 other.principal == principal) &&
             (identical(other.totalPayout, totalPayout) ||
                 other.totalPayout == totalPayout) &&
+            (identical(other.totalWithdrawal, totalWithdrawal) ||
+                other.totalWithdrawal == totalWithdrawal) &&
             (identical(other.purchaseDate, purchaseDate) ||
                 other.purchaseDate == purchaseDate));
   }
@@ -314,6 +337,7 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
     balance,
     principal,
     totalPayout,
+    totalWithdrawal,
     purchaseDate,
   );
 
@@ -344,6 +368,7 @@ abstract class _MonthlyPensionBalance extends MonthlyPensionBalance {
     final double balance,
     final double principal,
     @JsonKey(name: 'total_payout') final double totalPayout,
+    @JsonKey(name: 'total_withdrawal') final double totalWithdrawal,
     @JsonKey(name: 'purchase_date') final String? purchaseDate,
   }) = _$MonthlyPensionBalanceImpl;
   const _MonthlyPensionBalance._() : super._();
@@ -365,10 +390,13 @@ abstract class _MonthlyPensionBalance extends MonthlyPensionBalance {
   @override
   double get balance; // 당월 말 평가액
   @override
-  double get principal; // 최종 누적 투자 원금
+  double get principal; // 누적 투자 원금
   @override
   @JsonKey(name: 'total_payout')
-  double get totalPayout; // 최종 누적 연금 수령액
+  double get totalPayout; // 누적 연금 수령액
+  @override
+  @JsonKey(name: 'total_withdrawal')
+  double get totalWithdrawal; // 💡 누적 중도 인출금
   @override
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate;

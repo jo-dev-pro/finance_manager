@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/raw_upload/bank_monthly_upload.dart';
 import '../../core/raw_upload/pension_monthly_upload.dart';
 import '../../core/router/app_router_path.dart';
+import 'guide/pension_guide.dart';
 
 class AllMenuScreen extends StatelessWidget {
   const AllMenuScreen({super.key});
@@ -17,6 +18,20 @@ class AllMenuScreen extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: 32),
+            ListTile(
+              leading: const Icon(Icons.help_outline, color: Colors.indigo),
+              title: const Text('연금 자산 관리 가이드'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PensionGuideScreen(),
+                  ),
+                );
+              },
+            ),
+
             ListTile(
               leading: const Icon(Icons.monetization_on_outlined),
               title: const Text('투자금 관리'),

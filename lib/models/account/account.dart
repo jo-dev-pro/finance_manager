@@ -12,9 +12,10 @@ class Account with _$Account {
     @JsonKey(name: 'account_name_id') String? accountNameId,
     @JsonKey(name: 'account_name') String? accountName,
     @JsonKey(name: 'account_type') required String accountType,
-    @JsonKey(name: 'account_number') String? accountNumber, // 💡 계좌번호 필드 추가
+    @JsonKey(name: 'account_number') String? accountNumber,
     @JsonKey(name: 'logo_url') String? logoUrl,
     @Default('활동') String status,
+    @JsonKey(name: 'sort_order') @Default(0) int sortOrder, // 💡 출력 순서 필드 추가
   }) = _Account;
 
   factory Account.fromJson(Map<String, dynamic> json) =>
