@@ -427,8 +427,6 @@ class BankScreen extends ConsumerWidget {
                 ),
                 diff.toSignedPriceText(
                   style: const TextStyle(fontSize: 12),
-                  positiveColor: Colors.red,
-                  negativeColor: Colors.blue,
                 ),
               ],
             ),

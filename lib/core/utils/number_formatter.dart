@@ -137,8 +137,8 @@ extension NumberFormatter on num {
   /// [대시보드/은행/연금 공용] 부호(+/-)에 따라 색상이 적용된 금액 Text 위젯 리턴
   Widget toSignedPriceText({
     TextStyle? style,
-    Color positiveColor = const Color(0xFFFF8A80), // 플러스(수익/상승) Red/Orange
-    Color negativeColor = const Color(0xFF82B1FF), // 마이너스(손실/하락) Blue
+    Color positiveColor = Colors.red, // 플러스(수익/상승) Red/Orange
+    Color negativeColor = Colors.blue, // 마이너스(손실/하락) Blue
     Color zeroColor = Colors.grey,
     String suffix = '원',
     bool showPlusSign = true,
