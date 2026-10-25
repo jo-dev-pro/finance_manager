@@ -45,11 +45,21 @@ class PensionHoldingProductScreen extends ConsumerWidget {
           final accountMap = {for (var acc in accounts) acc.id!: acc};
           final productMap = {for (var prod in products) prod.id!: prod.productName};
 
+          // 💡 계좌의 sortOrder를 반영하여 보유 상품 목록 정렬
+          final sortedAccountProducts = [...accountProducts];
+          sortedAccountProducts.sort((a, b) {
+            final accA = accountMap[a.accountId];
+            final accB = accountMap[b.accountId];
+            final orderA = accA?.sortOrder ?? 999;
+            final orderB = accB?.sortOrder ?? 999;
+            return orderA.compareTo(orderB);
+          });
+
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: accountProducts.length,
+            itemCount: sortedAccountProducts.length,
             itemBuilder: (context, index) {
-              final item = accountProducts[index];
+              final item = sortedAccountProducts[index];
               
               final matchedAcc = accountMap[item.accountId];
               final institution = matchedAcc?.financialInstitution ?? '기타 금융기관';

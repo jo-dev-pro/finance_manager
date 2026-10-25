@@ -109,13 +109,17 @@ class _PensionHoldingProductDialogState
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
     final productsAsync = ref.watch(pensionProductNotifierProvider);
-    final holdingProductsAsync = ref.watch(pensionHoldingProductNotifierProvider);
+    final holdingProductsAsync = ref.watch(
+      pensionHoldingProductNotifierProvider,
+    );
 
     final existingHoldingList = holdingProductsAsync.value ?? [];
-    final bool isAlreadyExists = existingHoldingList.any((item) =>
-        item.accountId == _selectedAccountId &&
-        item.productId == _selectedProductId &&
-        (!_isEditing || item.id != widget.initialData?.id));
+    final bool isAlreadyExists = existingHoldingList.any(
+      (item) =>
+          item.accountId == _selectedAccountId &&
+          item.productId == _selectedProductId &&
+          (!_isEditing || item.id != widget.initialData?.id),
+    );
 
     return AlertDialog(
       title: Text(_isEditing ? '계좌별 보유상품 수정' : '계좌별 상품 등록'),
@@ -137,7 +141,7 @@ class _PensionHoldingProductDialogState
                     border: Border.all(color: Colors.blue.shade200),
                   ),
                   child: const Text(
-                    '💡 안내: 이 화면에서는 상품의 [초기 투자 원금]과 [최초 매수일]만 매칭하여 등록합니다.\n'
+                    '💡 안내: 이 화면에서는 상품의 [초기 투자 원금]과 [매수일]을 등록합니다.\n'
                     '매월 발생하는 추가 투자, 연금 수령액, 중도 인출금은 [월말 연금 입력] 다이얼로그에서 입력해 주세요!',
                     style: TextStyle(fontSize: 12, color: Colors.blueAccent),
                   ),
@@ -150,14 +154,15 @@ class _PensionHoldingProductDialogState
                   error: (err, _) => Text('계좌 로딩 실패: $err'),
                   data: (accounts) {
                     final accountNames = accountNamesAsync.value ?? [];
-                    final pensionAccounts = accounts
-                        .where(
-                          (a) =>
-                              a.accountType.toUpperCase() == '연금' &&
-                              a.status == '활동',
-                        )
-                        .toList()
-                      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+                    final pensionAccounts =
+                        accounts
+                            .where(
+                              (a) =>
+                                  a.accountType.toUpperCase() == '연금' &&
+                                  a.status == '활동',
+                            )
+                            .toList()
+                          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
                     if (pensionAccounts.isEmpty) {
                       return const Text('활동 중인 연금 계좌가 없습니다.');
@@ -178,16 +183,17 @@ class _PensionHoldingProductDialogState
                         labelText: '연금 계좌 선택',
                         border: OutlineInputBorder(),
                       ),
-                      items: pensionAccounts.map((acc) {
-                        final institution = acc.financialInstitution;
-                        final nameObj = accountNameMap[acc.accountNameId];
-                        return DropdownMenuItem(
-                          value: acc.id,
-                          child: Text(
-                            '$institution - ${nameObj?.accountName ?? '계좌'}',
-                          ),
-                        );
-                      }).toList(),
+                      items:
+                          pensionAccounts.map((acc) {
+                            final institution = acc.financialInstitution;
+                            final nameObj = accountNameMap[acc.accountNameId];
+                            return DropdownMenuItem(
+                              value: acc.id,
+                              child: Text(
+                                '$institution - ${nameObj?.accountName ?? '계좌'}',
+                              ),
+                            );
+                          }).toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedAccountId = val;
@@ -218,15 +224,16 @@ class _PensionHoldingProductDialogState
                         labelText: '상품 선택',
                         border: OutlineInputBorder(),
                       ),
-                      items: products.map((prod) {
-                        return DropdownMenuItem(
-                          value: prod.id,
-                          child: Text(
-                            prod.productName,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
+                      items:
+                          products.map((prod) {
+                            return DropdownMenuItem(
+                              value: prod.id,
+                              child: Text(
+                                prod.productName,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedProductId = val;
@@ -237,7 +244,7 @@ class _PensionHoldingProductDialogState
                 ),
                 const SizedBox(height: 16),
 
-                // 3. 투자 원금 입력 (초기 원금)
+                // 3. 투자 원금 입력
                 TextFormField(
                   controller: _principalController,
                   keyboardType: TextInputType.number,
@@ -260,43 +267,62 @@ class _PensionHoldingProductDialogState
                 ),
                 const SizedBox(height: 16),
 
-                // 4. 최초 매수일 (신규 등록시에만 노출)
-                if (!isAlreadyExists) ...[
-                  TextFormField(
-                    controller: _dateController,
-                    readOnly: true,
-                    decoration: const InputDecoration(
-                      labelText: '최초 매수일',
-                      hintText: 'YYYY-MM-DD',
-                      suffixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          _dateController.text = DateFormat(
-                            'yyyy-MM-dd',
-                          ).format(picked);
-                        });
-                      }
-                    },
+                // 4. 매수일 입력 (조건문 제거하여 항상 표시)
+                TextFormField(
+                  controller: _dateController,
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    labelText: '매수일',
+                    hintText: 'YYYY-MM-DD',
+                    suffixIcon: Icon(Icons.calendar_today),
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 12),
-                ] else ...[
+                  onTap: () async {
+                    DateTime initialDate = DateTime.now();
+                    if (_dateController.text.trim().isNotEmpty) {
+                      try {
+                        initialDate = DateFormat(
+                          'yyyy-MM-dd',
+                        ).parse(_dateController.text.trim());
+                      } catch (_) {
+                        initialDate = DateTime.now();
+                      }
+                    }
+
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: initialDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _dateController.text = DateFormat(
+                          'yyyy-MM-dd',
+                        ).format(picked);
+                      });
+                    }
+                  },
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return '매수일을 입력해 주세요.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                if (isAlreadyExists)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
                     child: Text(
-                      'ℹ️ 동일 계좌·상품의 추가 매수 내역입니다.',
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                      'ℹ️ 동일 계좌·상품의 추가 매수 내역입니다. 개별 매수일을 각각 지정할 수 있습니다.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ),
-                ],
 
                 // 5. 연금 수령 완료(종료) 여부 스위치
                 SwitchListTile(
@@ -322,13 +348,14 @@ class _PensionHoldingProductDialogState
         ),
         ElevatedButton(
           onPressed: _isSubmitting ? null : _submit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(_isEditing ? '수정' : '등록'),
+          child:
+              _isSubmitting
+                  ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                  : Text(_isEditing ? '수정' : '등록'),
         ),
       ],
     );

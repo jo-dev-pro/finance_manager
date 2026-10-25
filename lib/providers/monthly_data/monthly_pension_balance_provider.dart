@@ -6,10 +6,12 @@ import '../../core/providers/firestore_provider.dart';
 import '../../core/utils/collection_name.dart';
 import '../../models/account/account.dart';
 import '../../models/account/account_name.dart';
+import '../../models/pension/pension_holding_product.dart';
 import '../../models/pension/pension_product.dart';
 import '../../models/monthly_data/monthly_pension_balance.dart';
 import '../account/account_provider.dart';
 import '../account/account_name_provider.dart';
+import '../pension/pension_holding_product_provider.dart';
 import '../pension/pension_product_provider.dart';
 
 part 'monthly_pension_balance_provider.g.dart';
@@ -119,15 +121,40 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
 
   Future<List<MonthlyPensionBalance>> fetchBalances(String yearMonth) async {
     final firestore = ref.read(firestoreProvider);
+   // 1. 해당 월의 월말 연금 데이터 가져오기
     final snapshot = await firestore
         .collection(monthlyPensionBalanceDBName)
         .where('year_month', isEqualTo: yearMonth)
         .get();
 
-    return snapshot.docs.map((doc) {
+    final balances = snapshot.docs.map((doc) {
       final data = doc.data();
       data['id'] = doc.id;
       return MonthlyPensionBalance.fromJson(data);
+    }).toList();
+
+    // 💡 2. 계좌별 보유 상품(매수일 정보 포함) 목록 가져오기
+    // (pensionHoldingProductNotifierProvider를 통해 보유 상품 정보를 안전하게 가져옴)
+    List<PensionHoldingProduct> holdingProducts = [];
+    try {
+      holdingProducts = await ref.watch(pensionHoldingProductNotifierProvider.future);
+    } catch (_) {}
+
+    // 3. '계좌ID_상품ID'를 키로 하고 purchaseDate를 값으로 하는 맵(Map) 생성
+    final purchaseDateMap = {
+      for (var hp in holdingProducts)
+        '${hp.accountId}_${hp.productId}': hp.purchaseDate
+    };
+
+    // 💡 4. 월말 데이터에 매수일이 비어있다면 보유 상품의 매수일을 찾아 채워넣기(copyWith)
+    return balances.map((item) {
+      if (item.purchaseDate == null || item.purchaseDate!.isEmpty) {
+        final matchedDate = purchaseDateMap['${item.accountId}_${item.productId}'];
+        if (matchedDate != null && matchedDate.isNotEmpty) {
+          return item.copyWith(purchaseDate: matchedDate);
+        }
+      }
+      return item;
     }).toList();
   }
 

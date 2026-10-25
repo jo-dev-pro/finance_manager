@@ -16,8 +16,9 @@ class _GroupedPensionItem {
   final String productId;
   double principal;
   double totalPayout;
-  double totalWithdrawal; // 💡 누적 중도 인출금 추가
+  double totalWithdrawal;
   String? purchaseDate;
+  final bool isCashAsset; // 💡 현금성 자산 여부 구분 플래그
 
   _GroupedPensionItem({
     required this.accountId,
@@ -26,6 +27,7 @@ class _GroupedPensionItem {
     required this.totalPayout,
     required this.totalWithdrawal,
     this.purchaseDate,
+    this.isCashAsset = false,
   });
 }
 
@@ -46,9 +48,12 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
   final Map<String, TextEditingController> _balanceControllers = {};
   final Map<String, TextEditingController> _addPrincipalControllers = {};
   final Map<String, TextEditingController> _addPayoutControllers = {};
-  final Map<String, TextEditingController> _addWithdrawalControllers = {}; // 💡 인출금 컨트롤러
+  final Map<String, TextEditingController> _addWithdrawalControllers = {};
 
   final _formKey = GlobalKey<FormState>();
+
+  // 💡 계좌별 현금성 자산 - firestore 문서 id (현금성자산)
+  static const String kCashAssetProductId = 'awFP6MxvrFMQhKK9mA9D';
 
   @override
   void initState() {
@@ -103,8 +108,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 16),
-                
+                const SizedBox(height: 8),
                 TextFormField(
                   initialValue: _selectedYearMonth,
                   decoration: const InputDecoration(
@@ -201,10 +205,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
 
                             final Map<String, _GroupedPensionItem> groupedMap = {};
                             
-                            final matchedHoldingProducts = accountProducts
-                                .where((ap) => ap.accountId == _selectedAccountId)
-                                .toList();
-
+                            // 💡 1. 현금성 자산 항목을 항상 목록 첫 번째나 기본 항목으로 추가
                             final currentBalances =
                                 existingCurrentBalancesAsync.value ?? [];
                             final prevBalances =
@@ -214,6 +215,22 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                               for (var b in prevBalances)
                                 '${b.accountId}_${b.productId}': b
                             };
+
+                            // 현금성 자산 기본 데이터 구성 (productId = kCashAssetProductId)
+                            final cashPrevData = prevBalanceMap['${_selectedAccountId}_$kCashAssetProductId'];
+                            groupedMap[kCashAssetProductId] = _GroupedPensionItem(
+                              accountId: _selectedAccountId!,
+                              productId: kCashAssetProductId,
+                              principal: cashPrevData?.principal ?? 0.0,
+                              totalPayout: 0.0,
+                              totalWithdrawal: 0.0,
+                              isCashAsset: true,
+                            );
+
+                            // 2. 일반 보유 상품 매칭
+                            final matchedHoldingProducts = accountProducts
+                                .where((ap) => ap.accountId == _selectedAccountId)
+                                .toList();
 
                             for (var ap in matchedHoldingProducts) {
                               final prodId = ap.productId;
@@ -239,14 +256,6 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                             }
 
                             final groupedItems = groupedMap.values.toList();
-
-                            if (groupedItems.isEmpty) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Text('해당 계좌에 매칭된 연금 상품이 없습니다.'),
-                              );
-                            }
-
                             final currentBalanceMap = {
                               for (var b in currentBalances)
                                 '${b.accountId}_${b.productId}': b
@@ -261,10 +270,13 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                               itemBuilder: (context, index) {
                                 final groupItem = groupedItems[index];
                                 final prodId = groupItem.productId;
-                                final productName =
-                                    productMap[prodId] ?? '연금 상품';
+                                
+                                // 💡 현금성 자산인지 일반 상품인지 이름 구분
+                                final productName = groupItem.isCashAsset
+                                    ? '💵 계좌 공통 현금성 자산 (예수금 등)'
+                                    : (productMap[prodId] ?? '연금 상품');
+                                
                                 final key = '${_selectedAccountId}_$prodId';
-
                                 final currentData = currentBalanceMap[key];
 
                                 if (!_balanceControllers.containsKey(key)) {
@@ -280,11 +292,14 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                 }
 
                                 return Card(
-                                  elevation: 0.5,
+                                  elevation: groupItem.isCashAsset ? 1.5 : 0.5,
+                                  color: groupItem.isCashAsset ? Colors.amber.shade50 : Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                     side: BorderSide(
-                                      color: Colors.grey.shade300,
+                                      color: groupItem.isCashAsset
+                                          ? Colors.amber.shade300
+                                          : Colors.grey.shade300,
                                     ),
                                   ),
                                   child: Padding(
@@ -295,14 +310,19 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                       children: [
                                         Text(
                                           productName,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 15,
+                                            color: groupItem.isCashAsset
+                                                ? Colors.amber.shade900
+                                                : Colors.black87,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          '누적원금: ${groupItem.principal.toWon()} | 수령액: ${groupItem.totalPayout.toWon()} | 인출금: ${groupItem.totalWithdrawal.toWon()}',
+                                          groupItem.isCashAsset
+                                              ? '계좌 내 대기 자금 및 예수금 잔액'
+                                              : '누적원금: ${groupItem.principal.toWon()} | 수령액: ${groupItem.totalPayout.toWon()} | 인출금: ${groupItem.totalWithdrawal.toWon()}',
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: Colors.grey.shade600,
@@ -310,6 +330,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                         ),
                                         const Divider(height: 16),
                                         
+                                        // 당월 말 평가액 (현금성 자산도 잔액이 곧 평가액이 됨)
                                         TextFormField(
                                           controller: _balanceControllers[key],
                                           keyboardType: TextInputType.number,
@@ -317,72 +338,75 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                             FilteringTextInputFormatter.digitsOnly,
                                             ThousandsSeparatorInputFormatter(),
                                           ],
-                                          decoration: const InputDecoration(
-                                            labelText: '당월 말 평가액',
+                                          decoration: InputDecoration(
+                                            labelText: groupItem.isCashAsset ? '당월 말 현금성 자산 잔액' : '당월 말 평가액',
                                             suffixText: '원',
-                                            border: OutlineInputBorder(),
+                                            border: const OutlineInputBorder(),
                                             isDense: true,
                                           ),
                                         ),
                                         const SizedBox(height: 10),
 
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: TextFormField(
-                                                controller: _addPrincipalControllers[key],
-                                                keyboardType: TextInputType.number,
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter.digitsOnly,
-                                                  ThousandsSeparatorInputFormatter(),
-                                                ],
-                                                decoration: const InputDecoration(
-                                                  labelText: '당월 추가 투자금',
-                                                  hintText: '없으면 0',
-                                                  suffixText: '원',
-                                                  border: OutlineInputBorder(),
-                                                  isDense: true,
+                                        // 현금성 자산은 추가 투자금/수령액/인출금이 불필요하므로 일반 상품에만 노출하거나 공통 활용
+                                        if (!groupItem.isCashAsset) ...[
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: TextFormField(
+                                                  controller: _addPrincipalControllers[key],
+                                                  keyboardType: TextInputType.number,
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    ThousandsSeparatorInputFormatter(),
+                                                  ],
+                                                  decoration: const InputDecoration(
+                                                    labelText: '당월 추가 투자금',
+                                                    hintText: '없으면 0',
+                                                    suffixText: '원',
+                                                    border: OutlineInputBorder(),
+                                                    isDense: true,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Expanded(
-                                              child: TextFormField(
-                                                controller: _addPayoutControllers[key],
-                                                keyboardType: TextInputType.number,
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter.digitsOnly,
-                                                  ThousandsSeparatorInputFormatter(),
-                                                ],
-                                                decoration: const InputDecoration(
-                                                  labelText: '당월 수령 연금액',
-                                                  hintText: '없으면 0',
-                                                  suffixText: '원',
-                                                  border: OutlineInputBorder(),
-                                                  isDense: true,
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: TextFormField(
+                                                  controller: _addPayoutControllers[key],
+                                                  keyboardType: TextInputType.number,
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    ThousandsSeparatorInputFormatter(),
+                                                  ],
+                                                  decoration: const InputDecoration(
+                                                    labelText: '당월 수령 연금액',
+                                                    hintText: '없으면 0',
+                                                    suffixText: '원',
+                                                    border: OutlineInputBorder(),
+                                                    isDense: true,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Expanded(
-                                              child: TextFormField(
-                                                controller: _addWithdrawalControllers[key],
-                                                keyboardType: TextInputType.number,
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter.digitsOnly,
-                                                  ThousandsSeparatorInputFormatter(),
-                                                ],
-                                                decoration: const InputDecoration(
-                                                  labelText: '당월 중도 인출금',
-                                                  hintText: '없으면 0',
-                                                  suffixText: '원',
-                                                  border: OutlineInputBorder(),
-                                                  isDense: true,
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: TextFormField(
+                                                  controller: _addWithdrawalControllers[key],
+                                                  keyboardType: TextInputType.number,
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    ThousandsSeparatorInputFormatter(),
+                                                  ],
+                                                  decoration: const InputDecoration(
+                                                    labelText: '당월 중도 인출금',
+                                                    hintText: '없으면 0',
+                                                    suffixText: '원',
+                                                    border: OutlineInputBorder(),
+                                                    isDense: true,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
+                                            ],
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -425,10 +449,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
         ref.read(pensionHoldingProductNotifierProvider).value ?? [];
     
     final Map<String, _GroupedPensionItem> groupedMap = {};
-    final matchedHoldingProducts = accountProducts
-        .where((ap) => ap.accountId == _selectedAccountId)
-        .toList();
-
+    
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
     final prevBalances = ref.read(
           monthlyPensionBalanceNotifierProvider(prevYearMonth),
@@ -436,6 +457,22 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
     final prevBalanceMap = {
       for (var b in prevBalances) '${b.accountId}_${b.productId}': b
     };
+
+    // 💡 현금성 자산 처리
+    final cashPrevData = prevBalanceMap['${_selectedAccountId}_$kCashAssetProductId'];
+    groupedMap[kCashAssetProductId] = _GroupedPensionItem(
+      accountId: _selectedAccountId!,
+      productId: kCashAssetProductId,
+      principal: cashPrevData?.principal ?? 0.0,
+      totalPayout: 0.0,
+      totalWithdrawal: 0.0,
+      isCashAsset: true,
+    );
+
+    // 일반 상품 처리
+    final matchedHoldingProducts = accountProducts
+        .where((ap) => ap.accountId == _selectedAccountId)
+        .toList();
 
     for (var ap in matchedHoldingProducts) {
       final prodId = ap.productId;
@@ -474,13 +511,20 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
 
       if (balCtrl != null && balCtrl.text.isNotEmpty) {
         final balVal = double.tryParse(balCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
-        final addPrinVal = double.tryParse(addPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
-        final addPayoutVal = double.tryParse(addPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
-        final addWithdrawalVal = double.tryParse(addWithdrawalCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
+        
+        double finalPrincipal = groupItem.principal;
+        double finalPayout = groupItem.totalPayout;
+        double finalWithdrawal = groupItem.totalWithdrawal;
 
-        final finalPrincipal = groupItem.principal + addPrinVal;
-        final finalPayout = groupItem.totalPayout + addPayoutVal;
-        final finalWithdrawal = groupItem.totalWithdrawal + addWithdrawalVal;
+        if (!groupItem.isCashAsset) {
+          final addPrinVal = double.tryParse(addPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
+          final addPayoutVal = double.tryParse(addPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
+          final addWithdrawalVal = double.tryParse(addWithdrawalCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
+
+          finalPrincipal += addPrinVal;
+          finalPayout += addPayoutVal;
+          finalWithdrawal += addWithdrawalVal;
+        }
 
         if (balVal > 0 || finalPrincipal > 0) {
           itemsToSave.add(
@@ -491,7 +535,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
               balance: balVal,
               principal: finalPrincipal,
               totalPayout: finalPayout,
-              totalWithdrawal: finalWithdrawal, // 💡 최종 누적 인출금 저장
+              totalWithdrawal: finalWithdrawal,
               purchaseDate: groupItem.purchaseDate,
             ),
           );

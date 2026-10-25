@@ -26,8 +26,6 @@ class _PensionMonthlyUploadScreenState
   // 💡 YYYY.MM / YYYY.M / YYYY-M 형식을 YYYY-MM 포맷으로 정확히 정제
   String _formatYearMonth(dynamic raw) {
     String str = raw.toString().trim();
-
-    // 구분자 통일 (. 또는 / 를 - 로 변경)
     str = str.replaceAll('.', '-').replaceAll('/', '-');
 
     if (str.contains('-')) {
@@ -82,7 +80,6 @@ class _PensionMonthlyUploadScreenState
       });
 
       final firestore = FirebaseFirestore.instance;
-      // 💡 연금 월말 평가액 컬렉션 이름 적용
       final collectionRef = firestore.collection('monthly_pension_balance');
 
       WriteBatch batch = firestore.batch();
@@ -90,24 +87,34 @@ class _PensionMonthlyUploadScreenState
 
       for (int i = 1; i < table.maxRows; i++) {
         final row = table.rows[i];
-        // 엑셀 열 구성: 0(기준월), 1(계좌ID), 2(상품ID), 3(평가액)
+        // 💡 엑셀 열 구성: 0(기준월), 1(계좌ID), 2(상품ID), 3(평가액), 4(원금), 5(수령액), 6(인출금)
         if (row.length < 4 || row[0] == null || row[1] == null || row[2] == null) continue;
 
         final rawYM = row[0]?.toString() ?? '';
         final accountId = row[1]?.toString().trim() ?? '';
         final productId = row[2]?.toString().trim() ?? '';
-        final rawBalance = row[3]?.toString() ?? '0';
+        
+        final rawBalance = row.length > 3 ? row[3]?.toString() ?? '0' : '0';
+        final rawPrincipal = row.length > 4 ? row[4]?.toString() ?? '0' : '0';
+        final rawPayout = row.length > 5 ? row[5]?.toString() ?? '0' : '0';
+        final rawWithdrawal = row.length > 6 ? row[6]?.toString() ?? '0' : '0';
 
         if (rawYM.isEmpty || accountId.isEmpty || productId.isEmpty) continue;
 
         final yearMonth = _formatYearMonth(rawYM);
         final balance = double.tryParse(rawBalance) ?? 0.0;
+        final principal = double.tryParse(rawPrincipal) ?? 0.0;
+        final totalPayout = double.tryParse(rawPayout) ?? 0.0;
+        final totalWithdrawal = double.tryParse(rawWithdrawal) ?? 0.0;
 
         final model = MonthlyPensionBalance(
           yearMonth: yearMonth,
           accountId: accountId,
           productId: productId,
           balance: balance,
+          principal: principal,
+          totalPayout: totalPayout,
+          totalWithdrawal: totalWithdrawal,
         );
 
         final docData = model.toJson()..remove('id');
@@ -122,7 +129,7 @@ class _PensionMonthlyUploadScreenState
 
       await batch.commit();
 
-      // 💡 3. 저장 완료 후 Riverpod 캐시 무효화 (UI 즉시 반영)
+      // 3. 저장 완료 후 Riverpod 캐시 무효화 (UI 즉시 반영)
       ref.invalidate(availableYearMonthsProvider);
       ref.invalidate(allMonthlyPensionBalancesProvider);
 
@@ -161,9 +168,9 @@ class _PensionMonthlyUploadScreenState
               ),
               const SizedBox(height: 24),
               const Text(
-                '엑셀 파일 양식 안내\n[A열: 기준월, B열: 계좌ID, C열: 상품ID, D열: 월말 평가액]',
+                '엑셀 파일 양식 안내\n[A열: 기준월, B열: 계좌ID, C열: 상품ID(또는 현금성키),\nD열: 평가액, E열: 누적원금, F열: 누적수령액, G열: 누적인출금]',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 13),
+                style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.4),
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(

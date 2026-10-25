@@ -11,6 +11,7 @@ import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_pension_balance_provider.dart';
+import '../../../providers/pension/pension_product_provider.dart'; // 💡 상품명 매핑을 위해 추가
 import '../monthly_data/monthly_pension_balance_screen.dart';
 
 class PensionScreen extends ConsumerStatefulWidget {
@@ -57,6 +58,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     final selectedMonth = ref.watch(selectedYearMonthProvider);
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final productsAsync = ref.watch(pensionProductNotifierProvider); // 💡 상품 목록 프로바이더 watch
 
     return Scaffold(
       appBar: AppBar(
@@ -117,6 +119,19 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             0.0,
                             (sum, item) => sum + item.balance,
                           );
+                          // 💡 [추가] 전체 원금 및 총 평가 손익/수익률 계산
+                          final totalPrincipal = balances.fold<double>(
+                            0.0,
+                            (sum, item) => sum + item.principal,
+                          );
+                          final totalProfitOrLoss = balances.fold<double>(
+                            0.0,
+                            (sum, item) => sum + item.profitOrLoss,
+                          );
+                          final totalReturnRate = totalPrincipal > 0
+                              ? (totalProfitOrLoss / totalPrincipal) * 100
+                              : 0.0;
+
                           final lastTotalBalance = lastBalancesAsync.maybeWhen(
                             data: (lb) => lb.fold<double>(
                                 0.0, (sum, item) => sum + item.balance),
@@ -125,6 +140,9 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
 
                           return _buildSummaryCard(
                             totalBalance: totalBalance,
+                            totalPrincipal: totalPrincipal,
+                            totalProfitOrLoss: totalProfitOrLoss,
+                            totalReturnRate: totalReturnRate,
                             diffFromLastMonth: totalBalance - lastTotalBalance,
                           );
                         },
@@ -147,6 +165,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
 
                           final accounts = accountsAsync.value ?? [];
                           final accountNames = accountNamesAsync.value ?? [];
+                          final products = productsAsync.value ?? []; // 💡 상품 매핑 맵 생성용
 
                           final Map<String, List<MonthlyPensionBalance>>
                               accountGroups = {};
@@ -166,7 +185,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildAccountGrid(accountIds, accountGroups,
-                                  accounts, accountNames),
+                                  accounts, accountNames, products),
                               const SizedBox(height: 28),
                               const Text(
                                 '계좌별 평가 비중',
@@ -250,8 +269,14 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     );
   }
 
-  Widget _buildSummaryCard(
-      {required double totalBalance, required double diffFromLastMonth}) {
+  // 💡 [수정] 상단 대시보드에 전체 원금, 평가 손익 및 누적 수익률 반영
+  Widget _buildSummaryCard({
+    required double totalBalance,
+    required double totalPrincipal,
+    required double totalProfitOrLoss,
+    required double totalReturnRate,
+    required double diffFromLastMonth,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -269,6 +294,51 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
             totalBalance.toWon(),
             style: const TextStyle(
                 color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: Colors.white24, height: 1),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('총 투자 원금',
+                      style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 2),
+                  Text(
+                    totalPrincipal.toWon(),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text('평가 손익 (수익률)',
+                      style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      totalProfitOrLoss.toSignedPriceText(
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 4),
+                      totalReturnRate.toSignedPercentText(
+                        withParentheses: true,
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Row(
@@ -294,9 +364,15 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     Map<String, List<MonthlyPensionBalance>> accountGroups,
     List<Account> accounts,
     List<dynamic> accountNames,
+    List<dynamic> products,
   ) {
     final accountNameMap = {for (var an in accountNames) an.id: an};
     final accountMap = {for (var a in accounts) a.id!: a};
+    
+    // 💡 [수정] Map<String, String>으로 명시적 캐스팅 또는 변환 적용
+    final Map<String, String> productMap = {
+      for (var p in products) p.id.toString(): p.productName.toString()
+    };
 
     return GridView.builder(
       shrinkWrap: true,
@@ -305,7 +381,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.4,
+        childAspectRatio: 1.6,
       ),
       itemCount: accountIds.length,
       itemBuilder: (context, index) {
@@ -328,10 +404,13 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
           totalBalance: accountTotal,
           itemCount: items.length,
           onTap: () {
-            _showProductDetailBottomSheet(context,
-                institution: institution,
-                accountName: accountName,
-                products: items);
+            _showProductDetailBottomSheet(
+              context,
+              institution: institution,
+              accountName: accountName,
+              products: items,
+              productMap: productMap, // 이제 타입이 정확히 일치하여 오류가 사라집니다.
+            );
           },
         );
       },
@@ -423,7 +502,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                   },
                 ),
               ),
-              // 💡 titlesData 속성 안에 FlTitlesData를 선언하고 그 안에 배치해야 합니다.
               titlesData: FlTitlesData(
                 show: true,
                 leftTitles: const AxisTitles(
@@ -458,7 +536,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                   ),
                 ),
               ),
-              
               lineBarsData: accountIds.asMap().entries.map((entry) {
                 final idx = entry.key;
                 final accId = entry.value;
@@ -495,11 +572,13 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     );
   }
 
+  // 💡 [수정] 바텀시트에 상품명 표기 및 매수일 기준 연환산수익률(item.annualizedReturnRate) 정상 표출
   void _showProductDetailBottomSheet(
     BuildContext context, {
     required String institution,
     required String accountName,
     required List<MonthlyPensionBalance> products,
+    required Map<String, String> productMap,
   }) {
     showModalBottomSheet(
       context: context,
@@ -518,10 +597,22 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                   itemCount: products.length,
                   itemBuilder: (context, index) {
                     final item = products[index];
+                    
+                    // 현금성 자산 또는 상품명 매핑
+                    final productName = item.productId == '_CASH_ASSET_PRODUCT_ID_'
+                        ? '💵 계좌 공통 현금성 자산 (예수금)'
+                        : (productMap[item.productId] ?? '연금 상품');
+
                     return ListTile(
-                      title: Text('평가액: ${item.balance.toWon()}'),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        productName,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
                       subtitle: Text(
-                          '원금: ${item.principal.toWon()} | 수익률: ${item.returnRate.toStringAsFixed(1)}% (연환산: ${item.annualizedReturnRate.toStringAsFixed(1)}%)'),
+                        '평가액: ${item.balance.toWon()} | 원금: ${item.principal.toWon()}\n수익률: ${item.returnRate.toStringAsFixed(1)}% (연환산: ${item.annualizedReturnRate.toStringAsFixed(1)}%)',
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     );
                   },
                 ),
@@ -552,12 +643,14 @@ class _AccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 1,
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(10.0),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -566,10 +659,10 @@ class _AccountCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(institution,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                      style: TextStyle(fontSize: 10, color: Colors.grey[600])),
                   Text(accountName,
                       style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.bold),
+                          fontSize: 12, fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
                 ],
@@ -579,11 +672,11 @@ class _AccountCard extends StatelessWidget {
                 children: [
                   Text(totalBalance.toWon(),
                       style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Colors.indigo)),
                   Text('보유상품 $itemCount개',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                      style: TextStyle(fontSize: 10, color: Colors.grey[500])),
                 ],
               ),
             ],
