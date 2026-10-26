@@ -8,3 +8,4 @@ final String monthlyBankBalanceDBName = 'monthly_bank_balance';
 final String monthlyStockBalanceDBName = 'monthly_stock_balance';
 final String stockItemDBName = 'stock_item';
 final String stockTransactionTypeDBName = 'stock_transaction_type';
+final String stockHoldingItemDBName = 'stock_holding_item';
