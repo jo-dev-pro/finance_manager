@@ -16,7 +16,19 @@ class StockTransactionTypeScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('거래구분 관리')),
+      appBar: AppBar(
+        title: const Text('주식 거래구분 관리'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
+            color: Colors.grey.shade700,
+            padding: EdgeInsets.zero, // 기본 패딩 제거
+            constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+            onPressed: () => _showAddDialog(context),
+          ),
+          SizedBox(width: 16),
+        ],
+      ),
       body: stockTransactionTypeState.when(
         data: (items) {
           if (items.isEmpty) {
@@ -35,7 +47,7 @@ class StockTransactionTypeScreen extends ConsumerWidget {
               final item = items[index];
               final isAmountSign = item.amountSign == 'PLUS';
               final isQuantitySign = item.quantitySign == 'PLUS';
-
+ 
               return Card(
                 elevation: 1,
                 margin: const EdgeInsets.only(bottom: 12),
@@ -49,6 +61,7 @@ class StockTransactionTypeScreen extends ConsumerWidget {
                     vertical: 12,
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min, // 필요한 만큼만 공간 차지
                     children: [
                       // 💡 금액 부호 표시 뱃지 (+ / -)
                       Column(
@@ -135,11 +148,17 @@ class StockTransactionTypeScreen extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 20),
                         color: Colors.grey.shade700,
+                        padding: EdgeInsets.zero, // 기본 패딩 제거
+                        constraints: const BoxConstraints(), // 최소 48x48 제약 제거
                         onPressed: () => _showEditDialog(context, item),
                       ),
+                      const SizedBox(width: 8),
+
                       IconButton(
                         icon: const Icon(Icons.delete_outline, size: 20),
                         color: Colors.red.shade400,
+                        padding: EdgeInsets.zero, // 기본 패딩 제거
+                        constraints: const BoxConstraints(), // 최소 48x48 제약 제거
                         onPressed: () => _confirmDelete(context, ref, item),
                       ),
                     ],
@@ -152,25 +171,28 @@ class StockTransactionTypeScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('오류 발생: $e')),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text('거래구분 추가'),
-      ),
     );
   }
 
   void _showAddDialog(BuildContext context) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (_) => const StockTransactionTypeDialog(),
+      isScrollControlled: true, // 키보드 올라올 때 시트가 밀려 올라오도록 설정
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StockTransactionTypeDialog(),
     );
   }
 
   void _showEditDialog(BuildContext context, StockTransactionType item) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (_) => StockTransactionTypeDialog(initialData: item),
+      isScrollControlled: true, // 키보드 올라올 때 시트가 밀려 올라오도록 설정
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StockTransactionTypeDialog(initialData: item),
     );
   }
 

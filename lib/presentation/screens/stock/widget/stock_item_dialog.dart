@@ -78,19 +78,46 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(_isEditing ? '종목 수정' : '종목 등록'),
-      content: SingleChildScrollView(
+    // 키보드가 올라올 때 바텀시트가 가려지지 않도록 하단 인셋 확보
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      child: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 상단 헤더 (타이틀 + 닫기 버튼)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isEditing ? '종목 수정' : '종목 등록',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 12),
+
+              // 1. 종목코드 입력
               TextFormField(
                 controller: _codeController,
                 decoration: const InputDecoration(
                   labelText: '종목코드',
                   hintText: '예: 005930, AAPL',
+                  border: OutlineInputBorder(),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -100,11 +127,14 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
                 },
               ),
               const SizedBox(height: 12),
+
+              // 2. 종목명 입력
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: '종목명',
                   hintText: '예: 삼성전자, 애플',
+                  border: OutlineInputBorder(),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -114,9 +144,14 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
                 },
               ),
               const SizedBox(height: 12),
+
+              // 3. 시장 구분 선택
               DropdownButtonFormField<String>(
-                value: _selectedMarket,
-                decoration: const InputDecoration(labelText: '시장 구분'),
+                initialValue: _selectedMarket,
+                decoration: const InputDecoration(
+                  labelText: '시장 구분',
+                  border: OutlineInputBorder(),
+                ),
                 items: _markets.map((m) {
                   return DropdownMenuItem(value: m, child: Text(m));
                 }).toList(),
@@ -125,33 +160,47 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
                 },
               ),
               const SizedBox(height: 12),
+
+              // 4. 메모 입력
               TextFormField(
                 controller: _memoController,
                 decoration: const InputDecoration(
                   labelText: '메모 (선택)',
                   hintText: '비고 사항 입력',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // 하단 버튼 영역 (좌우 꽉 찬 버튼)
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _isEditing ? '수정하기' : '등록하기',
+                          style: const TextStyle(fontSize: 16),
+                        ),
                 ),
               ),
             ],
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _submit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(_isEditing ? '수정' : '등록'),
-        ),
-      ],
     );
   }
 }

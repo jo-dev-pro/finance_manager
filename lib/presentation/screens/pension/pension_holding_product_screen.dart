@@ -14,7 +14,9 @@ class PensionHoldingProductScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accountProductsAsync = ref.watch(pensionHoldingProductNotifierProvider);
+    final accountProductsAsync = ref.watch(
+      pensionHoldingProductNotifierProvider,
+    );
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
     final productsAsync = ref.watch(pensionProductNotifierProvider);
@@ -22,10 +24,18 @@ class PensionHoldingProductScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('계좌별 연금상품 관리'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
+            color: Colors.grey.shade700,
+            padding: EdgeInsets.zero, // 기본 패딩 제거
+            constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+            onPressed: () => _showAddDialog(context),
+          ),
+          SizedBox(width: 16),
+        ],
       ),
       body: accountProductsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('오류 발생: $err')),
         data: (accountProducts) {
           if (accountProducts.isEmpty) {
             return const Center(
@@ -43,7 +53,9 @@ class PensionHoldingProductScreen extends ConsumerWidget {
 
           final accountNameMap = {for (var an in accountNames) an.id: an};
           final accountMap = {for (var acc in accounts) acc.id!: acc};
-          final productMap = {for (var prod in products) prod.id!: prod.productName};
+          final productMap = {
+            for (var prod in products) prod.id!: prod.productName,
+          };
 
           // 💡 계좌의 sortOrder를 반영하여 보유 상품 목록 정렬
           final sortedAccountProducts = [...accountProducts];
@@ -60,12 +72,15 @@ class PensionHoldingProductScreen extends ConsumerWidget {
             itemCount: sortedAccountProducts.length,
             itemBuilder: (context, index) {
               final item = sortedAccountProducts[index];
-              
+
               final matchedAcc = accountMap[item.accountId];
               final institution = matchedAcc?.financialInstitution ?? '기타 금융기관';
-              final nameObj = matchedAcc != null ? accountNameMap[matchedAcc.accountNameId] : null;
+              final nameObj =
+                  matchedAcc != null
+                      ? accountNameMap[matchedAcc.accountNameId]
+                      : null;
               final accountName = nameObj?.accountName ?? '연금계좌';
-              
+
               final productName = productMap[item.productId] ?? '알 수 없는 상품';
 
               return Card(
@@ -76,8 +91,12 @@ class PensionHoldingProductScreen extends ConsumerWidget {
                   side: BorderSide(color: Colors.grey.shade200),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Expanded(
                         child: Column(
@@ -104,26 +123,40 @@ class PensionHoldingProductScreen extends ConsumerWidget {
                               children: [
                                 Text(
                                   '원금: ${item.principal.toWon()}',
-                                  style: const TextStyle(fontSize: 13, color: Colors.indigo, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.indigo,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
                                   '매수일: ${item.purchaseDate ?? '미입력'}',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
                                 ),
                               ],
                             ),
                           ],
                         ),
                       ),
+                      SizedBox(width: 16),
                       IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 20),
                         color: Colors.grey.shade700,
+                        padding: EdgeInsets.zero, // 기본 패딩 제거
+                        constraints: const BoxConstraints(), // 최소 48x48 제약 제거
                         onPressed: () => _showEditDialog(context, item),
                       ),
+                      SizedBox(width: 8),
+
                       IconButton(
                         icon: const Icon(Icons.delete_outline, size: 20),
                         color: Colors.red.shade400,
+                        padding: EdgeInsets.zero, // 기본 패딩 제거
+                        constraints: const BoxConstraints(), // 최소 48x48 제약 제거
                         onPressed: () => _confirmDelete(context, ref, item),
                       ),
                     ],
@@ -133,54 +166,64 @@ class PensionHoldingProductScreen extends ConsumerWidget {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text('상품 매칭 등록'),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text('오류 발생: $err')),
       ),
     );
   }
 
   void _showAddDialog(BuildContext context) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (_) => const PensionHoldingProductDialog(),
+      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => PensionHoldingProductDialog(),
     );
   }
 
   void _showEditDialog(BuildContext context, PensionHoldingProduct item) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (_) => PensionHoldingProductDialog(initialData: item),
+      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => PensionHoldingProductDialog(initialData: item),
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, PensionHoldingProduct item) {
+  void _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    PensionHoldingProduct item,
+  ) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('삭제 확인'),
-        content: const Text('해당 계좌의 상품 매칭 정보를 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('취소'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('삭제 확인'),
+            content: const Text('해당 계좌의 상품 매칭 정보를 삭제하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('취소'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (item.id != null) {
+                    await ref
+                        .read(pensionHoldingProductNotifierProvider.notifier)
+                        .deletePensionHoldingProduct(item.id!);
+                  }
+                  if (ctx.mounted) Navigator.of(ctx).pop();
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('삭제'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              if (item.id != null) {
-                await ref
-                    .read(pensionHoldingProductNotifierProvider.notifier)
-                    .deletePensionHoldingProduct(item.id!);
-              }
-              if (ctx.mounted) Navigator.of(ctx).pop();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
     );
   }
 }

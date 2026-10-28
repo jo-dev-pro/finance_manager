@@ -52,6 +52,7 @@ class AccountNameScreen extends ConsumerWidget {
                     vertical: 12,
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min, // 필요한 만큼만 공간 차지
                     children: [
                       Expanded(
                         child: Text(

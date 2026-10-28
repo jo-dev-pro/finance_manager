@@ -100,6 +100,7 @@ class InvestmentScreen extends ConsumerWidget {
                                   vertical: 12,
                                 ),
                                 child: Row(
+                                  mainAxisSize: MainAxisSize.min, // 필요한 만큼만 공간 차지
                                   children: [
                                     // 투자 정보 (설명, 날짜)
                                     Expanded(
@@ -139,13 +140,13 @@ class InvestmentScreen extends ConsumerWidget {
                                         color: Colors.blueAccent,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 16),
 
                                     // 수정 & 삭제 버튼
                                     IconButton(
                                       icon: const Icon(
                                         Icons.edit_outlined,
-                                        size: 20,
+                                        size: 20, 
                                       ),
                                       color: Colors.grey.shade700,
                                       padding: EdgeInsets.zero, // 기본 패딩 제거
@@ -166,11 +167,7 @@ class InvestmentScreen extends ConsumerWidget {
                                       constraints:
                                           const BoxConstraints(), // 최소 48x48 제약 제거
                                       onPressed:
-                                          () => _confirmDelete(
-                                            context,
-                                            ref,
-                                            item,
-                                          ),
+                                          () => _confirmDelete(context, ref, item),
                                     ),
                                   ],
                                 ),

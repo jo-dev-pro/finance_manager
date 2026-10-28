@@ -10,59 +10,6 @@ import 'widget/account_dialog.dart';
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
-  void _showDeleteConfirmDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Account account,
-    String productName,
-  ) {
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('계좌 삭제'),
-            content: Text('\'$productName\' 계좌를 정말 삭제하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('취소'),
-              ),
-              TextButton(
-                onPressed: () {
-                  if (account.id != null) {
-                    ref
-                        .read(accountNotifierProvider.notifier)
-                        .deleteAccount(account.id!);
-                  }
-                  Navigator.of(ctx).pop();
-                },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('삭제'),
-              ),
-            ],
-          ),
-    );
-  }
-
-  void _showFormDialog(BuildContext context, [Account? account]) {
-     showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => AccountDialog(initialAccount: account),
-    );
-  }
-
-  String _getAccountName(List<AccountName> accountNames, String accountNameId) {
-    final match = accountNames.firstWhere(
-      (an) => an.id == accountNameId,
-      orElse: () => const AccountName(accountName: '알 수 없는 계좌명'),
-    );
-    return match.accountName;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountState = ref.watch(accountNotifierProvider);
@@ -126,6 +73,7 @@ class AccountScreen extends ConsumerWidget {
                         vertical: 12,
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min, // 필요한 만큼만 공간 차지
                         children: [
                           CircleAvatar(
                             radius: 18,
@@ -295,5 +243,58 @@ class AccountScreen extends ConsumerWidget {
         error: (err, _) => Center(child: Text('데이터 로드 실패: $err')),
       ),
     );
+  }
+
+    void _showDeleteConfirmDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Account account,
+    String productName,
+  ) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('계좌 삭제'),
+            content: Text('\'$productName\' 계좌를 정말 삭제하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('취소'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (account.id != null) {
+                    ref
+                        .read(accountNotifierProvider.notifier)
+                        .deleteAccount(account.id!);
+                  }
+                  Navigator.of(ctx).pop();
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('삭제'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showFormDialog(BuildContext context, [Account? account]) {
+     showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => AccountDialog(initialAccount: account),
+    );
+  }
+
+  String _getAccountName(List<AccountName> accountNames, String accountNameId) {
+    final match = accountNames.firstWhere(
+      (an) => an.id == accountNameId,
+      orElse: () => const AccountName(accountName: '알 수 없는 계좌명'),
+    );
+    return match.accountName;
   }
 }

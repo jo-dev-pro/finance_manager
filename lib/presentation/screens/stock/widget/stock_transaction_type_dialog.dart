@@ -10,13 +10,15 @@ class StockTransactionTypeDialog extends ConsumerStatefulWidget {
   const StockTransactionTypeDialog({super.key, this.initialData});
 
   @override
-  ConsumerState<StockTransactionTypeDialog> createState() => _StockTransactionTypeDialogState();
+  ConsumerState<StockTransactionTypeDialog> createState() =>
+      _StockTransactionTypeDialogState();
 }
 
-class _StockTransactionTypeDialogState extends ConsumerState<StockTransactionTypeDialog> {
+class _StockTransactionTypeDialogState
+    extends ConsumerState<StockTransactionTypeDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _typeNameController;
-  
+
   // 수량 및 금액 연산자 상태값
   String _selectedQuantitySign = 'PLUS';
   String _selectedAmountSign = 'MINUS';
@@ -37,8 +39,10 @@ class _StockTransactionTypeDialogState extends ConsumerState<StockTransactionTyp
   @override
   void initState() {
     super.initState();
-    _typeNameController = TextEditingController(text: widget.initialData?.typeName ?? '');
-    
+    _typeNameController = TextEditingController(
+      text: widget.initialData?.typeName ?? '',
+    );
+
     if (widget.initialData != null) {
       _selectedQuantitySign = widget.initialData!.quantitySign;
       _selectedAmountSign = widget.initialData!.amountSign;
@@ -74,9 +78,9 @@ class _StockTransactionTypeDialogState extends ConsumerState<StockTransactionTyp
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -85,20 +89,46 @@ class _StockTransactionTypeDialogState extends ConsumerState<StockTransactionTyp
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(_isEditing ? '거래구분 수정' : '거래구분 등록'),
-      content: SingleChildScrollView(
+    // 키보드가 올라올 때 바텀시트가 가려지지 않도록 하단 여백 추가
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      child: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 상단 헤더 (타이틀 + 닫기 버튼)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isEditing ? '거래구분 수정' : '거래구분 등록',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 12),
+
               // 1. 거래구분명 입력
               TextFormField(
                 controller: _typeNameController,
                 decoration: const InputDecoration(
                   labelText: '거래구분명',
                   hintText: '예: 매수, 매도, 무상증자, 배당금',
+                  border: OutlineInputBorder(),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -111,19 +141,22 @@ class _StockTransactionTypeDialogState extends ConsumerState<StockTransactionTyp
 
               // 2. 수량 연산자 선택
               DropdownButtonFormField<String>(
-                value: _signOptions.contains(_selectedQuantitySign)
-                    ? _selectedQuantitySign
-                    : 'PLUS',
+                initialValue:
+                    _signOptions.contains(_selectedQuantitySign)
+                        ? _selectedQuantitySign
+                        : 'PLUS',
                 decoration: const InputDecoration(
                   labelText: '수량 연산',
                   helperText: '거래 발생 시 주식 수량 변동방식',
+                  border: OutlineInputBorder(),
                 ),
-                items: _signOptions.map((sign) {
-                  return DropdownMenuItem(
-                    value: sign,
-                    child: Text(_signLabels[sign] ?? sign),
-                  );
-                }).toList(),
+                items:
+                    _signOptions.map((sign) {
+                      return DropdownMenuItem(
+                        value: sign,
+                        child: Text(_signLabels[sign] ?? sign),
+                      );
+                    }).toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedQuantitySign = val);
                 },
@@ -132,43 +165,58 @@ class _StockTransactionTypeDialogState extends ConsumerState<StockTransactionTyp
 
               // 3. 금액 연산자 선택
               DropdownButtonFormField<String>(
-                value: _signOptions.contains(_selectedAmountSign)
-                    ? _selectedAmountSign
-                    : 'MINUS',
+                initialValue:
+                    _signOptions.contains(_selectedAmountSign)
+                        ? _selectedAmountSign
+                        : 'MINUS',
                 decoration: const InputDecoration(
                   labelText: '금액(현금) 연산',
                   helperText: '거래 발생 시 현금 잔고 변동방식',
+                  border: OutlineInputBorder(),
                 ),
-                items: _signOptions.map((sign) {
-                  return DropdownMenuItem(
-                    value: sign,
-                    child: Text(_signLabels[sign] ?? sign),
-                  );
-                }).toList(),
+                items:
+                    _signOptions.map((sign) {
+                      return DropdownMenuItem(
+                        value: sign,
+                        child: Text(_signLabels[sign] ?? sign),
+                      );
+                    }).toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedAmountSign = val);
                 },
+              ),
+              const SizedBox(height: 24),
+
+              // 하단 버튼 영역 (좌우 꽉 찬 버튼)
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child:
+                      _isSubmitting
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : Text(
+                            _isEditing ? '수정하기' : '등록하기',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                ),
               ),
             ],
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _submit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(_isEditing ? '수정' : '등록'),
-        ),
-      ],
     );
   }
 }

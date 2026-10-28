@@ -41,7 +41,7 @@ class BankScreen extends ConsumerWidget {
                 AppRoutePath.monthlyBankBalance,
                 extra: selectedMonth,
               );
-            },
+            }, 
             icon: const Icon(Icons.calendar_month, size: 18),
             label: const Text('월말은행'),
           ),
@@ -346,19 +346,11 @@ class BankScreen extends ConsumerWidget {
               value:
                   months.contains(currentMonth) ? currentMonth : months.first,
               icon: const Icon(Icons.arrow_drop_down),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
-              ),
               items:
                   months.map((String month) {
                     return DropdownMenuItem<String>(
                       value: month,
-                      child: Text(
-                        month,
-                        style: const TextStyle(color: Colors.black87),
-                      ),
+                      child: Text(month),
                     );
                   }).toList(),
               onChanged: (String? newMonth) {

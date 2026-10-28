@@ -2,8 +2,10 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../models/account/account.dart';
 import '../../../models/monthly_data/monthly_pension_balance.dart';
@@ -12,7 +14,6 @@ import '../../../providers/account/account_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../providers/pension/pension_product_provider.dart'; // 💡 상품명 매핑을 위해 추가
-import '../monthly_data/monthly_pension_balance_screen.dart';
 
 class PensionScreen extends ConsumerStatefulWidget {
   const PensionScreen({super.key});
@@ -67,16 +68,15 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         actions: [
           ElevatedButton.icon(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MonthlyPensionBalanceScreen(),
-                ),
+               context.push(
+                AppRoutePath.monthlyPensionBalance,
+                extra: selectedMonth,
               );
             },
             icon: const Icon(Icons.calendar_month_outlined),
             label: const Text('월말연금'),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
         ],
       ),
       body: availableMonthsAsync.when(
@@ -231,7 +231,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            onPressed: currentIndex < months.length - 1
+            onPressed: currentIndex < months.length - 1 
                 ? () {
                     ref
                         .read(selectedYearMonthProvider.notifier)
@@ -240,16 +240,20 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                 : null,
           ),
           DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: currentMonth,
-              items: months
-                  .map((m) => DropdownMenuItem(value: m, child: Text(m)))
-                  .toList(),
-              onChanged: (newMonth) {
+             child: DropdownButton<String>(
+              value:
+                  months.contains(currentMonth) ? currentMonth : months.first,
+              icon: const Icon(Icons.arrow_drop_down),
+              items:
+                  months.map((String month) {
+                    return DropdownMenuItem<String>(
+                      value: month,
+                      child: Text(month),
+                    );
+                  }).toList(),
+              onChanged: (String? newMonth) {
                 if (newMonth != null) {
-                  ref
-                      .read(selectedYearMonthProvider.notifier)
-                      .select(newMonth);
+                  ref.read(selectedYearMonthProvider.notifier).select(newMonth);
                 }
               },
             ),
