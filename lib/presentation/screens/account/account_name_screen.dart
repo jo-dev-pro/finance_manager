@@ -57,13 +57,19 @@ class AccountNameScreen extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 20),
                         color: Colors.grey.shade700,
+                        padding: EdgeInsets.zero, // 기본 패딩 제거
+                        constraints: const BoxConstraints(), // 최소 48x48 제약 제거
                         onPressed:
                             () =>
                                 _showDialog(context, accountName: accountName),
                       ),
+                      const SizedBox(width: 8),
+
                       IconButton(
                         icon: const Icon(Icons.delete_outline, size: 20),
                         color: Colors.red.shade400,
+                        padding: EdgeInsets.zero, // 기본 패딩 제거
+                        constraints: const BoxConstraints(), // 최소 48x48 제약 제거
                         onPressed:
                             () => _confirmDelete(context, ref, accountName),
                       ),
@@ -84,8 +90,12 @@ class AccountNameScreen extends ConsumerWidget {
   }
 
   void _showDialog(BuildContext context, {AccountName? accountName}) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true, // 키보드 자리에 맞게 바텀시트가 올라오도록 설정
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => AccountNameDialog(accountName: accountName),
     );
   }

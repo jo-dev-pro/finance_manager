@@ -1,10 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../core/utils/number_formatter.dart';
 import '../../../../models/account/account.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -22,7 +20,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _institutionController;
   late final TextEditingController _numberController;
-  late final TextEditingController _sortOrderController; // 💡 출력 순서 컨트롤러 추가
+  late final TextEditingController _sortOrderController;
 
   String? _selectedAccountNameId;
   String? _selectedAccountName;
@@ -44,7 +42,6 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
     _numberController = TextEditingController(
       text: widget.initialAccount?.accountNumber ?? '',
     );
-    // 💡 기존 값이 있으면 대입, 없으면 기본값 '0'
     _sortOrderController = TextEditingController(
       text: widget.initialAccount?.sortOrder.toString() ?? '0',
     );
@@ -62,7 +59,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
   void dispose() {
     _institutionController.dispose();
     _numberController.dispose();
-    _sortOrderController.dispose(); // 💡 메모리 해제
+    _sortOrderController.dispose();
     super.dispose();
   }
 
@@ -85,12 +82,11 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
       final number = _numberController.text.trim();
       final sortOrder = int.tryParse(_sortOrderController.text.trim()) ?? 0;
 
-      // 💡 1. 현재 등록된 전체 계좌 목록 가져오기
       final existingAccounts = ref.read(accountNotifierProvider).value ?? [];
 
-      // 💡 2. 중복 체크 (수정 중인 본인 계좌는 제외하고, 동일한 sortOrder가 있는지 확인)
-      final isDuplicate = existingAccounts.any((acc) => 
-        acc.sortOrder == sortOrder && acc.id != widget.initialAccount?.id
+      final isDuplicate = existingAccounts.any(
+        (acc) =>
+            acc.sortOrder == sortOrder && acc.id != widget.initialAccount?.id,
       );
 
       if (isDuplicate) {
@@ -100,7 +96,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
             backgroundColor: Colors.redAccent,
           ),
         );
-        return; // 중복일 경우 저장을 중단하고 빠져나감
+        return;
       }
 
       if (_isEditing) {
@@ -131,59 +127,86 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
       Navigator.of(context).pop();
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final existingLogoUrl = widget.initialAccount?.logoUrl;
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return AlertDialog(
-      title: Text(_isEditing ? '계좌 정보 수정' : '신규 계좌 등록'),
-      content: SingleChildScrollView(
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      child: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 36,
-                  backgroundColor: Colors.grey[200],
-                  backgroundImage:
-                      _imageBytes != null
-                          ? MemoryImage(_imageBytes!)
-                          : (existingLogoUrl != null &&
-                                  existingLogoUrl.isNotEmpty
-                              ? NetworkImage(existingLogoUrl) as ImageProvider
-                              : null),
-                  child:
-                      (_imageBytes == null &&
-                              (existingLogoUrl == null ||
-                                  existingLogoUrl.isEmpty))
-                          ? const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_a_photo,
-                                size: 20,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                '로고 선택',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey,
+              // 상단 헤더 (타이틀 + 닫기)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isEditing ? '계좌 정보 수정' : '신규 계좌 등록',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 12),
+
+              // 로고 선택
+              Center(
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 36,
+                    backgroundColor: Colors.grey[200],
+                    backgroundImage:
+                        _imageBytes != null
+                            ? MemoryImage(_imageBytes!)
+                            : (existingLogoUrl != null &&
+                                    existingLogoUrl.isNotEmpty
+                                ? NetworkImage(existingLogoUrl) as ImageProvider
+                                : null),
+                    child:
+                        (_imageBytes == null &&
+                                (existingLogoUrl == null ||
+                                    existingLogoUrl.isEmpty))
+                            ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_a_photo,
+                                  size: 20,
+                                  color: Colors.grey[800],
                                 ),
-                              ),
-                            ],
-                          )
-                          : null,
+                                SizedBox(height: 4),
+                                Text(
+                                  '로고 선택',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey[800],
+                                  ),
+                                ),
+                              ],
+                            )
+                            : null,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
 
+              // 금융기관 입력
               TextFormField(
                 controller: _institutionController,
                 enableSuggestions: false,
@@ -196,6 +219,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
               ),
               const SizedBox(height: 12),
 
+              // 계좌구분 선택
               DropdownButtonFormField<String>(
                 initialValue: _selectedType,
                 decoration: const InputDecoration(
@@ -213,6 +237,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
               ),
               const SizedBox(height: 12),
 
+              // 계좌명 선택
               accountNamesAsync.when(
                 data: (accountNames) {
                   return DropdownButtonFormField<String>(
@@ -233,7 +258,13 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
                             )
                             .toList(),
                     onChanged: (val) {
-                      setState(() => _selectedAccountNameId = val);
+                      final selected = accountNames.firstWhere(
+                        (element) => element.id == val,
+                      );
+                      setState(() {
+                        _selectedAccountNameId = val;
+                        _selectedAccountName = selected.accountName;
+                      });
                     },
                     validator:
                         (v) => v == null || v.isEmpty ? '계좌명을 선택하세요' : null,
@@ -251,6 +282,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
               ),
               const SizedBox(height: 12),
 
+              // 계좌번호 입력
               TextFormField(
                 controller: _numberController,
                 enableSuggestions: false,
@@ -264,13 +296,11 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
               ),
               const SizedBox(height: 12),
 
-              // 💡 [추가] 출력 순서 입력 필드
+              // 출력 순서 입력
               TextFormField(
                 controller: _sortOrderController,
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   labelText: '출력 순서 (숫자가 낮을수록 상단)',
                   hintText: '예: 1, 2, 3...',
@@ -278,20 +308,28 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
                 ),
                 validator: (v) => v == null || v.isEmpty ? '순서를 입력하세요' : null,
               ),
+              const SizedBox(height: 24),
+
+              // 하단 버튼 (좌우 꽉 찬 버튼)
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(
+                    _isEditing ? '수정하기' : '등록하기',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: Text(_isEditing ? '수정' : '등록'),
-        ),
-      ],
     );
   }
 }

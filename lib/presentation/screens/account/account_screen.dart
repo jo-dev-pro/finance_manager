@@ -45,9 +45,13 @@ class AccountScreen extends ConsumerWidget {
   }
 
   void _showFormDialog(BuildContext context, [Account? account]) {
-    showDialog(
+     showModalBottomSheet(
       context: context,
-      builder: (_) => AccountDialog(initialAccount: account),
+      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => AccountDialog(initialAccount: account),
     );
   }
 
@@ -244,11 +248,19 @@ class AccountScreen extends ConsumerWidget {
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20),
                             color: Colors.grey.shade700,
+                               padding: EdgeInsets.zero, // 기본 패딩 제거
+                                      constraints:
+                                          const BoxConstraints(), // 최소 48x48 제약 제거
                             onPressed: () => _showFormDialog(context, account),
                           ),
+                          const SizedBox(width: 8),
+
                           IconButton(
                             icon: const Icon(Icons.delete_outline, size: 20),
                             color: Colors.red.shade400,
+                               padding: EdgeInsets.zero, // 기본 패딩 제거
+                                      constraints:
+                                          const BoxConstraints(), // 최소 48x48 제약 제거
                             onPressed:
                                 () => _showDeleteConfirmDialog(
                                   context,

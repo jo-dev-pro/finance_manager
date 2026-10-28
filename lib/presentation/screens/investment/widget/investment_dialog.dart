@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/utils/date_helper.dart'; // DateHelper 경로 확인 필요
+import '../../../../core/utils/date_helper.dart';
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../models/investment/investment.dart';
 import '../../../../providers/investment/investment_provider.dart';
@@ -43,12 +43,11 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
 
     _amountController = TextEditingController(text: initialAmountText);
 
-    // 날짜 초기값 설정
     if (widget.initialData?.createdAt != null) {
       _selectedDate = widget.initialData!.createdAt!;
     }
     _dateController = TextEditingController(
-      text: DateHelper.formatToKorean(_selectedDate),
+      text: DateHelper.formatToDate(_selectedDate),
     );
   }
 
@@ -60,7 +59,6 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
     super.dispose();
   }
 
-  // 날짜 선택 클릭 처리
   Future<void> _pickDate() async {
     final picked = await DateHelper.pickDate(
       context,
@@ -69,7 +67,7 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
-        _dateController.text = DateHelper.formatToKorean(picked);
+        _dateController.text = DateHelper.formatToDate(picked);
       });
     }
   }
@@ -88,7 +86,7 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
         id: widget.initialData?.id,
         description: description,
         amount: amount,
-        createdAt: widget.initialData?.createdAt, // 기존 생성일자 유지
+        createdAt: widget.initialData?.createdAt,
       );
 
       final notifier = ref.read(investmentNotifierProvider.notifier);
@@ -112,84 +110,129 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(_isEditing ? '투자 내역 수정' : '투자 내역 등록'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 1. 날짜 선택 입력 항목 추가
-            GestureDetector(
-              onTap: _pickDate,
-              child: AbsorbPointer(
-                // 키보드가 뜨지 않고 클릭 이벤트만 받도록 설정
-                child: TextFormField(
-                  controller: _dateController,
-                  decoration: const InputDecoration(
-                    labelText: '날짜',
-                    suffixIcon: Icon(Icons.calendar_today_outlined),
+    // 키보드가 올라올 때 화면이 밀리거나 가려지는 것을 방지하기 위해 viewInsets 활용
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 상단 타이틀 및 닫기 버튼
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isEditing ? '투자 내역 수정' : '투자 내역 등록',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 8),
+
+              // 1. 날짜 선택
+              GestureDetector(
+                onTap: _pickDate,
+                child: AbsorbPointer(
+                  child: TextFormField(
+                    controller: _dateController,
+                    decoration: const InputDecoration(
+                      labelText: '날짜',
+                      border: OutlineInputBorder(),
+                      suffixIcon: Icon(Icons.calendar_today_outlined),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // 2. 적요 입력
-            TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(labelText: '적요'),
-              validator: (val) {
-                if (val == null || val.trim().isEmpty) {
-                  return '적요를 입력해 주세요.';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            // 3. 금액 입력
-            TextFormField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                ThousandsSeparatorInputFormatter(),
-              ],
-              decoration: const InputDecoration(
-                labelText: '투자금액',
-                hintText: '0',
-                suffixText: '원',
+              const SizedBox(height: 16),
+
+              // 2. 적요 입력
+              TextFormField(
+                controller: _descriptionController,
+                maxLines: null,
+                decoration: const InputDecoration(
+                  labelText: '적요',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) {
+                    return '적요를 입력해 주세요.';
+                  }
+                  return null;
+                },
               ),
-              validator: (val) {
-                if (val == null || val.trim().isEmpty) {
-                  return '금액을 입력해 주세요.';
-                }
-                final cleanVal = val.replaceAll(',', '').trim();
-                if (double.tryParse(cleanVal) == null) {
-                  return '올바른 숫자를 입력해 주세요.';
-                }
-                return null;
-              },
-            ),
-          ],
+              const SizedBox(height: 16),
+
+              // 3. 투자금액 입력
+              TextFormField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  ThousandsSeparatorInputFormatter(),
+                ],
+                decoration: const InputDecoration(
+                  labelText: '투자금액',
+                  hintText: '0',
+                  suffixText: '원',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) {
+                    return '금액을 입력해 주세요.';
+                  }
+                  final cleanVal = val.replaceAll(',', '').trim();
+                  if (double.tryParse(cleanVal) == null) {
+                    return '올바른 숫자를 입력해 주세요.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // 하단 버튼 영역 (좌우 꽉 찬 버튼)
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child:
+                      _isSubmitting
+                          ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : Text(
+                            _isEditing ? '수정하기' : '등록하기',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _submit,
-          child:
-              _isSubmitting
-                  ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                  : Text(_isEditing ? '수정' : '등록'),
-        ),
-      ],
     );
   }
 }

@@ -31,7 +31,6 @@ class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
   @override
   void didUpdateWidget(covariant AccountNameDialog oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 전달받은 accountName 객체가 변경되었을 때 컨트롤러 텍스트 동기화
     if (oldWidget.accountName != widget.accountName) {
       _nameController.text = widget.accountName?.accountName ?? '';
     }
@@ -62,9 +61,9 @@ class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -73,47 +72,85 @@ class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(_isEditing ? '계좌명 수정' : '계좌명 등록'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: '계좌명',
-                hintText: '예: 정기예금, 자유적금',
-                border: OutlineInputBorder(),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 상단 타이틀 및 닫기
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isEditing ? '계좌명 수정' : '계좌명 등록',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
-              validator: (val) {
-                if (val == null || val.trim().isEmpty) {
-                  return '계좌명을 입력해주세요.';
-                }
-                return null;
-              },
-            ),
-          ],
+              const Divider(),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: _nameController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: '계좌명',
+                  hintText: '예: 정기예금, 자유적금',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) {
+                    return '계좌명을 입력해주세요.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // 하단 버튼 (좌우 꽉 찬 버튼)
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child:
+                      _isSubmitting
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : Text(
+                            _isEditing ? '수정하기' : '등록하기',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.pop(context),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _submit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(_isEditing ? '수정' : '등록'),
-        ),
-      ],
     );
   }
 }

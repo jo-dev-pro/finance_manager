@@ -32,8 +32,8 @@ class DateHelper {
   }
 
   /// [유틸] DateTime 객체를 "2026년 03월 12일 (목)" 형식의 한글 텍스트로 변환합니다.
-  static String formatToKorean(DateTime? date) {
+  static String formatToDate(DateTime? date) {
     if (date == null) return '';
-    return DateFormat('yyyy년 MM월 dd일 (E)', 'ko_KR').format(date);
+    return DateFormat('yyyy-MM-dd').format(date);
   }
 }
