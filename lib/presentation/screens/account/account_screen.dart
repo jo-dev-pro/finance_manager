@@ -69,7 +69,18 @@ class AccountScreen extends ConsumerWidget {
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('계좌 관리')),
+      appBar: AppBar(title: const Text('계좌 관리'),
+      actions: [
+          IconButton( 
+            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
+            color: Colors.grey.shade700,
+            padding: EdgeInsets.zero, // 기본 패딩 제거
+            constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+            onPressed: () => _showFormDialog(context),
+          ),
+          SizedBox(width: 16),
+        ],
+      ),
       body: accountState.when(
         data: (accounts) {
           if (accounts.isEmpty) {
@@ -282,11 +293,6 @@ class AccountScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('데이터 로드 실패: $err')),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showFormDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text('계좌 추가'),
       ),
     );
   }

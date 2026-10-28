@@ -18,7 +18,7 @@ class InvestmentScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('투자 내역 관리'),
         actions: [
-          IconButton(
+          IconButton( 
             icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
             color: Colors.grey.shade700,
             padding: EdgeInsets.zero, // 기본 패딩 제거

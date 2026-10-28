@@ -13,7 +13,19 @@ class AccountNameScreen extends ConsumerWidget {
     final accountNameAsync = ref.watch(accountNameNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('은행 계좌명 관리')),
+      appBar: AppBar(
+        title: const Text('은행 계좌명 관리'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
+            color: Colors.grey.shade700,
+            padding: EdgeInsets.zero, // 기본 패딩 제거
+            constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+            onPressed: () => _showDialog(context),
+          ),
+          SizedBox(width: 16),
+        ],
+      ),
       body: accountNameAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('오류가 발생했습니다: $err')),
@@ -80,11 +92,6 @@ class AccountNameScreen extends ConsumerWidget {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text('계좌명 추가'),
       ),
     );
   }
