@@ -134,7 +134,7 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
   final firestore = ref.watch(firestoreProvider);
 
   // 1. 총 투자원금
-  final investSnap = await firestore.collection('investment').get();
+  final investSnap = await firestore.collection(investmentDBName).get();
   final totalInvested = investSnap.docs.fold<double>(
     0,
     (sum, doc) => sum + ((doc.data()['amount'] ?? 0) as num).toDouble(),
@@ -152,7 +152,7 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
   // 3. 증권 총 평가액
   final stockSnap =
       await firestore
-          .collection('monthly_stock_balance')
+          .collection(monthlyStockBalanceDBName)
           .where('year_month', isEqualTo: selectedMonth)
           .get();
   final stockBalance = stockSnap.docs.fold<double>(
@@ -164,7 +164,7 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
   // 4. 연금 총 평가액
   final pensionSnap =
       await firestore
-          .collection('monthly_pension_balance')
+          .collection(monthlyPensionBalanceDBName)
           .where('year_month', isEqualTo: selectedMonth)
           .get();
   final pensionBalance = pensionSnap.docs.fold<double>(

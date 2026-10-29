@@ -9,17 +9,17 @@ part of 'stock_item.dart';
 _$StockItemImpl _$$StockItemImplFromJson(Map<String, dynamic> json) =>
     _$StockItemImpl(
       id: json['id'] as String?,
-      symbolCode: json['symbol_code'] as String,
-      name: json['name'] as String,
-      market: json['market'] as String? ?? 'KOSPI',
-      memo: json['memo'] as String?,
+      itemName: json['itemName'] as String,
+      otherName: json['otherName'] as String?,
+      stockCode: json['stockCode'] as String,
+      yahooName: json['yahooName'] as String?,
     );
 
 Map<String, dynamic> _$$StockItemImplToJson(_$StockItemImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'symbol_code': instance.symbolCode,
-      'name': instance.name,
-      'market': instance.market,
-      'memo': instance.memo,
+      'itemName': instance.itemName,
+      'otherName': instance.otherName,
+      'stockCode': instance.stockCode,
+      'yahooName': instance.yahooName,
     };

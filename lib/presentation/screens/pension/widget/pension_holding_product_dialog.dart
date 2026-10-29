@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/date_helper.dart'; // 💡 DateHelper 임포트 추가
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../models/pension/pension_holding_product.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -33,6 +34,8 @@ class _PensionHoldingProductDialogState
   bool _isSubmitting = false;
   bool get _isEditing => widget.initialData != null;
 
+  DateTime _selectedDate = DateTime.now(); // 💡 선택된 날짜 관리 변수 추가
+
   @override
   void initState() {
     super.initState();
@@ -44,9 +47,21 @@ class _PensionHoldingProductDialogState
           ? widget.initialData!.principal.toCommaString()
           : '',
     );
+
+    // 날짜 초기값 설정
+    if (widget.initialData?.purchaseDate != null &&
+        widget.initialData!.purchaseDate!.isNotEmpty) {
+      try {
+        _selectedDate = DateFormat('yyyy-MM-dd').parse(widget.initialData!.purchaseDate!);
+      } catch (_) {
+        _selectedDate = DateTime.now();
+      }
+    }
+    
     _dateController = TextEditingController(
-      text: widget.initialData?.purchaseDate ?? '',
+      text: DateHelper.formatToDate(_selectedDate),
     );
+    
     _isTerminated = widget.initialData?.isTerminated ?? false;
   }
 
@@ -55,6 +70,20 @@ class _PensionHoldingProductDialogState
     _principalController.dispose();
     _dateController.dispose();
     super.dispose();
+  }
+
+  // 💡 DateHelper를 활용한 날짜 피커 메서드
+  Future<void> _pickDate() async {
+    final picked = await DateHelper.pickDate(
+      context,
+      initialDate: _selectedDate,
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+        _dateController.text = DateHelper.formatToDate(picked);
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -285,47 +314,26 @@ class _PensionHoldingProductDialogState
               ),
               const SizedBox(height: 16),
 
-              // 4. 매수일 입력
-              TextFormField(
-                controller: _dateController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: '매수일',
-                  hintText: 'YYYY-MM-DD',
-                  suffixIcon: Icon(Icons.calendar_today),
-                  border: OutlineInputBorder(),
+              // 4. 매수일 입력 (DateHelper 적용)
+              GestureDetector(
+                onTap: _pickDate,
+                child: AbsorbPointer(
+                  child: TextFormField(
+                    controller: _dateController,
+                    decoration: const InputDecoration(
+                      labelText: '매수일',
+                      hintText: 'YYYY-MM-DD',
+                      suffixIcon: Icon(Icons.calendar_today_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) {
+                        return '매수일을 입력해 주세요.';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-                onTap: () async {
-                  DateTime initialDate = DateTime.now();
-                  if (_dateController.text.trim().isNotEmpty) {
-                    try {
-                      initialDate = DateFormat(
-                        'yyyy-MM-dd',
-                      ).parse(_dateController.text.trim());
-                    } catch (_) {
-                      initialDate = DateTime.now();
-                    }
-                  }
-
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: initialDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _dateController.text =
-                          DateFormat('yyyy-MM-dd').format(picked);
-                    });
-                  }
-                },
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return '매수일을 입력해 주세요.';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 8),
 

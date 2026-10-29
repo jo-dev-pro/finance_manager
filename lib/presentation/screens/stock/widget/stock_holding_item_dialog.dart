@@ -227,7 +227,7 @@ class _StockHoldingItemDialogState
                         return DropdownMenuItem(
                           value: stock.id,
                           child: Text(
-                            '${stock.name} (${stock.symbolCode})',
+                            '${stock.itemName} (${stock.stockCode})',
                             overflow: TextOverflow.ellipsis,
                           ),
                         );

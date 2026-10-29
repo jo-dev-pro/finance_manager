@@ -6,8 +6,29 @@ part of 'monthly_stock_balance_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$allMonthlyStockBalancesHash() =>
+    r'4fad37d9b653c8570fd0a897d4440018c4d6b5c4';
+
+/// See also [AllMonthlyStockBalances].
+@ProviderFor(AllMonthlyStockBalances)
+final allMonthlyStockBalancesProvider = AutoDisposeAsyncNotifierProvider<
+  AllMonthlyStockBalances,
+  List<MonthlyStockBalanceWithDetail>
+>.internal(
+  AllMonthlyStockBalances.new,
+  name: r'allMonthlyStockBalancesProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$allMonthlyStockBalancesHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$AllMonthlyStockBalances =
+    AutoDisposeAsyncNotifier<List<MonthlyStockBalanceWithDetail>>;
 String _$monthlyStockBalanceNotifierHash() =>
-    r'afadfd292bbf86d27b1de18a4df76942da12b04e';
+    r'9366fb1dd41200d297705ba5a142a8108e9ead8e';
 
 /// Copied from Dart SDK
 class _SystemHash {

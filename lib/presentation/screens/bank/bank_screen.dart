@@ -383,42 +383,73 @@ class BankScreen extends ConsumerWidget {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: Colors.white,
-          backgroundImage:
-              account.logoUrl != null ? NetworkImage(account.logoUrl!) : null,
-          child:
-              account.logoUrl == null
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            // 1. 로고 아바타
+            CircleAvatar(
+              backgroundColor: Colors.white,
+              backgroundImage:
+                  account.logoUrl != null ? NetworkImage(account.logoUrl!) : null,
+              child: account.logoUrl == null
                   ? Icon(Icons.account_balance, color: Colors.blue.shade700)
                   : null,
-        ),
-        title: Text(
-          item.productName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          '${account.financialInstitution}${account.accountNumber != null && account.accountNumber!.isNotEmpty ? ' | ${account.accountNumber}' : ''}',
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              item.currentBalance.toWon(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            const SizedBox(width: 12),
+
+            // 2. 텍스트 영역 (계좌명, 금융기관 | 계좌번호)
+            // 💡 Expanded와 overflow 처리를 통해 좁은 화면에서도 세로로 길어지지 않게 방지
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    item.productName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${account.financialInstitution}${account.accountNumber != null && account.accountNumber!.isNotEmpty ? ' | ${account.accountNumber}' : ''}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // 3. 금액 및 전월 대비 영역 (오른쪽 고정)
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
-                  '전월대비 ',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                Text(
+                  item.currentBalance.toWon(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
-                diff.toSignedPriceText(
-                  style: const TextStyle(fontSize: 12),
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      '전월대비 ',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                    diff.toSignedPriceText(
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ],
                 ),
               ],
             ),

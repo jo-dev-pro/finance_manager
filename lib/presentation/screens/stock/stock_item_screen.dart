@@ -19,8 +19,8 @@ class StockItemScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
             color: Colors.grey.shade700,
-            padding: EdgeInsets.zero, // 기본 패딩 제거
-            constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
             onPressed: () => _showAddDialog(context),
           ),
           const SizedBox(width: 16),
@@ -58,7 +58,7 @@ class StockItemScreen extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      // 시장 구분 뱃지 (컨테이너)
+                      // 💡 시장 구분 뱃지 (yahooName 반영)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -69,7 +69,7 @@ class StockItemScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          item.market,
+                          item.yahooName ?? 'KR',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.blue.shade800,
@@ -79,13 +79,13 @@ class StockItemScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 12),
 
-                      // 종목 정보 (종목명, 코드/메모)
+                      // 💡 종목 정보 (itemName, stockCode, otherName 반영)
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              item.name,
+                              item.itemName,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -93,7 +93,7 @@ class StockItemScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '코드: ${item.symbolCode}${item.memo != null && item.memo!.isNotEmpty ? ' • ${item.memo}' : ''}',
+                              '코드: ${item.stockCode}${item.otherName != null && item.otherName!.isNotEmpty ? ' • ${item.otherName}' : ''}',
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 12,
@@ -142,7 +142,7 @@ class StockItemScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => StockItemDialog(),
+      builder: (context) => const StockItemDialog(),
     );
   }
 
@@ -162,7 +162,7 @@ class StockItemScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('삭제 확인'),
-        content: Text('\'${item.name}\' 종목을 삭제하시겠습니까?'),
+        content: Text('\'${item.itemName}\' 종목을 삭제하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),

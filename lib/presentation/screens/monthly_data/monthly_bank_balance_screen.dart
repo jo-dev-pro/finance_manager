@@ -63,14 +63,17 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                       logoUrl != null && logoUrl.isNotEmpty
                                           ? NetworkImage(logoUrl)
                                           : null,
-                                  child: (logoUrl == null || logoUrl.isEmpty)
-                                      ? Icon(
-                                          Icons.account_balance,
-                                          color: Colors.blue.shade700,
-                                        )
-                                      : null,
+                                  child:
+                                      (logoUrl == null || logoUrl.isEmpty)
+                                          ? Icon(
+                                            Icons.account_balance,
+                                            color: Colors.blue.shade700,
+                                          )
+                                          : null,
                                 ),
                                 const SizedBox(width: 14),
+
+                                // 💡 [수정] 중간 텍스트 영역에 Expanded를 주어 남은 공간을 유연하게 차지하고 오버플로우 방지
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -78,11 +81,15 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                     children: [
                                       Row(
                                         children: [
-                                          Text(
-                                            wrapper.accountNameDisplay,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
+                                          Expanded(
+                                            child: Text(
+                                              wrapper.accountNameDisplay,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                           const SizedBox(width: 8),
@@ -114,10 +121,15 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                           fontSize: 13,
                                           color: Colors.grey.shade600,
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
                                 ),
+                                const SizedBox(width: 8),
+
+                                // 우측 금액 및 아이콘 영역 (고정 크기 유지)
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
@@ -125,7 +137,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                       balanceItem.balance.toWon(),
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                        fontSize: 15,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -133,34 +145,36 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         IconButton(
+                                          padding: EdgeInsets.zero, // 기본 패딩 제거
                                           constraints: const BoxConstraints(),
-                                          padding: const EdgeInsets.all(4),
                                           icon: const Icon(
                                             Icons.edit,
-                                            size: 20,
+                                            size: 19,
                                             color: Colors.grey,
                                           ),
-                                          onPressed: () => _showEditDialog(
-                                            context,
-                                            ref,
-                                            wrapper,
-                                          ),
+                                          onPressed:
+                                              () => _showEditBottomSheet(
+                                                context,
+                                                ref,
+                                                wrapper,
+                                              ),
                                         ),
-                                        const SizedBox(width: 8),
+                                           const SizedBox(width: 8),
                                         IconButton(
+                                          padding: EdgeInsets.zero, // 기본 패딩 제거
                                           constraints: const BoxConstraints(),
-                                          padding: const EdgeInsets.all(4),
                                           icon: const Icon(
                                             Icons.delete,
-                                            size: 20,
+                                            size: 19,
                                             color: Colors.redAccent,
                                           ),
-                                          onPressed: () => _confirmDelete(
-                                            context,
-                                            ref,
-                                            balanceItem,
-                                            wrapper.accountNameDisplay,
-                                          ),
+                                          onPressed:
+                                              () => _confirmDelete(
+                                                context,
+                                                ref,
+                                                balanceItem,
+                                                wrapper.accountNameDisplay,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -193,70 +207,118 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
             ),
             icon: const Icon(Icons.add),
             label: const Text('월말 잔액 추가 입력', style: TextStyle(fontSize: 16)),
-            onPressed: () => _showAddDialog(context),
+            onPressed: () => _showAddBottomSheet(context),
           ),
         ),
       ),
     );
   }
 
-  void _showEditDialog(
+  void _showEditBottomSheet(
     BuildContext context,
     WidgetRef ref,
     MonthlyBankBalanceWithAccount wrapper,
   ) {
     final balanceItem = wrapper.balanceItem;
     final controller = TextEditingController(
-      text: NumberFormat('#,###', 'ko_KR').format(balanceItem.balance),
+      text: balanceItem.balance.toCommaString(),
     );
+    final formKey = GlobalKey<FormState>();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          '${wrapper.accountNameDisplay} (${balanceItem.yearMonth}) 금액 수정',
-        ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            ThousandsSeparatorInputFormatter(),
-          ],
-          decoration: const InputDecoration(
-            labelText: '금액 (원)',
-            suffixText: '원',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final cleanText = controller.text.replaceAll(
-                RegExp(r'[^0-9]'),
-                '',
-              );
-              final newBalance = double.tryParse(cleanText) ?? 0.0;
-
-              final updatedItem = balanceItem.copyWith(balance: newBalance);
-              await ref
-                  .read(
-                    monthlyBankBalanceNotifierProvider(
-                      balanceItem.yearMonth,
-                    ).notifier,
-                  )
-                  .saveBalance(updatedItem);
-
-              if (context.mounted) Navigator.pop(dialogContext);
-            },
-            child: const Text('저장'),
-          ),
-        ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.of(sheetContext).viewInsets.bottom;
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${wrapper.accountNameDisplay} (${balanceItem.yearMonth}) 금액 수정',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      ThousandsSeparatorInputFormatter(),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: '금액 (원)',
+                      suffixText: '원',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) {
+                        return '금액을 입력해 주세요.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        // 💡 [수정] 린트 규칙 반영 (중괄호 블록 추가)
+                        if (!(formKey.currentState?.validate() ?? false)) {
+                          return;
+                        }
+
+                        final cleanText = controller.text.replaceAll(
+                          RegExp(r'[^0-9]'),
+                          '',
+                        );
+                        final newBalance = double.tryParse(cleanText) ?? 0.0;
+
+                        final updatedItem = balanceItem.copyWith(
+                          balance: newBalance,
+                        );
+                        await ref
+                            .read(
+                              monthlyBankBalanceNotifierProvider(
+                                balanceItem.yearMonth,
+                              ).notifier,
+                            )
+                            .saveBalance(updatedItem);
+
+                        if (sheetContext.mounted) Navigator.pop(sheetContext);
+                      },
+                      child: const Text('저장하기', style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -268,40 +330,46 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('삭제 확인'),
-        content: Text('$accountName의 ${item.yearMonth} 월말 데이터를 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('삭제 확인'),
+            content: Text('$accountName의 ${item.yearMonth} 월말 데이터를 삭제하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('취소'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () async {
+                  if (item.id != null) {
+                    await ref
+                        .read(
+                          monthlyBankBalanceNotifierProvider(
+                            item.yearMonth,
+                          ).notifier,
+                        )
+                        .deleteBalance(item.id!);
+                  }
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                },
+                child: const Text('삭제', style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              if (item.id != null) {
-                await ref
-                    .read(
-                      monthlyBankBalanceNotifierProvider(
-                        item.yearMonth,
-                      ).notifier,
-                    )
-                    .deleteBalance(item.id!);
-              }
-              if (context.mounted) Navigator.pop(dialogContext);
-            },
-            child: const Text('삭제', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
     );
   }
 
-  void _showAddDialog(BuildContext context) {
+  void _showAddBottomSheet(BuildContext context) {
     final now = DateFormat('yyyy-MM').format(DateTime.now());
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => MonthlyBankDialog(yearMonth: initialYearMonth ?? now),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (context) => MonthlyBankDialog(yearMonth: initialYearMonth ?? now),
     );
   }
 }

@@ -8,14 +8,18 @@ import '../../presentation/screens/all_menu_screen.dart';
 import '../../presentation/screens/account/account_name_screen.dart';
 import '../../presentation/screens/bank/bank_screen.dart';
 import '../../presentation/screens/dashboard_screen.dart';
+import '../../presentation/screens/guide/pension_guide.dart';
+import '../../presentation/screens/guide/stock_guide.dart';
 import '../../presentation/screens/investment/investment_screen.dart';
 import '../../presentation/screens/monthly_data/monthly_bank_balance_screen.dart';
+import '../../presentation/screens/monthly_data/monthly_pension_balance_screen.dart';
+import '../../presentation/screens/monthly_data/monthly_stock_balance_screen.dart';
 import '../../presentation/screens/pension/pension_holding_product_screen.dart';
 import '../../presentation/screens/pension/pension_product_screen.dart';
 import '../../presentation/screens/pension/pension_screen.dart';
+import '../../presentation/screens/stock/stock_holding_item_screen.dart';
 import '../../presentation/screens/stock/stock_item_screen.dart';
 import '../../presentation/screens/stock/stock_screen.dart';
-import '../../presentation/screens/stock/stock_transaction_type_screen.dart';
 import '../../presentation/responsive/responsive_scaffold.dart';
 import 'app_router_path.dart';
 
@@ -55,7 +59,9 @@ GoRouter router(RouterRef ref) {
                     path: AppRoutePath.monthlyBankBalanceSub,
                     builder: (context, state) {
                       final selectedMonth = state.extra as String?;
-                      return MonthlyBankBalanceScreen(initialYearMonth: selectedMonth);
+                      return MonthlyBankBalanceScreen(
+                        initialYearMonth: selectedMonth,
+                      );
                     },
                   ),
                 ],
@@ -69,6 +75,17 @@ GoRouter router(RouterRef ref) {
               GoRoute(
                 path: AppRoutePath.stock,
                 builder: (context, state) => const StockScreen(),
+                routes: [
+                  GoRoute(
+                    path: AppRoutePath.monthlyStockBalanceSub,
+                    builder: (context, state) {
+                      final selectedMonth = state.extra as String?;
+                      return MonthlyStockBalanceScreen(
+                        initialYearMonth: selectedMonth,
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -79,6 +96,17 @@ GoRouter router(RouterRef ref) {
               GoRoute(
                 path: AppRoutePath.pension,
                 builder: (context, state) => const PensionScreen(),
+                routes: [
+                  GoRoute(
+                    path: AppRoutePath.monthlyPensionBalanceSub,
+                    builder: (context, state) {
+                      final selectedMonth = state.extra as String?;
+                      return MonthlyPensionBalanceScreen(
+                        initialYearMonth: selectedMonth,
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -90,6 +118,14 @@ GoRouter router(RouterRef ref) {
                 path: AppRoutePath.all,
                 builder: (context, state) => const AllMenuScreen(),
                 routes: [
+                  GoRoute(
+                    path: AppRoutePath.pensionGuideSub,
+                    builder: (context, state) => const PensionGuideScreen(),
+                  ),
+                  GoRoute(
+                    path: AppRoutePath.stockGuideSub,
+                    builder: (context, state) => const StockGuideScreen(),
+                  ),
                   GoRoute(
                     path: AppRoutePath.investmentSub,
                     builder: (context, state) => const InvestmentScreen(),
@@ -107,12 +143,13 @@ GoRouter router(RouterRef ref) {
                     builder: (context, state) => const StockItemScreen(),
                   ),
                   GoRoute(
-                    path: AppRoutePath.stockTransactionTypeSub,
-                    builder: (context, state) => const StockTransactionTypeScreen(),
+                    path: AppRoutePath.stockHoldingItemSub,
+                    builder: (context, state) => const StockHoldingItemScreen(),
                   ),
                   GoRoute(
                     path: AppRoutePath.pensionAccountProductSub,
-                    builder: (context, state) => const PensionHoldingProductScreen(),
+                    builder:
+                        (context, state) => const PensionHoldingProductScreen(),
                   ),
                   GoRoute(
                     path: AppRoutePath.pensionProductSub,

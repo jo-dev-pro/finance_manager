@@ -19,7 +19,7 @@ class StockItemNotifier extends _$StockItemNotifier {
     final firestore = ref.read(firestoreProvider);
     final snapshot = await firestore
         .collection(stockItemDBName)
-        .orderBy('name', descending: false) // ascending: true -> descending: false 변경
+        .orderBy('itemName', descending: false) // ascending: true -> descending: false 변경
         .get();
 
     return snapshot.docs.map((doc) {

@@ -21,12 +21,15 @@ StockItem _$StockItemFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$StockItem {
-  String? get id => throw _privateConstructorUsedError;
-  @JsonKey(name: 'symbol_code')
-  String get symbolCode => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
-  String get market => throw _privateConstructorUsedError;
-  String? get memo => throw _privateConstructorUsedError;
+  String? get id => throw _privateConstructorUsedError; // 문서 ID (docId) 매핑용
+  @JsonKey(name: 'itemName')
+  String get itemName => throw _privateConstructorUsedError; // 종목명 (예: 노바텍)
+  @JsonKey(name: 'otherName')
+  String? get otherName => throw _privateConstructorUsedError; // 기타 이름
+  @JsonKey(name: 'stockCode')
+  String get stockCode => throw _privateConstructorUsedError; // 종목 코드 (예: 285490)
+  @JsonKey(name: 'yahooName')
+  String? get yahooName => throw _privateConstructorUsedError;
 
   /// Serializes this StockItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -45,10 +48,10 @@ abstract class $StockItemCopyWith<$Res> {
   @useResult
   $Res call({
     String? id,
-    @JsonKey(name: 'symbol_code') String symbolCode,
-    String name,
-    String market,
-    String? memo,
+    @JsonKey(name: 'itemName') String itemName,
+    @JsonKey(name: 'otherName') String? otherName,
+    @JsonKey(name: 'stockCode') String stockCode,
+    @JsonKey(name: 'yahooName') String? yahooName,
   });
 }
 
@@ -68,10 +71,10 @@ class _$StockItemCopyWithImpl<$Res, $Val extends StockItem>
   @override
   $Res call({
     Object? id = freezed,
-    Object? symbolCode = null,
-    Object? name = null,
-    Object? market = null,
-    Object? memo = freezed,
+    Object? itemName = null,
+    Object? otherName = freezed,
+    Object? stockCode = null,
+    Object? yahooName = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -80,25 +83,25 @@ class _$StockItemCopyWithImpl<$Res, $Val extends StockItem>
                     ? _value.id
                     : id // ignore: cast_nullable_to_non_nullable
                         as String?,
-            symbolCode:
-                null == symbolCode
-                    ? _value.symbolCode
-                    : symbolCode // ignore: cast_nullable_to_non_nullable
+            itemName:
+                null == itemName
+                    ? _value.itemName
+                    : itemName // ignore: cast_nullable_to_non_nullable
                         as String,
-            name:
-                null == name
-                    ? _value.name
-                    : name // ignore: cast_nullable_to_non_nullable
+            otherName:
+                freezed == otherName
+                    ? _value.otherName
+                    : otherName // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            stockCode:
+                null == stockCode
+                    ? _value.stockCode
+                    : stockCode // ignore: cast_nullable_to_non_nullable
                         as String,
-            market:
-                null == market
-                    ? _value.market
-                    : market // ignore: cast_nullable_to_non_nullable
-                        as String,
-            memo:
-                freezed == memo
-                    ? _value.memo
-                    : memo // ignore: cast_nullable_to_non_nullable
+            yahooName:
+                freezed == yahooName
+                    ? _value.yahooName
+                    : yahooName // ignore: cast_nullable_to_non_nullable
                         as String?,
           )
           as $Val,
@@ -117,10 +120,10 @@ abstract class _$$StockItemImplCopyWith<$Res>
   @useResult
   $Res call({
     String? id,
-    @JsonKey(name: 'symbol_code') String symbolCode,
-    String name,
-    String market,
-    String? memo,
+    @JsonKey(name: 'itemName') String itemName,
+    @JsonKey(name: 'otherName') String? otherName,
+    @JsonKey(name: 'stockCode') String stockCode,
+    @JsonKey(name: 'yahooName') String? yahooName,
   });
 }
 
@@ -139,10 +142,10 @@ class __$$StockItemImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = freezed,
-    Object? symbolCode = null,
-    Object? name = null,
-    Object? market = null,
-    Object? memo = freezed,
+    Object? itemName = null,
+    Object? otherName = freezed,
+    Object? stockCode = null,
+    Object? yahooName = freezed,
   }) {
     return _then(
       _$StockItemImpl(
@@ -151,25 +154,25 @@ class __$$StockItemImplCopyWithImpl<$Res>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                     as String?,
-        symbolCode:
-            null == symbolCode
-                ? _value.symbolCode
-                : symbolCode // ignore: cast_nullable_to_non_nullable
+        itemName:
+            null == itemName
+                ? _value.itemName
+                : itemName // ignore: cast_nullable_to_non_nullable
                     as String,
-        name:
-            null == name
-                ? _value.name
-                : name // ignore: cast_nullable_to_non_nullable
+        otherName:
+            freezed == otherName
+                ? _value.otherName
+                : otherName // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        stockCode:
+            null == stockCode
+                ? _value.stockCode
+                : stockCode // ignore: cast_nullable_to_non_nullable
                     as String,
-        market:
-            null == market
-                ? _value.market
-                : market // ignore: cast_nullable_to_non_nullable
-                    as String,
-        memo:
-            freezed == memo
-                ? _value.memo
-                : memo // ignore: cast_nullable_to_non_nullable
+        yahooName:
+            freezed == yahooName
+                ? _value.yahooName
+                : yahooName // ignore: cast_nullable_to_non_nullable
                     as String?,
       ),
     );
@@ -181,10 +184,10 @@ class __$$StockItemImplCopyWithImpl<$Res>
 class _$StockItemImpl implements _StockItem {
   const _$StockItemImpl({
     this.id,
-    @JsonKey(name: 'symbol_code') required this.symbolCode,
-    required this.name,
-    this.market = 'KOSPI',
-    this.memo,
+    @JsonKey(name: 'itemName') required this.itemName,
+    @JsonKey(name: 'otherName') this.otherName,
+    @JsonKey(name: 'stockCode') required this.stockCode,
+    @JsonKey(name: 'yahooName') this.yahooName,
   });
 
   factory _$StockItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -192,20 +195,26 @@ class _$StockItemImpl implements _StockItem {
 
   @override
   final String? id;
+  // 문서 ID (docId) 매핑용
   @override
-  @JsonKey(name: 'symbol_code')
-  final String symbolCode;
+  @JsonKey(name: 'itemName')
+  final String itemName;
+  // 종목명 (예: 노바텍)
   @override
-  final String name;
+  @JsonKey(name: 'otherName')
+  final String? otherName;
+  // 기타 이름
   @override
-  @JsonKey()
-  final String market;
+  @JsonKey(name: 'stockCode')
+  final String stockCode;
+  // 종목 코드 (예: 285490)
   @override
-  final String? memo;
+  @JsonKey(name: 'yahooName')
+  final String? yahooName;
 
   @override
   String toString() {
-    return 'StockItem(id: $id, symbolCode: $symbolCode, name: $name, market: $market, memo: $memo)';
+    return 'StockItem(id: $id, itemName: $itemName, otherName: $otherName, stockCode: $stockCode, yahooName: $yahooName)';
   }
 
   @override
@@ -214,17 +223,20 @@ class _$StockItemImpl implements _StockItem {
         (other.runtimeType == runtimeType &&
             other is _$StockItemImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.symbolCode, symbolCode) ||
-                other.symbolCode == symbolCode) &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.market, market) || other.market == market) &&
-            (identical(other.memo, memo) || other.memo == memo));
+            (identical(other.itemName, itemName) ||
+                other.itemName == itemName) &&
+            (identical(other.otherName, otherName) ||
+                other.otherName == otherName) &&
+            (identical(other.stockCode, stockCode) ||
+                other.stockCode == stockCode) &&
+            (identical(other.yahooName, yahooName) ||
+                other.yahooName == yahooName));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, symbolCode, name, market, memo);
+      Object.hash(runtimeType, id, itemName, otherName, stockCode, yahooName);
 
   /// Create a copy of StockItem
   /// with the given fields replaced by the non-null parameter values.
@@ -243,26 +255,29 @@ class _$StockItemImpl implements _StockItem {
 abstract class _StockItem implements StockItem {
   const factory _StockItem({
     final String? id,
-    @JsonKey(name: 'symbol_code') required final String symbolCode,
-    required final String name,
-    final String market,
-    final String? memo,
+    @JsonKey(name: 'itemName') required final String itemName,
+    @JsonKey(name: 'otherName') final String? otherName,
+    @JsonKey(name: 'stockCode') required final String stockCode,
+    @JsonKey(name: 'yahooName') final String? yahooName,
   }) = _$StockItemImpl;
 
   factory _StockItem.fromJson(Map<String, dynamic> json) =
       _$StockItemImpl.fromJson;
 
   @override
-  String? get id;
+  String? get id; // 문서 ID (docId) 매핑용
   @override
-  @JsonKey(name: 'symbol_code')
-  String get symbolCode;
+  @JsonKey(name: 'itemName')
+  String get itemName; // 종목명 (예: 노바텍)
   @override
-  String get name;
+  @JsonKey(name: 'otherName')
+  String? get otherName; // 기타 이름
   @override
-  String get market;
+  @JsonKey(name: 'stockCode')
+  String get stockCode; // 종목 코드 (예: 285490)
   @override
-  String? get memo;
+  @JsonKey(name: 'yahooName')
+  String? get yahooName;
 
   /// Create a copy of StockItem
   /// with the given fields replaced by the non-null parameter values.

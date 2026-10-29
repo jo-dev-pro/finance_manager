@@ -16,22 +16,34 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _codeController;
   late TextEditingController _nameController;
-  late TextEditingController _memoController;
-  String _selectedMarket = 'KOSPI';
+  late TextEditingController _otherNameController;
+  
+  // 💡 야후 파이낸스 접미사 기준에 맞춘 시장 구분 값 설정 (KS: 코스피, KQ: 코스닥, 빈값: 미국/기타)
+  String _selectedYahooName = 'KS';
   bool _isSubmitting = false;
 
   bool get _isEditing => widget.initialData != null;
 
-  final List<String> _markets = ['KOSPI', 'KOSDAQ', 'NYSE', 'NASDAQ', 'ETF', '기타'];
+  // 야후 파이낸스 티커 접미사 매핑용 목록 (label: 화면 표시명, value: 실제 yahooName 저장값)
+  final List<Map<String, String>> _yahooMarkets = [
+    {'label': '코스피 (KS)', 'value': 'KS'},
+    {'label': '코스닥 (KQ)', 'value': 'KQ'},
+    {'label': '미국 / 기타 (접미사 없음)', 'value': ''},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _codeController = TextEditingController(text: widget.initialData?.symbolCode ?? '');
-    _nameController = TextEditingController(text: widget.initialData?.name ?? '');
-    _memoController = TextEditingController(text: widget.initialData?.memo ?? '');
-    if (widget.initialData != null && _markets.contains(widget.initialData!.market)) {
-      _selectedMarket = widget.initialData!.market;
+    _codeController = TextEditingController(text: widget.initialData?.stockCode ?? '');
+    _nameController = TextEditingController(text: widget.initialData?.itemName ?? '');
+    _otherNameController = TextEditingController(text: widget.initialData?.otherName ?? '');
+    
+    if (widget.initialData != null && widget.initialData!.yahooName != null) {
+      // 기존 저장된 값이 목록에 있다면 반영, 없으면 기본값 유지
+      final match = _yahooMarkets.any((m) => m['value'] == widget.initialData!.yahooName);
+      if (match) {
+        _selectedYahooName = widget.initialData!.yahooName!;
+      }
     }
   }
 
@@ -39,7 +51,7 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
   void dispose() {
     _codeController.dispose();
     _nameController.dispose();
-    _memoController.dispose();
+    _otherNameController.dispose();
     super.dispose();
   }
 
@@ -51,10 +63,10 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
     try {
       final stockItem = StockItem(
         id: widget.initialData?.id,
-        symbolCode: _codeController.text.trim(),
-        name: _nameController.text.trim(),
-        market: _selectedMarket,
-        memo: _memoController.text.trim().isEmpty ? null : _memoController.text.trim(),
+        stockCode: _codeController.text.trim(),
+        itemName: _nameController.text.trim(),
+        yahooName: _selectedYahooName, // 💡 야후 연동용 yahooName 저장
+        otherName: _otherNameController.text.trim().isEmpty ? null : _otherNameController.text.trim(),
       );
 
       final notifier = ref.read(stockItemNotifierProvider.notifier);
@@ -78,7 +90,6 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // 키보드가 올라올 때 바텀시트가 가려지지 않도록 하단 인셋 확보
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
@@ -91,7 +102,7 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 상단 헤더 (타이틀 + 닫기 버튼)
+              // 상단 헤더
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -115,8 +126,8 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
               TextFormField(
                 controller: _codeController,
                 decoration: const InputDecoration(
-                  labelText: '종목코드',
-                  hintText: '예: 005930, AAPL',
+                  labelText: '종목코드 (티커)',
+                  hintText: '예: 005930, 285490, AAPL',
                   border: OutlineInputBorder(),
                 ),
                 validator: (val) {
@@ -133,7 +144,7 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: '종목명',
-                  hintText: '예: 삼성전자, 애플',
+                  hintText: '예: 삼성전자, 노바텍, 애플',
                   border: OutlineInputBorder(),
                 ),
                 validator: (val) {
@@ -145,40 +156,45 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
               ),
               const SizedBox(height: 12),
 
-              // 3. 시장 구분 선택
+              // 3. 야후 시장 구분 (yahooName) 선택
               DropdownButtonFormField<String>(
-                initialValue: _selectedMarket,
+                initialValue: _selectedYahooName,
                 decoration: const InputDecoration(
-                  labelText: '시장 구분',
+                  labelText: '야후 시장 구분 (Yahoo Name)',
                   border: OutlineInputBorder(),
+                  helperText: '야후 파이낸스 자동 시세 조회 시 티커 뒤에 붙는 구분자입니다.',
+                  helperMaxLines: 2,
                 ),
-                items: _markets.map((m) {
-                  return DropdownMenuItem(value: m, child: Text(m));
+                items: _yahooMarkets.map((market) {
+                  return DropdownMenuItem(
+                    value: market['value'],
+                    child: Text(market['label']!),
+                  );
                 }).toList(),
                 onChanged: (val) {
-                  if (val != null) setState(() => _selectedMarket = val);
+                  if (val != null) setState(() => _selectedYahooName = val);
                 },
               ),
               const SizedBox(height: 12),
 
-              // 4. 메모 입력
+              // 4. 기타 이름 / 메모 입력 (otherName)
               TextFormField(
-                controller: _memoController,
+                controller: _otherNameController,
                 decoration: const InputDecoration(
-                  labelText: '메모 (선택)',
+                  labelText: '기타 이름 / 메모 (선택)',
                   hintText: '비고 사항 입력',
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 24),
 
-              // 하단 버튼 영역 (좌우 꽉 찬 버튼)
+              // 하단 버튼 영역
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submit,
-                    style: ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
                   ),
