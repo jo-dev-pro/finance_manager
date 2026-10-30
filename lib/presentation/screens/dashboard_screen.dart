@@ -417,11 +417,6 @@ class DashboardScreen extends ConsumerWidget {
             child: DropdownButton<String>(
               value: months.contains(currentMonth) ? currentMonth : months.first,
               icon: const Icon(Icons.arrow_drop_down),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
-              ),
               items: months.map((String month) {
                 return DropdownMenuItem<String>(
                   value: month,

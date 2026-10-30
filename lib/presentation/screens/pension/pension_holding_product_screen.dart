@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/utils/number_formatter.dart';
 import '../../../models/pension/pension_holding_product.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
@@ -28,11 +27,11 @@ class PensionHoldingProductScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
             color: Colors.grey.shade700,
-            padding: EdgeInsets.zero, // 기본 패딩 제거
-            constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
             onPressed: () => _showAddDialog(context),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
         ],
       ),
       body: accountProductsAsync.when(
@@ -57,7 +56,6 @@ class PensionHoldingProductScreen extends ConsumerWidget {
             for (var prod in products) prod.id!: prod.productName,
           };
 
-          // 💡 계좌의 sortOrder를 반영하여 보유 상품 목록 정렬
           final sortedAccountProducts = [...accountProducts];
           sortedAccountProducts.sort((a, b) {
             final accA = accountMap[a.accountId];
@@ -96,19 +94,50 @@ class PensionHoldingProductScreen extends ConsumerWidget {
                     vertical: 12,
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '[$institution] $accountName',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w500,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  '[$institution] $accountName',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: item.isActive
+                                        ? Colors.green.shade50
+                                        : Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: item.isActive
+                                          ? Colors.green.shade200
+                                          : Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    item.isActive ? '활동중' : '비활동',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: item.isActive
+                                          ? Colors.green.shade700
+                                          : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -119,44 +148,30 @@ class PensionHoldingProductScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Text(
-                                  '원금: ${item.principal.toWon()}',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.indigo,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  '매수일: ${item.purchaseDate ?? '미입력'}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              '최초 매수일: ${item.initialPurchaseDate ?? '미입력'}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(width: 16),
+                      const SizedBox(width: 16),
                       IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 20),
                         color: Colors.grey.shade700,
-                        padding: EdgeInsets.zero, // 기본 패딩 제거
-                        constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                         onPressed: () => _showEditDialog(context, item),
                       ),
-                      SizedBox(width: 8),
-
+                      const SizedBox(width: 12),
                       IconButton(
                         icon: const Icon(Icons.delete_outline, size: 20),
                         color: Colors.red.shade400,
-                        padding: EdgeInsets.zero, // 기본 패딩 제거
-                        constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                         onPressed: () => _confirmDelete(context, ref, item),
                       ),
                     ],
@@ -175,18 +190,18 @@ class PensionHoldingProductScreen extends ConsumerWidget {
   void _showAddDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => PensionHoldingProductDialog(),
+      builder: (context) => const PensionHoldingProductDialog(),
     );
   }
 
   void _showEditDialog(BuildContext context, PensionHoldingProduct item) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/utils/number_formatter.dart';
 import '../../../models/stock/stock_holding_item.dart';
 import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
@@ -71,7 +70,6 @@ class StockHoldingItemScreen extends ConsumerWidget {
                 final accountName = nameObj?.accountName ?? '주식계좌';
 
                 final matchedStock = stockMap[item.stockItemId];
-                // 💡 수정된 StockItem 모델 필드명(itemName, stockCode, yahooName) 반영
                 final stockName = matchedStock?.itemName ?? '알 수 없는 종목';
                 final stockSymbol = matchedStock?.stockCode ?? '';
                 final market = matchedStock?.yahooName ?? '';
@@ -123,11 +121,30 @@ class StockHoldingItemScreen extends ConsumerWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: !item.isActive ? Colors.green.shade50 : Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                          color: !item.isActive ? Colors.green.shade200 : Colors.grey.shade300,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        !item.isActive ? '보유중' : '매도완료',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: !item.isActive ? Colors.green.shade700 : Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  '[$institution] $accountName${stockSymbol.isNotEmpty ? ' • $stockSymbol' : ''}${item.purchaseDate != null ? ' • ${item.purchaseDate}' : ''}',
+                                  '[$institution] $accountName${stockSymbol.isNotEmpty ? ' • $stockSymbol' : ''}${item.initialPurchaseDate != null ? ' • 최초매수: ${item.initialPurchaseDate}' : ''}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -142,15 +159,6 @@ class StockHoldingItemScreen extends ConsumerWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                item.principal.toWon(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: Colors.blueAccent,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -164,7 +172,7 @@ class StockHoldingItemScreen extends ConsumerWidget {
                                     ),
                                     onPressed: () => _showEditBottomSheet(context, item),
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: 8),
                                   IconButton(
                                     padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
                                     constraints: const BoxConstraints(),

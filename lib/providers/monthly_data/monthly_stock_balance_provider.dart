@@ -139,7 +139,7 @@ class MonthlyStockBalanceNotifier extends _$MonthlyStockBalanceNotifier {
     // 3. '계좌ID_종목ID'를 키로 하고 purchaseDate를 값으로 하는 맵 생성
     final purchaseDateMap = {
       for (var hi in holdingItems)
-        '${hi.accountId}_${hi.stockItemId}': hi.purchaseDate
+        '${hi.accountId}_${hi.stockItemId}': hi.initialPurchaseDate
     };
 
     // 4. 월말 데이터에 매수일이 비어있다면 보유 종목의 매수일을 찾아 채워넣기

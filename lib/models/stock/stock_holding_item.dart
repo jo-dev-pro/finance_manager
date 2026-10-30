@@ -5,13 +5,14 @@ part 'stock_holding_item.g.dart';
 
 @freezed
 class StockHoldingItem with _$StockHoldingItem {
+  const StockHoldingItem._();
+
   const factory StockHoldingItem({
     String? id,
-    @JsonKey(name: 'account_id') required String accountId,
-    @JsonKey(name: 'stock_item_id') required String stockItemId,
-    @Default(0.0) double principal,               // 초기/누적 투자 원금
-    @JsonKey(name: 'purchase_date') String? purchaseDate, // 최초 매수일
-    @Default(false) bool isTerminated,            // 전량 매도/종료 여부
+    @JsonKey(name: 'account_id') required String accountId,       // 계좌 ID
+    @JsonKey(name: 'stock_item_id') required String stockItemId, // 종목 ID
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,    // 활동 / 비활동 여부
+    @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate, // 최초 매수일 (고정)
   }) = _StockHoldingItem;
 
   factory StockHoldingItem.fromJson(Map<String, dynamic> json) =>

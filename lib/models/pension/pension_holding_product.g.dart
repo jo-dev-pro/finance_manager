@@ -12,10 +12,8 @@ _$PensionHoldingProductImpl _$$PensionHoldingProductImplFromJson(
   id: json['id'] as String?,
   accountId: json['account_id'] as String,
   productId: json['product_id'] as String,
-  principal: (json['principal'] as num?)?.toDouble() ?? 0.0,
-  purchaseDate: json['purchase_date'] as String?,
-  totalPayout: (json['total_payout'] as num?)?.toDouble() ?? 0.0,
-  isTerminated: json['is_terminated'] as bool? ?? false,
+  isActive: json['is_active'] as bool? ?? true,
+  initialPurchaseDate: json['initial_purchase_date'] as String?,
 );
 
 Map<String, dynamic> _$$PensionHoldingProductImplToJson(
@@ -24,8 +22,6 @@ Map<String, dynamic> _$$PensionHoldingProductImplToJson(
   'id': instance.id,
   'account_id': instance.accountId,
   'product_id': instance.productId,
-  'principal': instance.principal,
-  'purchase_date': instance.purchaseDate,
-  'total_payout': instance.totalPayout,
-  'is_terminated': instance.isTerminated,
+  'is_active': instance.isActive,
+  'initial_purchase_date': instance.initialPurchaseDate,
 };

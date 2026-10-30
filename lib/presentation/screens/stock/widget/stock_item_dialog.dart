@@ -66,7 +66,7 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
         stockCode: _codeController.text.trim(),
         itemName: _nameController.text.trim(),
         yahooName: _selectedYahooName, // 💡 야후 연동용 yahooName 저장
-        otherName: _otherNameController.text.trim().isEmpty ? null : _otherNameController.text.trim(),
+        otherName: _otherNameController.text.trim().isEmpty ? '' : _otherNameController.text.trim(),
       );
 
       final notifier = ref.read(stockItemNotifierProvider.notifier);

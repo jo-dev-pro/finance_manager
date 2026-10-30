@@ -25,7 +25,7 @@ mixin _$StockItem {
   @JsonKey(name: 'itemName')
   String get itemName => throw _privateConstructorUsedError; // 종목명 (예: 노바텍)
   @JsonKey(name: 'otherName')
-  String? get otherName => throw _privateConstructorUsedError; // 기타 이름
+  String get otherName => throw _privateConstructorUsedError; // 기타 이름
   @JsonKey(name: 'stockCode')
   String get stockCode => throw _privateConstructorUsedError; // 종목 코드 (예: 285490)
   @JsonKey(name: 'yahooName')
@@ -49,7 +49,7 @@ abstract class $StockItemCopyWith<$Res> {
   $Res call({
     String? id,
     @JsonKey(name: 'itemName') String itemName,
-    @JsonKey(name: 'otherName') String? otherName,
+    @JsonKey(name: 'otherName') String otherName,
     @JsonKey(name: 'stockCode') String stockCode,
     @JsonKey(name: 'yahooName') String? yahooName,
   });
@@ -72,7 +72,7 @@ class _$StockItemCopyWithImpl<$Res, $Val extends StockItem>
   $Res call({
     Object? id = freezed,
     Object? itemName = null,
-    Object? otherName = freezed,
+    Object? otherName = null,
     Object? stockCode = null,
     Object? yahooName = freezed,
   }) {
@@ -89,10 +89,10 @@ class _$StockItemCopyWithImpl<$Res, $Val extends StockItem>
                     : itemName // ignore: cast_nullable_to_non_nullable
                         as String,
             otherName:
-                freezed == otherName
+                null == otherName
                     ? _value.otherName
                     : otherName // ignore: cast_nullable_to_non_nullable
-                        as String?,
+                        as String,
             stockCode:
                 null == stockCode
                     ? _value.stockCode
@@ -121,7 +121,7 @@ abstract class _$$StockItemImplCopyWith<$Res>
   $Res call({
     String? id,
     @JsonKey(name: 'itemName') String itemName,
-    @JsonKey(name: 'otherName') String? otherName,
+    @JsonKey(name: 'otherName') String otherName,
     @JsonKey(name: 'stockCode') String stockCode,
     @JsonKey(name: 'yahooName') String? yahooName,
   });
@@ -143,7 +143,7 @@ class __$$StockItemImplCopyWithImpl<$Res>
   $Res call({
     Object? id = freezed,
     Object? itemName = null,
-    Object? otherName = freezed,
+    Object? otherName = null,
     Object? stockCode = null,
     Object? yahooName = freezed,
   }) {
@@ -160,10 +160,10 @@ class __$$StockItemImplCopyWithImpl<$Res>
                 : itemName // ignore: cast_nullable_to_non_nullable
                     as String,
         otherName:
-            freezed == otherName
+            null == otherName
                 ? _value.otherName
                 : otherName // ignore: cast_nullable_to_non_nullable
-                    as String?,
+                    as String,
         stockCode:
             null == stockCode
                 ? _value.stockCode
@@ -185,7 +185,7 @@ class _$StockItemImpl implements _StockItem {
   const _$StockItemImpl({
     this.id,
     @JsonKey(name: 'itemName') required this.itemName,
-    @JsonKey(name: 'otherName') this.otherName,
+    @JsonKey(name: 'otherName') this.otherName = '',
     @JsonKey(name: 'stockCode') required this.stockCode,
     @JsonKey(name: 'yahooName') this.yahooName,
   });
@@ -202,7 +202,7 @@ class _$StockItemImpl implements _StockItem {
   // 종목명 (예: 노바텍)
   @override
   @JsonKey(name: 'otherName')
-  final String? otherName;
+  final String otherName;
   // 기타 이름
   @override
   @JsonKey(name: 'stockCode')
@@ -256,7 +256,7 @@ abstract class _StockItem implements StockItem {
   const factory _StockItem({
     final String? id,
     @JsonKey(name: 'itemName') required final String itemName,
-    @JsonKey(name: 'otherName') final String? otherName,
+    @JsonKey(name: 'otherName') final String otherName,
     @JsonKey(name: 'stockCode') required final String stockCode,
     @JsonKey(name: 'yahooName') final String? yahooName,
   }) = _$StockItemImpl;
@@ -271,7 +271,7 @@ abstract class _StockItem implements StockItem {
   String get itemName; // 종목명 (예: 노바텍)
   @override
   @JsonKey(name: 'otherName')
-  String? get otherName; // 기타 이름
+  String get otherName; // 기타 이름
   @override
   @JsonKey(name: 'stockCode')
   String get stockCode; // 종목 코드 (예: 285490)

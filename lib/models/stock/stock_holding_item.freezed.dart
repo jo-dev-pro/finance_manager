@@ -23,13 +23,13 @@ StockHoldingItem _$StockHoldingItemFromJson(Map<String, dynamic> json) {
 mixin _$StockHoldingItem {
   String? get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_id')
-  String get accountId => throw _privateConstructorUsedError;
+  String get accountId => throw _privateConstructorUsedError; // 계좌 ID
   @JsonKey(name: 'stock_item_id')
-  String get stockItemId => throw _privateConstructorUsedError;
-  double get principal => throw _privateConstructorUsedError; // 초기/누적 투자 원금
-  @JsonKey(name: 'purchase_date')
-  String? get purchaseDate => throw _privateConstructorUsedError; // 최초 매수일
-  bool get isTerminated => throw _privateConstructorUsedError;
+  String get stockItemId => throw _privateConstructorUsedError; // 종목 ID
+  @JsonKey(name: 'is_active')
+  bool get isActive => throw _privateConstructorUsedError; // 활동 / 비활동 여부
+  @JsonKey(name: 'initial_purchase_date')
+  String? get initialPurchaseDate => throw _privateConstructorUsedError;
 
   /// Serializes this StockHoldingItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -52,9 +52,8 @@ abstract class $StockHoldingItemCopyWith<$Res> {
     String? id,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'stock_item_id') String stockItemId,
-    double principal,
-    @JsonKey(name: 'purchase_date') String? purchaseDate,
-    bool isTerminated,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate,
   });
 }
 
@@ -76,9 +75,8 @@ class _$StockHoldingItemCopyWithImpl<$Res, $Val extends StockHoldingItem>
     Object? id = freezed,
     Object? accountId = null,
     Object? stockItemId = null,
-    Object? principal = null,
-    Object? purchaseDate = freezed,
-    Object? isTerminated = null,
+    Object? isActive = null,
+    Object? initialPurchaseDate = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -97,21 +95,16 @@ class _$StockHoldingItemCopyWithImpl<$Res, $Val extends StockHoldingItem>
                     ? _value.stockItemId
                     : stockItemId // ignore: cast_nullable_to_non_nullable
                         as String,
-            principal:
-                null == principal
-                    ? _value.principal
-                    : principal // ignore: cast_nullable_to_non_nullable
-                        as double,
-            purchaseDate:
-                freezed == purchaseDate
-                    ? _value.purchaseDate
-                    : purchaseDate // ignore: cast_nullable_to_non_nullable
-                        as String?,
-            isTerminated:
-                null == isTerminated
-                    ? _value.isTerminated
-                    : isTerminated // ignore: cast_nullable_to_non_nullable
+            isActive:
+                null == isActive
+                    ? _value.isActive
+                    : isActive // ignore: cast_nullable_to_non_nullable
                         as bool,
+            initialPurchaseDate:
+                freezed == initialPurchaseDate
+                    ? _value.initialPurchaseDate
+                    : initialPurchaseDate // ignore: cast_nullable_to_non_nullable
+                        as String?,
           )
           as $Val,
     );
@@ -131,9 +124,8 @@ abstract class _$$StockHoldingItemImplCopyWith<$Res>
     String? id,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'stock_item_id') String stockItemId,
-    double principal,
-    @JsonKey(name: 'purchase_date') String? purchaseDate,
-    bool isTerminated,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate,
   });
 }
 
@@ -154,9 +146,8 @@ class __$$StockHoldingItemImplCopyWithImpl<$Res>
     Object? id = freezed,
     Object? accountId = null,
     Object? stockItemId = null,
-    Object? principal = null,
-    Object? purchaseDate = freezed,
-    Object? isTerminated = null,
+    Object? isActive = null,
+    Object? initialPurchaseDate = freezed,
   }) {
     return _then(
       _$StockHoldingItemImpl(
@@ -175,21 +166,16 @@ class __$$StockHoldingItemImplCopyWithImpl<$Res>
                 ? _value.stockItemId
                 : stockItemId // ignore: cast_nullable_to_non_nullable
                     as String,
-        principal:
-            null == principal
-                ? _value.principal
-                : principal // ignore: cast_nullable_to_non_nullable
-                    as double,
-        purchaseDate:
-            freezed == purchaseDate
-                ? _value.purchaseDate
-                : purchaseDate // ignore: cast_nullable_to_non_nullable
-                    as String?,
-        isTerminated:
-            null == isTerminated
-                ? _value.isTerminated
-                : isTerminated // ignore: cast_nullable_to_non_nullable
+        isActive:
+            null == isActive
+                ? _value.isActive
+                : isActive // ignore: cast_nullable_to_non_nullable
                     as bool,
+        initialPurchaseDate:
+            freezed == initialPurchaseDate
+                ? _value.initialPurchaseDate
+                : initialPurchaseDate // ignore: cast_nullable_to_non_nullable
+                    as String?,
       ),
     );
   }
@@ -197,15 +183,14 @@ class __$$StockHoldingItemImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$StockHoldingItemImpl implements _StockHoldingItem {
+class _$StockHoldingItemImpl extends _StockHoldingItem {
   const _$StockHoldingItemImpl({
     this.id,
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'stock_item_id') required this.stockItemId,
-    this.principal = 0.0,
-    @JsonKey(name: 'purchase_date') this.purchaseDate,
-    this.isTerminated = false,
-  });
+    @JsonKey(name: 'is_active') this.isActive = true,
+    @JsonKey(name: 'initial_purchase_date') this.initialPurchaseDate,
+  }) : super._();
 
   factory _$StockHoldingItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$StockHoldingItemImplFromJson(json);
@@ -215,24 +200,22 @@ class _$StockHoldingItemImpl implements _StockHoldingItem {
   @override
   @JsonKey(name: 'account_id')
   final String accountId;
+  // 계좌 ID
   @override
   @JsonKey(name: 'stock_item_id')
   final String stockItemId;
+  // 종목 ID
   @override
-  @JsonKey()
-  final double principal;
-  // 초기/누적 투자 원금
+  @JsonKey(name: 'is_active')
+  final bool isActive;
+  // 활동 / 비활동 여부
   @override
-  @JsonKey(name: 'purchase_date')
-  final String? purchaseDate;
-  // 최초 매수일
-  @override
-  @JsonKey()
-  final bool isTerminated;
+  @JsonKey(name: 'initial_purchase_date')
+  final String? initialPurchaseDate;
 
   @override
   String toString() {
-    return 'StockHoldingItem(id: $id, accountId: $accountId, stockItemId: $stockItemId, principal: $principal, purchaseDate: $purchaseDate, isTerminated: $isTerminated)';
+    return 'StockHoldingItem(id: $id, accountId: $accountId, stockItemId: $stockItemId, isActive: $isActive, initialPurchaseDate: $initialPurchaseDate)';
   }
 
   @override
@@ -245,12 +228,10 @@ class _$StockHoldingItemImpl implements _StockHoldingItem {
                 other.accountId == accountId) &&
             (identical(other.stockItemId, stockItemId) ||
                 other.stockItemId == stockItemId) &&
-            (identical(other.principal, principal) ||
-                other.principal == principal) &&
-            (identical(other.purchaseDate, purchaseDate) ||
-                other.purchaseDate == purchaseDate) &&
-            (identical(other.isTerminated, isTerminated) ||
-                other.isTerminated == isTerminated));
+            (identical(other.isActive, isActive) ||
+                other.isActive == isActive) &&
+            (identical(other.initialPurchaseDate, initialPurchaseDate) ||
+                other.initialPurchaseDate == initialPurchaseDate));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -260,9 +241,8 @@ class _$StockHoldingItemImpl implements _StockHoldingItem {
     id,
     accountId,
     stockItemId,
-    principal,
-    purchaseDate,
-    isTerminated,
+    isActive,
+    initialPurchaseDate,
   );
 
   /// Create a copy of StockHoldingItem
@@ -282,15 +262,15 @@ class _$StockHoldingItemImpl implements _StockHoldingItem {
   }
 }
 
-abstract class _StockHoldingItem implements StockHoldingItem {
+abstract class _StockHoldingItem extends StockHoldingItem {
   const factory _StockHoldingItem({
     final String? id,
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'stock_item_id') required final String stockItemId,
-    final double principal,
-    @JsonKey(name: 'purchase_date') final String? purchaseDate,
-    final bool isTerminated,
+    @JsonKey(name: 'is_active') final bool isActive,
+    @JsonKey(name: 'initial_purchase_date') final String? initialPurchaseDate,
   }) = _$StockHoldingItemImpl;
+  const _StockHoldingItem._() : super._();
 
   factory _StockHoldingItem.fromJson(Map<String, dynamic> json) =
       _$StockHoldingItemImpl.fromJson;
@@ -299,17 +279,16 @@ abstract class _StockHoldingItem implements StockHoldingItem {
   String? get id;
   @override
   @JsonKey(name: 'account_id')
-  String get accountId;
+  String get accountId; // 계좌 ID
   @override
   @JsonKey(name: 'stock_item_id')
-  String get stockItemId;
+  String get stockItemId; // 종목 ID
   @override
-  double get principal; // 초기/누적 투자 원금
+  @JsonKey(name: 'is_active')
+  bool get isActive; // 활동 / 비활동 여부
   @override
-  @JsonKey(name: 'purchase_date')
-  String? get purchaseDate; // 최초 매수일
-  @override
-  bool get isTerminated;
+  @JsonKey(name: 'initial_purchase_date')
+  String? get initialPurchaseDate;
 
   /// Create a copy of StockHoldingItem
   /// with the given fields replaced by the non-null parameter values.

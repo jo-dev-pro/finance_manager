@@ -6,7 +6,6 @@ import '../../models/pension/pension_holding_product.dart';
 
 part 'pension_holding_product_provider.g.dart';
 
-
 @Riverpod(keepAlive: true)
 class PensionHoldingProductNotifier extends _$PensionHoldingProductNotifier {
   @override

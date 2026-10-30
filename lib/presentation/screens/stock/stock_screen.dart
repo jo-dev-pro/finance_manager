@@ -26,6 +26,9 @@ class _StockScreenState extends ConsumerState<StockScreen> {
   final TransformationController _transformationController =
       TransformationController();
 
+  // 💡 계좌 공통 현금성 자산(예수금) ID 상수
+  static const String kCashAssetProductId = '_CASH_ASSET_PRODUCT_ID_';
+
   final List<Color> _chartColors = [
     Colors.indigo,
     Colors.teal,
@@ -69,7 +72,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
           ElevatedButton.icon(
             onPressed: () {
               context.push(
-                AppRoutePath.monthlyStockBalance, // 라우트 경로에 맞게 조절 가능
+                AppRoutePath.monthlyStockBalance,
                 extra: selectedMonth,
               );
             },
@@ -124,7 +127,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             (sum, item) => sum + item.principal,
                           );
                           
-                          // 총 평가 손익 계산 (배당 및 인출액 포함 공식 반영)
                           final totalPayout = balances.fold<double>(
                               0.0, (sum, item) => sum + item.totalPayout);
                           final totalWithdrawal = balances.fold<double>(
@@ -184,7 +186,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             (sum, item) => sum + item.balance,
                           );
 
-                          // 수정된 StockItem 모델 매핑 (`itemName`, `stockCode` 반영)[cite: 14]
                           final Map<String, String> stockMap = {
                             for (var s in stockItems) s.id.toString(): s.itemName.toString()
                           };
@@ -578,7 +579,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
     );
   }
 
-  // 주식 계좌 카드 터치 시 바텀시트에서 보유 종목 상세 내역 표기
   void _showStockDetailBottomSheet(
     BuildContext context, {
     required String institution,
@@ -594,7 +594,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('[$institution] $accountName 보유 종목',
+              Text('[$institution]$accountName 보유 종목',
                   style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.bold)),
               const Divider(),
@@ -603,7 +603,11 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final item = items[index];
-                    final stockName = stockMap[item.stockItemId] ?? '알 수 없는 종목';
+                    
+                    // 💡 현금성 자산 구분 및 상품명 매핑
+                    final stockName = item.stockItemId == kCashAssetProductId
+                        ? '💵 계좌 공통 현금성 자산 (예수금)'
+                        : (stockMap[item.stockItemId] ?? '주식 종목');
 
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -612,7 +616,9 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       subtitle: Text(
-                        '평가액: ${item.balance.toWon()} | 수량: ${item.quantity.toCommaString()}주\n단가: ${item.currentPrice.toWon()} | 수익률: ${item.returnRate.toStringAsFixed(1)}%',
+                        item.stockItemId == kCashAssetProductId
+                            ? '잔액: ${item.balance.toWon()}'
+                            : '평가액: ${item.balance.toWon()} \vert{} 수량: ${item.quantity.toCommaString()}주\n단가: ${item.currentPrice.toWon()} \vert{} 수익률: ${item.returnRate.toStringAsFixed(1)}%',
                         style: const TextStyle(fontSize: 12),
                       ),
                     );

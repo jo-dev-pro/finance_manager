@@ -18,7 +18,7 @@ class _GroupedPensionItem {
   double totalPayout;
   double totalWithdrawal;
   String? purchaseDate;
-  final bool isCashAsset; // 💡 현금성 자산 여부 구분 플래그
+  final bool isCashAsset;
 
   _GroupedPensionItem({
     required this.accountId,
@@ -52,8 +52,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
 
   final _formKey = GlobalKey<FormState>();
 
-  // 💡 계좌별 현금성 자산 - firestore 문서 id (현금성자산)
-  static const String kCashAssetProductId = 'awFP6MxvrFMQhKK9mA9D';
+  static const String kCashAssetProductId = '_CASH_ASSET_PRODUCT_ID_';
 
   @override
   void initState() {
@@ -142,22 +141,19 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                     };
 
                     final pensionAccounts = accounts
-                        .where((a) =>
-                            a.accountType.toUpperCase() == '연금' &&
-                            a.status == '활동')
+                        .where((a) => a.accountType.toUpperCase() == '연금')
                         .toList()
                       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
                     if (pensionAccounts.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Text('활동 중인 연금 계좌가 없습니다.'),
+                        child: Text('등록된 연금 계좌가 없습니다.'),
                       );
                     }
 
                     if (_selectedAccountId == null ||
-                        !pensionAccounts
-                            .any((a) => a.id == _selectedAccountId)) {
+                        !pensionAccounts.any((a) => a.id == _selectedAccountId)) {
                       _selectedAccountId = pensionAccounts.first.id;
                     }
 
@@ -205,7 +201,6 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
 
                             final Map<String, _GroupedPensionItem> groupedMap = {};
                             
-                            // 💡 1. 현금성 자산 항목을 항상 목록 첫 번째나 기본 항목으로 추가
                             final currentBalances =
                                 existingCurrentBalancesAsync.value ?? [];
                             final prevBalances =
@@ -216,7 +211,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                 '${b.accountId}_${b.productId}': b
                             };
 
-                            // 현금성 자산 기본 데이터 구성 (productId = kCashAssetProductId)
+                            // 1. 계좌 공통 현금성 자산 기본 구성
                             final cashPrevData = prevBalanceMap['${_selectedAccountId}_$kCashAssetProductId'];
                             groupedMap[kCashAssetProductId] = _GroupedPensionItem(
                               accountId: _selectedAccountId!,
@@ -227,32 +222,26 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                               isCashAsset: true,
                             );
 
-                            // 2. 일반 보유 상품 매칭
+                            // 2. 활동 중인 일반 보유 상품 매칭 및 직전 월 누적값 연동
                             final matchedHoldingProducts = accountProducts
-                                .where((ap) => ap.accountId == _selectedAccountId)
+                                .where((ap) => ap.accountId == _selectedAccountId && ap.isActive)
                                 .toList();
 
                             for (var ap in matchedHoldingProducts) {
                               final prodId = ap.productId;
                               final prevData = prevBalanceMap['${ap.accountId}_$prodId'];
-                              final basePrincipal = prevData?.principal ?? ap.principal;
-                              final basePayout = prevData?.totalPayout ?? ap.totalPayout;
+                              final basePrincipal = prevData?.principal ?? 0.0;
+                              final basePayout = prevData?.totalPayout ?? 0.0;
                               final baseWithdrawal = prevData?.totalWithdrawal ?? 0.0;
 
-                              if (groupedMap.containsKey(prodId)) {
-                                groupedMap[prodId]!.principal += basePrincipal;
-                                groupedMap[prodId]!.totalPayout += basePayout;
-                                groupedMap[prodId]!.totalWithdrawal += baseWithdrawal;
-                              } else {
-                                groupedMap[prodId] = _GroupedPensionItem(
-                                  accountId: ap.accountId,
-                                  productId: prodId,
-                                  principal: basePrincipal,
-                                  totalPayout: basePayout,
-                                  totalWithdrawal: baseWithdrawal,
-                                  purchaseDate: ap.purchaseDate,
-                                );
-                              }
+                              groupedMap[prodId] = _GroupedPensionItem(
+                                accountId: ap.accountId,
+                                productId: prodId,
+                                principal: basePrincipal,
+                                totalPayout: basePayout,
+                                totalWithdrawal: baseWithdrawal,
+                                purchaseDate: ap.initialPurchaseDate,
+                              );
                             }
 
                             final groupedItems = groupedMap.values.toList();
@@ -271,9 +260,8 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                 final groupItem = groupedItems[index];
                                 final prodId = groupItem.productId;
                                 
-                                // 💡 현금성 자산인지 일반 상품인지 이름 구분
                                 final productName = groupItem.isCashAsset
-                                    ? '💵 계좌 공통 현금성 자산 (예수금 등)'
+                                    ? '💵 계좌 공통 현금성 자산 (예수금)'
                                     : (productMap[prodId] ?? '연금 상품');
                                 
                                 final key = '${_selectedAccountId}_$prodId';
@@ -330,7 +318,6 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                         ),
                                         const Divider(height: 16),
                                         
-                                        // 당월 말 평가액 (현금성 자산도 잔액이 곧 평가액이 됨)
                                         TextFormField(
                                           controller: _balanceControllers[key],
                                           keyboardType: TextInputType.number,
@@ -347,7 +334,6 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                         ),
                                         const SizedBox(height: 10),
 
-                                        // 현금성 자산은 추가 투자금/수령액/인출금이 불필요하므로 일반 상품에만 노출하거나 공통 활용
                                         if (!groupItem.isCashAsset) ...[
                                           Row(
                                             children: [
@@ -360,8 +346,8 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                                     ThousandsSeparatorInputFormatter(),
                                                   ],
                                                   decoration: const InputDecoration(
-                                                    labelText: '당월 추가 투자금',
-                                                    hintText: '없으면 0',
+                                                    labelText: '금월 추가 매수액',
+                                                    hintText: '0',
                                                     suffixText: '원',
                                                     border: OutlineInputBorder(),
                                                     isDense: true,
@@ -378,8 +364,8 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                                     ThousandsSeparatorInputFormatter(),
                                                   ],
                                                   decoration: const InputDecoration(
-                                                    labelText: '당월 수령 연금액',
-                                                    hintText: '없으면 0',
+                                                    labelText: '금월 연금지급액',
+                                                    hintText: '0',
                                                     suffixText: '원',
                                                     border: OutlineInputBorder(),
                                                     isDense: true,
@@ -396,8 +382,8 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                                                     ThousandsSeparatorInputFormatter(),
                                                   ],
                                                   decoration: const InputDecoration(
-                                                    labelText: '당월 중도 인출금',
-                                                    hintText: '없으면 0',
+                                                    labelText: '금월 매도/인출',
+                                                    hintText: '0',
                                                     suffixText: '원',
                                                     border: OutlineInputBorder(),
                                                     isDense: true,
@@ -458,7 +444,6 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
       for (var b in prevBalances) '${b.accountId}_${b.productId}': b
     };
 
-    // 💡 현금성 자산 처리
     final cashPrevData = prevBalanceMap['${_selectedAccountId}_$kCashAssetProductId'];
     groupedMap[kCashAssetProductId] = _GroupedPensionItem(
       accountId: _selectedAccountId!,
@@ -469,32 +454,25 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
       isCashAsset: true,
     );
 
-    // 일반 상품 처리
     final matchedHoldingProducts = accountProducts
-        .where((ap) => ap.accountId == _selectedAccountId)
+        .where((ap) => ap.accountId == _selectedAccountId && ap.isActive)
         .toList();
 
     for (var ap in matchedHoldingProducts) {
       final prodId = ap.productId;
       final prevData = prevBalanceMap['${ap.accountId}_$prodId'];
-      final basePrincipal = prevData?.principal ?? ap.principal;
-      final basePayout = prevData?.totalPayout ?? ap.totalPayout;
+      final basePrincipal = prevData?.principal ?? 0.0;
+      final basePayout = prevData?.totalPayout ?? 0.0;
       final baseWithdrawal = prevData?.totalWithdrawal ?? 0.0;
 
-      if (groupedMap.containsKey(prodId)) {
-        groupedMap[prodId]!.principal += basePrincipal;
-        groupedMap[prodId]!.totalPayout += basePayout;
-        groupedMap[prodId]!.totalWithdrawal += baseWithdrawal;
-      } else {
-        groupedMap[prodId] = _GroupedPensionItem(
-          accountId: ap.accountId,
-          productId: prodId,
-          principal: basePrincipal,
-          totalPayout: basePayout,
-          totalWithdrawal: baseWithdrawal,
-          purchaseDate: ap.purchaseDate,
-        );
-      }
+      groupedMap[prodId] = _GroupedPensionItem(
+        accountId: ap.accountId,
+        productId: prodId,
+        principal: basePrincipal,
+        totalPayout: basePayout,
+        totalWithdrawal: baseWithdrawal,
+        purchaseDate: ap.initialPurchaseDate,
+      );
     }
 
     final List<MonthlyPensionBalance> itemsToSave = [];
@@ -526,20 +504,18 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
           finalWithdrawal += addWithdrawalVal;
         }
 
-        if (balVal > 0 || finalPrincipal > 0) {
-          itemsToSave.add(
-            MonthlyPensionBalance(
-              yearMonth: _selectedYearMonth,
-              accountId: _selectedAccountId!,
-              productId: prodId,
-              balance: balVal,
-              principal: finalPrincipal,
-              totalPayout: finalPayout,
-              totalWithdrawal: finalWithdrawal,
-              purchaseDate: groupItem.purchaseDate,
-            ),
-          );
-        }
+        itemsToSave.add(
+          MonthlyPensionBalance(
+            yearMonth: _selectedYearMonth,
+            accountId: _selectedAccountId!,
+            productId: prodId,
+            balance: balVal,
+            principal: finalPrincipal,
+            totalPayout: finalPayout,
+            totalWithdrawal: finalWithdrawal,
+            purchaseDate: groupItem.purchaseDate,
+          ),
+        );
       }
     }
 

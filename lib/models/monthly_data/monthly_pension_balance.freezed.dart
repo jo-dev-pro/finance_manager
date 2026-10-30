@@ -35,7 +35,7 @@ mixin _$MonthlyPensionBalance {
   @JsonKey(name: 'total_payout')
   double get totalPayout => throw _privateConstructorUsedError; // 누적 연금 수령액
   @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal => throw _privateConstructorUsedError; // 💡 누적 중도 인출금
+  double get totalWithdrawal => throw _privateConstructorUsedError; // 누적 중도 인출금
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate => throw _privateConstructorUsedError;
 
@@ -293,7 +293,7 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
   @override
   @JsonKey(name: 'total_withdrawal')
   final double totalWithdrawal;
-  // 💡 누적 중도 인출금
+  // 누적 중도 인출금
   @override
   @JsonKey(name: 'purchase_date')
   final String? purchaseDate;
@@ -396,7 +396,7 @@ abstract class _MonthlyPensionBalance extends MonthlyPensionBalance {
   double get totalPayout; // 누적 연금 수령액
   @override
   @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal; // 💡 누적 중도 인출금
+  double get totalWithdrawal; // 누적 중도 인출금
   @override
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate;

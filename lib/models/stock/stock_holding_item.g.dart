@@ -12,9 +12,8 @@ _$StockHoldingItemImpl _$$StockHoldingItemImplFromJson(
   id: json['id'] as String?,
   accountId: json['account_id'] as String,
   stockItemId: json['stock_item_id'] as String,
-  principal: (json['principal'] as num?)?.toDouble() ?? 0.0,
-  purchaseDate: json['purchase_date'] as String?,
-  isTerminated: json['isTerminated'] as bool? ?? false,
+  isActive: json['is_active'] as bool? ?? true,
+  initialPurchaseDate: json['initial_purchase_date'] as String?,
 );
 
 Map<String, dynamic> _$$StockHoldingItemImplToJson(
@@ -23,7 +22,6 @@ Map<String, dynamic> _$$StockHoldingItemImplToJson(
   'id': instance.id,
   'account_id': instance.accountId,
   'stock_item_id': instance.stockItemId,
-  'principal': instance.principal,
-  'purchase_date': instance.purchaseDate,
-  'isTerminated': instance.isTerminated,
+  'is_active': instance.isActive,
+  'initial_purchase_date': instance.initialPurchaseDate,
 };

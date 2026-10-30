@@ -6,7 +6,7 @@ part of 'stock_item_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$stockItemNotifierHash() => r'b8774c31559217c3bff2a08ad2bb4a9e188259ac';
+String _$stockItemNotifierHash() => r'7caff5e74fb4282834d0a7e31d7374ecca24db0a';
 
 /// See also [StockItemNotifier].
 @ProviderFor(StockItemNotifier)

@@ -6,29 +6,8 @@ part of 'monthly_pension_balance_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$allMonthlyPensionBalancesHash() =>
-    r'0209c9a1ff6d518dc9c221e3f0b7688c56b68c8d';
-
-/// See also [AllMonthlyPensionBalances].
-@ProviderFor(AllMonthlyPensionBalances)
-final allMonthlyPensionBalancesProvider = AutoDisposeAsyncNotifierProvider<
-  AllMonthlyPensionBalances,
-  List<MonthlyPensionBalanceWithDetail>
->.internal(
-  AllMonthlyPensionBalances.new,
-  name: r'allMonthlyPensionBalancesProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$allMonthlyPensionBalancesHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$AllMonthlyPensionBalances =
-    AutoDisposeAsyncNotifier<List<MonthlyPensionBalanceWithDetail>>;
 String _$monthlyPensionBalanceNotifierHash() =>
-    r'241b802e09c2ad0b88e5c598384eac1ede039704';
+    r'9dae0ff21bdf3b9d4688acd0bac37ab2aef2b540';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -200,5 +179,26 @@ class _MonthlyPensionBalanceNotifierProviderElement
       (origin as MonthlyPensionBalanceNotifierProvider).yearMonth;
 }
 
+String _$allMonthlyPensionBalancesHash() =>
+    r'1160b72442372771e7e4020003eeb4dad0ad56ff';
+
+/// See also [AllMonthlyPensionBalances].
+@ProviderFor(AllMonthlyPensionBalances)
+final allMonthlyPensionBalancesProvider = AsyncNotifierProvider<
+  AllMonthlyPensionBalances,
+  List<MonthlyPensionBalanceWithDetail>
+>.internal(
+  AllMonthlyPensionBalances.new,
+  name: r'allMonthlyPensionBalancesProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$allMonthlyPensionBalancesHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$AllMonthlyPensionBalances =
+    AsyncNotifier<List<MonthlyPensionBalanceWithDetail>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

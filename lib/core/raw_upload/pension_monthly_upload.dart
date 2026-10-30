@@ -87,7 +87,7 @@ class _PensionMonthlyUploadScreenState
 
       for (int i = 1; i < table.maxRows; i++) {
         final row = table.rows[i];
-        // 💡 엑셀 열 구성: 0(기준월), 1(계좌ID), 2(상품ID), 3(평가액), 4(원금), 5(수령액), 6(인출금)
+        // 💡 엑셀 열 구성: 0(기준월), 1(계좌ID), 2(상품ID), 3(평가액), 4(원금), 5(수령액), 6(인출금), [선택: 7(최초매수일)]
         if (row.length < 4 || row[0] == null || row[1] == null || row[2] == null) continue;
 
         final rawYM = row[0]?.toString() ?? '';
@@ -98,6 +98,7 @@ class _PensionMonthlyUploadScreenState
         final rawPrincipal = row.length > 4 ? row[4]?.toString() ?? '0' : '0';
         final rawPayout = row.length > 5 ? row[5]?.toString() ?? '0' : '0';
         final rawWithdrawal = row.length > 6 ? row[6]?.toString() ?? '0' : '0';
+        final rawPurchaseDate = row.length > 7 ? row[7]?.toString()?.trim() : null;
 
         if (rawYM.isEmpty || accountId.isEmpty || productId.isEmpty) continue;
 
@@ -115,10 +116,15 @@ class _PensionMonthlyUploadScreenState
           principal: principal,
           totalPayout: totalPayout,
           totalWithdrawal: totalWithdrawal,
+          purchaseDate: (rawPurchaseDate != null && rawPurchaseDate.isNotEmpty) ? rawPurchaseDate : null,
         );
 
+        // 💡 기준월_계좌ID_상품ID 조합으로 문서 ID를 고정하여 덮어쓰기 (중복 방지)
+        final docId = '${yearMonth}_${accountId}_${productId}';
+        final docRef = collectionRef.doc(docId);
+
         final docData = model.toJson()..remove('id');
-        batch.set(collectionRef.doc(), docData);
+        batch.set(docRef, docData, SetOptions(merge: true));
         count++;
 
         if (count % 400 == 0) {
@@ -168,7 +174,7 @@ class _PensionMonthlyUploadScreenState
               ),
               const SizedBox(height: 24),
               const Text(
-                '엑셀 파일 양식 안내\n[A열: 기준월, B열: 계좌ID, C열: 상품ID(또는 현금성키),\nD열: 평가액, E열: 누적원금, F열: 누적수령액, G열: 누적인출금]',
+                '엑셀 파일 양식 안내\n[A열: 기준월, B열: 계좌ID, C열: 상품ID(또는 현금성키),\nD열: 평가액, E열: 누적원금, F열: 누적수령액, G열: 인출금, H열: 매수일(선택)]',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.4),
               ),

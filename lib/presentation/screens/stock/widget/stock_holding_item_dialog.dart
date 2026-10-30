@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/utils/number_formatter.dart';
 import '../../../../models/stock/stock_holding_item.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
@@ -26,9 +24,8 @@ class _StockHoldingItemDialogState
 
   String? _selectedAccountId;
   String? _selectedStockItemId;
-  late TextEditingController _principalController;
   late TextEditingController _dateController;
-  bool _isTerminated = false;
+  bool _isActive = true;
 
   bool _isSubmitting = false;
   bool get _isEditing => widget.initialData != null;
@@ -39,20 +36,14 @@ class _StockHoldingItemDialogState
     _selectedAccountId = widget.initialData?.accountId;
     _selectedStockItemId = widget.initialData?.stockItemId;
 
-    _principalController = TextEditingController(
-      text: widget.initialData != null && widget.initialData!.principal > 0
-          ? widget.initialData!.principal.toCommaString()
-          : '',
-    );
     _dateController = TextEditingController(
-      text: widget.initialData?.purchaseDate ?? '',
+      text: widget.initialData?.initialPurchaseDate ?? '',
     );
-    _isTerminated = widget.initialData?.isTerminated ?? false;
+    _isActive = widget.initialData?.isActive ?? true;
   }
 
   @override
   void dispose() {
-    _principalController.dispose();
     _dateController.dispose();
     super.dispose();
   }
@@ -69,19 +60,14 @@ class _StockHoldingItemDialogState
     setState(() => _isSubmitting = true);
 
     try {
-      final cleanPrincipal = _principalController.text
-          .replaceAll(RegExp(r'[^0-9]'), '')
-          .trim();
-      final principalVal = double.tryParse(cleanPrincipal) ?? 0.0;
       final dateText = _dateController.text.trim();
 
       final item = StockHoldingItem(
         id: widget.initialData?.id,
         accountId: _selectedAccountId!,
         stockItemId: _selectedStockItemId!,
-        principal: principalVal,
-        purchaseDate: dateText.isNotEmpty ? dateText : null,
-        isTerminated: _isTerminated,
+        initialPurchaseDate: dateText.isNotEmpty ? dateText : null,
+        isActive: _isActive,
       );
 
       final notifier = ref.read(stockHoldingItemNotifierProvider.notifier);
@@ -108,13 +94,6 @@ class _StockHoldingItemDialogState
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
     final stockItemsAsync = ref.watch(stockItemNotifierProvider);
-    final holdingItemsAsync = ref.watch(stockHoldingItemNotifierProvider);
-
-    final existingList = holdingItemsAsync.value ?? [];
-    final bool isAlreadyExists = existingList.any((item) =>
-        item.accountId == _selectedAccountId &&
-        item.stockItemId == _selectedStockItemId &&
-        (!_isEditing || item.id != widget.initialData?.id));
 
     return AlertDialog(
       title: Text(_isEditing ? '계좌별 보유종목 수정' : '계좌별 종목 등록'),
@@ -127,7 +106,6 @@ class _StockHoldingItemDialogState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 안내 가이드 박스
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -136,8 +114,8 @@ class _StockHoldingItemDialogState
                     border: Border.all(color: Colors.indigo.shade200),
                   ),
                   child: const Text(
-                    '💡 안내: 이 화면에서는 종목의 [초기 투자 원금]과 [최초 매수일]을 등록합니다.\n'
-                    '매월 발생하는 평가액 및 수량 변동은 [월말 주식 평가액 입력]에서 관리해 주세요!',
+                    '💡 안내: 이 화면에서는 계좌별 종목의 [최초 매수일]과 [종료 여부]를 설정합니다.\n'
+                    '매월 발생하는 평가액, 보유 수량 및 원금 변동은 [월말 주식 평가액 입력]에서 관리하세요!',
                     style: TextStyle(fontSize: 12, color: Colors.indigoAccent),
                   ),
                 ),
@@ -149,23 +127,20 @@ class _StockHoldingItemDialogState
                   error: (err, _) => Text('계좌 로딩 실패: $err'),
                   data: (accounts) {
                     final accountNames = accountNamesAsync.value ?? [];
-                    // 주식 계좌 필터링 (계좌 타입이 '주식'인 항목 중심, 필요시 조건 조정 가능)
                     final stockAccounts = accounts
                         .where(
                           (a) =>
-                              a.accountType.toUpperCase() == '주식' &&
-                              a.status == '활동',
+                              a.accountType.toUpperCase() == '주식',
                         )
                         .toList()
                       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-                    // 만약 '주식' 타입 계좌가 없다면 전체 활동 계좌를 보여주거나 유연하게 처리
                     final targetAccounts = stockAccounts.isNotEmpty
                         ? stockAccounts
-                        : accounts.where((a) => a.status == '활동').toList();
+                        : accounts;
 
                     if (targetAccounts.isEmpty) {
-                      return const Text('활동 중인 주식 계좌가 없습니다.');
+                      return const Text('등록된 주식 계좌가 없습니다.');
                     }
 
                     final accountNameMap = {
@@ -209,7 +184,7 @@ class _StockHoldingItemDialogState
                   error: (err, _) => Text('종목 로딩 실패: $err'),
                   data: (stockItems) {
                     if (stockItems.isEmpty) {
-                      return const Text('등록된 주식 종목이 없습니다. 종목 DB를 먼저 추가해 주세요.');
+                      return const Text('등록된 주식 종목이 없습니다.');
                     }
 
                     if (_selectedStockItemId == null && stockItems.isNotEmpty) {
@@ -242,30 +217,7 @@ class _StockHoldingItemDialogState
                 ),
                 const SizedBox(height: 16),
 
-                // 3. 투자 원금 입력
-                TextFormField(
-                  controller: _principalController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    ThousandsSeparatorInputFormatter(),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: isAlreadyExists ? '추가 투자 원금' : '초기 투자 원금',
-                    hintText: '투자 원금 입력',
-                    suffixText: '원',
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (val) {
-                    if (val == null || val.trim().isEmpty) {
-                      return '원금을 입력해 주세요.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // 4. 최초 매수일 입력 (기존 등록된 날짜 초기 포커싱 반영)
+                // 3. 최초 매수일 입력
                 TextFormField(
                   controller: _dateController,
                   readOnly: true,
@@ -308,15 +260,15 @@ class _StockHoldingItemDialogState
                 ),
                 const SizedBox(height: 16),
 
-                // 5. 전량 매도/종료 여부 스위치
+                // 4. 종료 여부 스위치
                 SwitchListTile(
                   title: const Text('보유 종목 매도 완료 (종료)'),
                   subtitle: const Text('전량 매도하여 더 이상 보유하지 않는 경우 체크'),
-                  value: _isTerminated,
+                  value: _isActive,
                   contentPadding: EdgeInsets.zero,
                   onChanged: (val) {
                     setState(() {
-                      _isTerminated = val;
+                      _isActive = val;   // true: 활동 중, false: 비활동/종료
                     });
                   },
                 ),

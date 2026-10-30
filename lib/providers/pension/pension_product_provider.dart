@@ -32,6 +32,16 @@ class PensionProductNotifier extends _$PensionProductNotifier {
 
   Future<void> addPensionProduct(PensionProduct product) async {
     final firestore = ref.read(firestoreProvider);
+
+    // 1. 상품명 중복 검사
+    final existingSnapshot = await firestore.collection(pensionProductDBName).get();
+    for (var doc in existingSnapshot.docs) {
+      final data = doc.data();
+      if (data['product_name'] == product.productName || data['productName'] == product.productName) {
+        throw Exception('이미 등록된 상품명(${product.productName})입니다.');
+      }
+    }
+
     final data = product.toJson()..remove('id');
 
     await firestore.collection(pensionProductDBName).add(data);
@@ -41,6 +51,17 @@ class PensionProductNotifier extends _$PensionProductNotifier {
   Future<void> updatePensionProduct(PensionProduct product) async {
     if (product.id == null) return;
     final firestore = ref.read(firestoreProvider);
+    
+    // 1. 상품명 중복 검사
+    final existingSnapshot = await firestore.collection(pensionProductDBName).get();
+    for (var doc in existingSnapshot.docs) {
+      if (doc.id == product.id) continue;
+      final data = doc.data();
+      if (data['product_name'] == product.productName || data['productName'] == product.productName) {
+        throw Exception('이미 존재하는 상품명(${product.productName})입니다.');
+      }
+    }
+
     final data = product.toJson()..remove('id');
 
     await firestore.collection(pensionProductDBName).doc(product.id).update(data);

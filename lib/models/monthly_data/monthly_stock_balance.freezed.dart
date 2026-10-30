@@ -31,12 +31,13 @@ mixin _$MonthlyStockBalance {
   double get quantity => throw _privateConstructorUsedError; // 당월 말 보유 수량
   @JsonKey(name: 'current_price')
   double get currentPrice => throw _privateConstructorUsedError; // 당월 말 현재가
-  double get balance => throw _privateConstructorUsedError; // 당월 말 평가액
+  double get balance =>
+      throw _privateConstructorUsedError; // 당월 말 평가액 (quantity * currentPrice)
   double get principal => throw _privateConstructorUsedError; // 누적 투자 원금
   @JsonKey(name: 'total_payout')
   double get totalPayout => throw _privateConstructorUsedError; // 누적 배당금 등 수령액
   @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal => throw _privateConstructorUsedError; // 💡 누적 인출액
+  double get totalWithdrawal => throw _privateConstructorUsedError; // 누적 인출액
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate => throw _privateConstructorUsedError;
 
@@ -316,7 +317,7 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
   @override
   @JsonKey()
   final double balance;
-  // 당월 말 평가액
+  // 당월 말 평가액 (quantity * currentPrice)
   @override
   @JsonKey()
   final double principal;
@@ -328,7 +329,7 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
   @override
   @JsonKey(name: 'total_withdrawal')
   final double totalWithdrawal;
-  // 💡 누적 인출액
+  // 누적 인출액
   @override
   @JsonKey(name: 'purchase_date')
   final String? purchaseDate;
@@ -435,7 +436,7 @@ abstract class _MonthlyStockBalance extends MonthlyStockBalance {
   @JsonKey(name: 'current_price')
   double get currentPrice; // 당월 말 현재가
   @override
-  double get balance; // 당월 말 평가액
+  double get balance; // 당월 말 평가액 (quantity * currentPrice)
   @override
   double get principal; // 누적 투자 원금
   @override
@@ -443,7 +444,7 @@ abstract class _MonthlyStockBalance extends MonthlyStockBalance {
   double get totalPayout; // 누적 배당금 등 수령액
   @override
   @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal; // 💡 누적 인출액
+  double get totalWithdrawal; // 누적 인출액
   @override
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate;

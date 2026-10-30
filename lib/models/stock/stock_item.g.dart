@@ -10,7 +10,7 @@ _$StockItemImpl _$$StockItemImplFromJson(Map<String, dynamic> json) =>
     _$StockItemImpl(
       id: json['id'] as String?,
       itemName: json['itemName'] as String,
-      otherName: json['otherName'] as String?,
+      otherName: json['otherName'] as String? ?? '',
       stockCode: json['stockCode'] as String,
       yahooName: json['yahooName'] as String?,
     );

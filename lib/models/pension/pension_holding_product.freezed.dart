@@ -25,16 +25,13 @@ PensionHoldingProduct _$PensionHoldingProductFromJson(
 mixin _$PensionHoldingProduct {
   String? get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_id')
-  String get accountId => throw _privateConstructorUsedError; // 연금 계좌 ID
+  String get accountId => throw _privateConstructorUsedError; // 연금 계좌 ID[cite: 6]
   @JsonKey(name: 'product_id')
-  String get productId => throw _privateConstructorUsedError; // 공용 상품 ID
-  double get principal => throw _privateConstructorUsedError; // 총 투자 원금
-  @JsonKey(name: 'purchase_date')
-  String? get purchaseDate => throw _privateConstructorUsedError; // 최초 매수일 (YYYY-MM-DD)
-  @JsonKey(name: 'total_payout')
-  double get totalPayout => throw _privateConstructorUsedError; // 💡 누적 연금 수령(지급)액
-  @JsonKey(name: 'is_terminated')
-  bool get isTerminated => throw _privateConstructorUsedError;
+  String get productId => throw _privateConstructorUsedError; // 공용 상품 ID[cite: 6]
+  @JsonKey(name: 'is_active')
+  bool get isActive => throw _privateConstructorUsedError; // 활동 / 비활동 여부[cite: 6]
+  @JsonKey(name: 'initial_purchase_date')
+  String? get initialPurchaseDate => throw _privateConstructorUsedError;
 
   /// Serializes this PensionHoldingProduct to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -57,10 +54,8 @@ abstract class $PensionHoldingProductCopyWith<$Res> {
     String? id,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_id') String productId,
-    double principal,
-    @JsonKey(name: 'purchase_date') String? purchaseDate,
-    @JsonKey(name: 'total_payout') double totalPayout,
-    @JsonKey(name: 'is_terminated') bool isTerminated,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate,
   });
 }
 
@@ -85,10 +80,8 @@ class _$PensionHoldingProductCopyWithImpl<
     Object? id = freezed,
     Object? accountId = null,
     Object? productId = null,
-    Object? principal = null,
-    Object? purchaseDate = freezed,
-    Object? totalPayout = null,
-    Object? isTerminated = null,
+    Object? isActive = null,
+    Object? initialPurchaseDate = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -107,26 +100,16 @@ class _$PensionHoldingProductCopyWithImpl<
                     ? _value.productId
                     : productId // ignore: cast_nullable_to_non_nullable
                         as String,
-            principal:
-                null == principal
-                    ? _value.principal
-                    : principal // ignore: cast_nullable_to_non_nullable
-                        as double,
-            purchaseDate:
-                freezed == purchaseDate
-                    ? _value.purchaseDate
-                    : purchaseDate // ignore: cast_nullable_to_non_nullable
-                        as String?,
-            totalPayout:
-                null == totalPayout
-                    ? _value.totalPayout
-                    : totalPayout // ignore: cast_nullable_to_non_nullable
-                        as double,
-            isTerminated:
-                null == isTerminated
-                    ? _value.isTerminated
-                    : isTerminated // ignore: cast_nullable_to_non_nullable
+            isActive:
+                null == isActive
+                    ? _value.isActive
+                    : isActive // ignore: cast_nullable_to_non_nullable
                         as bool,
+            initialPurchaseDate:
+                freezed == initialPurchaseDate
+                    ? _value.initialPurchaseDate
+                    : initialPurchaseDate // ignore: cast_nullable_to_non_nullable
+                        as String?,
           )
           as $Val,
     );
@@ -146,10 +129,8 @@ abstract class _$$PensionHoldingProductImplCopyWith<$Res>
     String? id,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_id') String productId,
-    double principal,
-    @JsonKey(name: 'purchase_date') String? purchaseDate,
-    @JsonKey(name: 'total_payout') double totalPayout,
-    @JsonKey(name: 'is_terminated') bool isTerminated,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate,
   });
 }
 
@@ -171,10 +152,8 @@ class __$$PensionHoldingProductImplCopyWithImpl<$Res>
     Object? id = freezed,
     Object? accountId = null,
     Object? productId = null,
-    Object? principal = null,
-    Object? purchaseDate = freezed,
-    Object? totalPayout = null,
-    Object? isTerminated = null,
+    Object? isActive = null,
+    Object? initialPurchaseDate = freezed,
   }) {
     return _then(
       _$PensionHoldingProductImpl(
@@ -193,26 +172,16 @@ class __$$PensionHoldingProductImplCopyWithImpl<$Res>
                 ? _value.productId
                 : productId // ignore: cast_nullable_to_non_nullable
                     as String,
-        principal:
-            null == principal
-                ? _value.principal
-                : principal // ignore: cast_nullable_to_non_nullable
-                    as double,
-        purchaseDate:
-            freezed == purchaseDate
-                ? _value.purchaseDate
-                : purchaseDate // ignore: cast_nullable_to_non_nullable
-                    as String?,
-        totalPayout:
-            null == totalPayout
-                ? _value.totalPayout
-                : totalPayout // ignore: cast_nullable_to_non_nullable
-                    as double,
-        isTerminated:
-            null == isTerminated
-                ? _value.isTerminated
-                : isTerminated // ignore: cast_nullable_to_non_nullable
+        isActive:
+            null == isActive
+                ? _value.isActive
+                : isActive // ignore: cast_nullable_to_non_nullable
                     as bool,
+        initialPurchaseDate:
+            freezed == initialPurchaseDate
+                ? _value.initialPurchaseDate
+                : initialPurchaseDate // ignore: cast_nullable_to_non_nullable
+                    as String?,
       ),
     );
   }
@@ -225,10 +194,8 @@ class _$PensionHoldingProductImpl extends _PensionHoldingProduct {
     this.id,
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'product_id') required this.productId,
-    this.principal = 0.0,
-    @JsonKey(name: 'purchase_date') this.purchaseDate,
-    @JsonKey(name: 'total_payout') this.totalPayout = 0.0,
-    @JsonKey(name: 'is_terminated') this.isTerminated = false,
+    @JsonKey(name: 'is_active') this.isActive = true,
+    @JsonKey(name: 'initial_purchase_date') this.initialPurchaseDate,
   }) : super._();
 
   factory _$PensionHoldingProductImpl.fromJson(Map<String, dynamic> json) =>
@@ -239,30 +206,22 @@ class _$PensionHoldingProductImpl extends _PensionHoldingProduct {
   @override
   @JsonKey(name: 'account_id')
   final String accountId;
-  // 연금 계좌 ID
+  // 연금 계좌 ID[cite: 6]
   @override
   @JsonKey(name: 'product_id')
   final String productId;
-  // 공용 상품 ID
+  // 공용 상품 ID[cite: 6]
   @override
-  @JsonKey()
-  final double principal;
-  // 총 투자 원금
+  @JsonKey(name: 'is_active')
+  final bool isActive;
+  // 활동 / 비활동 여부[cite: 6]
   @override
-  @JsonKey(name: 'purchase_date')
-  final String? purchaseDate;
-  // 최초 매수일 (YYYY-MM-DD)
-  @override
-  @JsonKey(name: 'total_payout')
-  final double totalPayout;
-  // 💡 누적 연금 수령(지급)액
-  @override
-  @JsonKey(name: 'is_terminated')
-  final bool isTerminated;
+  @JsonKey(name: 'initial_purchase_date')
+  final String? initialPurchaseDate;
 
   @override
   String toString() {
-    return 'PensionHoldingProduct(id: $id, accountId: $accountId, productId: $productId, principal: $principal, purchaseDate: $purchaseDate, totalPayout: $totalPayout, isTerminated: $isTerminated)';
+    return 'PensionHoldingProduct(id: $id, accountId: $accountId, productId: $productId, isActive: $isActive, initialPurchaseDate: $initialPurchaseDate)';
   }
 
   @override
@@ -275,14 +234,10 @@ class _$PensionHoldingProductImpl extends _PensionHoldingProduct {
                 other.accountId == accountId) &&
             (identical(other.productId, productId) ||
                 other.productId == productId) &&
-            (identical(other.principal, principal) ||
-                other.principal == principal) &&
-            (identical(other.purchaseDate, purchaseDate) ||
-                other.purchaseDate == purchaseDate) &&
-            (identical(other.totalPayout, totalPayout) ||
-                other.totalPayout == totalPayout) &&
-            (identical(other.isTerminated, isTerminated) ||
-                other.isTerminated == isTerminated));
+            (identical(other.isActive, isActive) ||
+                other.isActive == isActive) &&
+            (identical(other.initialPurchaseDate, initialPurchaseDate) ||
+                other.initialPurchaseDate == initialPurchaseDate));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -292,10 +247,8 @@ class _$PensionHoldingProductImpl extends _PensionHoldingProduct {
     id,
     accountId,
     productId,
-    principal,
-    purchaseDate,
-    totalPayout,
-    isTerminated,
+    isActive,
+    initialPurchaseDate,
   );
 
   /// Create a copy of PensionHoldingProduct
@@ -321,10 +274,8 @@ abstract class _PensionHoldingProduct extends PensionHoldingProduct {
     final String? id,
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'product_id') required final String productId,
-    final double principal,
-    @JsonKey(name: 'purchase_date') final String? purchaseDate,
-    @JsonKey(name: 'total_payout') final double totalPayout,
-    @JsonKey(name: 'is_terminated') final bool isTerminated,
+    @JsonKey(name: 'is_active') final bool isActive,
+    @JsonKey(name: 'initial_purchase_date') final String? initialPurchaseDate,
   }) = _$PensionHoldingProductImpl;
   const _PensionHoldingProduct._() : super._();
 
@@ -335,21 +286,16 @@ abstract class _PensionHoldingProduct extends PensionHoldingProduct {
   String? get id;
   @override
   @JsonKey(name: 'account_id')
-  String get accountId; // 연금 계좌 ID
+  String get accountId; // 연금 계좌 ID[cite: 6]
   @override
   @JsonKey(name: 'product_id')
-  String get productId; // 공용 상품 ID
+  String get productId; // 공용 상품 ID[cite: 6]
   @override
-  double get principal; // 총 투자 원금
+  @JsonKey(name: 'is_active')
+  bool get isActive; // 활동 / 비활동 여부[cite: 6]
   @override
-  @JsonKey(name: 'purchase_date')
-  String? get purchaseDate; // 최초 매수일 (YYYY-MM-DD)
-  @override
-  @JsonKey(name: 'total_payout')
-  double get totalPayout; // 💡 누적 연금 수령(지급)액
-  @override
-  @JsonKey(name: 'is_terminated')
-  bool get isTerminated;
+  @JsonKey(name: 'initial_purchase_date')
+  String? get initialPurchaseDate;
 
   /// Create a copy of PensionHoldingProduct
   /// with the given fields replaced by the non-null parameter values.

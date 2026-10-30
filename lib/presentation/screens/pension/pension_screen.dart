@@ -13,7 +13,7 @@ import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_pension_balance_provider.dart';
-import '../../../providers/pension/pension_product_provider.dart'; // 💡 상품명 매핑을 위해 추가
+import '../../../providers/pension/pension_product_provider.dart';
 
 class PensionScreen extends ConsumerStatefulWidget {
   const PensionScreen({super.key});
@@ -25,6 +25,9 @@ class PensionScreen extends ConsumerStatefulWidget {
 class _PensionScreenState extends ConsumerState<PensionScreen> {
   final TransformationController _transformationController =
       TransformationController();
+
+  // 💡 다이얼로그와 동일한 현금성 자산 상품 ID 상수 정의
+  static const String kCashAssetProductId = '_CASH_ASSET_PRODUCT_ID_';
 
   final List<Color> _chartColors = [
     Colors.indigo,
@@ -59,7 +62,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     final selectedMonth = ref.watch(selectedYearMonthProvider);
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final productsAsync = ref.watch(pensionProductNotifierProvider); // 💡 상품 목록 프로바이더 watch
+    final productsAsync = ref.watch(pensionProductNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -68,7 +71,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         actions: [
           ElevatedButton.icon(
             onPressed: () {
-               context.push(
+              context.push(
                 AppRoutePath.monthlyPensionBalance,
                 extra: selectedMonth,
               );
@@ -119,7 +122,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             0.0,
                             (sum, item) => sum + item.balance,
                           );
-                          // 💡 [추가] 전체 원금 및 총 평가 손익/수익률 계산
                           final totalPrincipal = balances.fold<double>(
                             0.0,
                             (sum, item) => sum + item.principal,
@@ -165,7 +167,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
 
                           final accounts = accountsAsync.value ?? [];
                           final accountNames = accountNamesAsync.value ?? [];
-                          final products = productsAsync.value ?? []; // 💡 상품 매핑 맵 생성용
+                          final products = productsAsync.value ?? [];
 
                           final Map<String, List<MonthlyPensionBalance>>
                               accountGroups = {};
@@ -231,7 +233,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            onPressed: currentIndex < months.length - 1 
+            onPressed: currentIndex < months.length - 1
                 ? () {
                     ref
                         .read(selectedYearMonthProvider.notifier)
@@ -240,7 +242,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                 : null,
           ),
           DropdownButtonHideUnderline(
-             child: DropdownButton<String>(
+            child: DropdownButton<String>(
               value:
                   months.contains(currentMonth) ? currentMonth : months.first,
               icon: const Icon(Icons.arrow_drop_down),
@@ -273,7 +275,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     );
   }
 
-  // 💡 [수정] 상단 대시보드에 전체 원금, 평가 손익 및 누적 수익률 반영
   Widget _buildSummaryCard({
     required double totalBalance,
     required double totalPrincipal,
@@ -373,7 +374,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     final accountNameMap = {for (var an in accountNames) an.id: an};
     final accountMap = {for (var a in accounts) a.id!: a};
     
-    // 💡 [수정] Map<String, String>으로 명시적 캐스팅 또는 변환 적용
     final Map<String, String> productMap = {
       for (var p in products) p.id.toString(): p.productName.toString()
     };
@@ -413,7 +413,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
               institution: institution,
               accountName: accountName,
               products: items,
-              productMap: productMap, // 이제 타입이 정확히 일치하여 오류가 사라집니다.
+              productMap: productMap,
             );
           },
         );
@@ -576,7 +576,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     );
   }
 
-  // 💡 [수정] 바텀시트에 상품명 표기 및 매수일 기준 연환산수익률(item.annualizedReturnRate) 정상 표출
+  // 💡 [수정] 바텀시트 내 현금성 자산 상품명 매칭 검증 강화
   void _showProductDetailBottomSheet(
     BuildContext context, {
     required String institution,
@@ -602,8 +602,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                   itemBuilder: (context, index) {
                     final item = products[index];
                     
-                    // 현금성 자산 또는 상품명 매핑
-                    final productName = item.productId == '_CASH_ASSET_PRODUCT_ID_'
+                    final productName = item.productId == kCashAssetProductId
                         ? '💵 계좌 공통 현금성 자산 (예수금)'
                         : (productMap[item.productId] ?? '연금 상품');
 
