@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -33,7 +34,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
     final stockItemsAsync = ref.watch(stockItemNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('주식 월말 내역 관리')),
+      appBar: AppBar(title: const Text('주식 월말 내역 관리')),
       body: balancesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('데이터를 불러오지 못했습니다: $err')),
@@ -115,7 +116,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                       final institution = account?.financialInstitution ?? '기타 증권사';
                       final accName = accountName?.accountName ?? '주식계좌';
                       
-                      // 💡 모델 변경사항(itemName, stockCode) 반영
                       final stockName = stock?.itemName ?? '알 수 없는 종목';
                       final stockCode = stock?.stockCode ?? '';
 
@@ -136,7 +136,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // 상단: 종목명 (1줄)
                                       Text(
                                         stockName,
                                         style: const TextStyle(
@@ -148,7 +147,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 6),
                                       
-                                      // 하단: [증권사] 계좌명 + 연월 배지 조합
                                       Row(
                                         children: [
                                           Expanded(
@@ -211,7 +209,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                                             size: 19,
                                             color: Colors.grey,
                                           ),
-                                          onPressed: () => _showEditDialog(
+                                          onPressed: () => _showEditBottomSheet(
                                             context,
                                             ref,
                                             item,
@@ -267,7 +265,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
               '주식 월말 평가액 추가 입력',
               style: TextStyle(fontSize: 16),
             ),
-            onPressed: () => _showAddDialog(context, targetMonth),
+            onPressed: () => _showAddBottomSheet(context, targetMonth),
           ),
         ),
       ),
@@ -291,25 +289,217 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
     );
   }
 
-  void _showAddDialog(BuildContext context, String currentMonth) {
-    showDialog(
+  // 💡 바텀시트 호출 함수로 변경
+  void _showAddBottomSheet(BuildContext context, String currentMonth) {
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (_) => MonthlyStockBalanceDialog(yearMonth: currentMonth),
     );
   }
 
-  void _showEditDialog(
+  // 💡 개별 주식 항목 단건 수정 바텀시트
+  void _showEditBottomSheet(
     BuildContext context,
     WidgetRef ref,
     MonthlyStockBalance item,
     String stockName,
   ) {
-    showDialog(
+    final qtyController = TextEditingController(
+      text: item.quantity > 0 ? item.quantity.toString() : '',
+    );
+    final priceController = TextEditingController(
+      text: item.currentPrice > 0 ? item.currentPrice.toCommaString() : '',
+    );
+    final principalController = TextEditingController(
+      text: item.principal > 0 ? item.principal.toCommaString() : '',
+    );
+    final payoutController = TextEditingController(
+      text: item.totalPayout > 0 ? item.totalPayout.toCommaString() : '',
+    );
+    final withdrawalController = TextEditingController(
+      text: item.totalWithdrawal > 0 ? item.totalWithdrawal.toCommaString() : '',
+    );
+
+    final formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
       context: context,
-      builder: (_) => MonthlyStockBalanceDialog(
-        yearMonth: item.yearMonth,
-        initialData: item,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.of(sheetContext).viewInsets.bottom;
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '$stockName (${item.yearMonth}) 수정',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 12),
+
+                  // 수량 & 현재가
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: qtyController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(
+                            labelText: '보유 수량',
+                            suffixText: '주',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (val) => val == null || val.trim().isEmpty ? '수량 입력' : null,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: TextFormField(
+                          controller: priceController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            ThousandsSeparatorInputFormatter(),
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: '주당 현재가',
+                            suffixText: '원',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (val) => val == null || val.trim().isEmpty ? '현재가 입력' : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 투자 원금
+                  TextFormField(
+                    controller: principalController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      ThousandsSeparatorInputFormatter(),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: '누적 투자 원금',
+                      suffixText: '원',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) => val == null || val.trim().isEmpty ? '원금 입력' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 배당금 & 인출액
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: payoutController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            ThousandsSeparatorInputFormatter(),
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: '누적 배당금',
+                            suffixText: '원',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextFormField(
+                          controller: withdrawalController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            ThousandsSeparatorInputFormatter(),
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: '누적 인출액',
+                            suffixText: '원',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (!(formKey.currentState?.validate() ?? false)) return;
+
+                        final qty = double.tryParse(qtyController.text.replaceAll(',', '').trim()) ?? 0.0;
+                        final price = double.tryParse(priceController.text.replaceAll(RegExp(r'[^0-9.]'), '').trim()) ?? 0.0;
+                        final principal = double.tryParse(principalController.text.replaceAll(RegExp(r'[^0-9]'), '').trim()) ?? 0.0;
+                        final payout = double.tryParse(payoutController.text.replaceAll(RegExp(r'[^0-9]'), '').trim()) ?? 0.0;
+                        final withdrawal = double.tryParse(withdrawalController.text.replaceAll(RegExp(r'[^0-9]'), '').trim()) ?? 0.0;
+
+                        final updatedItem = item.copyWith(
+                          quantity: qty,
+                          currentPrice: price,
+                          balance: qty * price,
+                          principal: principal,
+                          totalPayout: payout,
+                          totalWithdrawal: withdrawal,
+                        );
+
+                        await ref
+                            .read(
+                              monthlyStockBalanceNotifierProvider(
+                                item.yearMonth,
+                              ).notifier,
+                            )
+                            .saveBalance(updatedItem);
+
+                        if (sheetContext.mounted) Navigator.pop(sheetContext);
+                      },
+                      child: const Text('저장하기', style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

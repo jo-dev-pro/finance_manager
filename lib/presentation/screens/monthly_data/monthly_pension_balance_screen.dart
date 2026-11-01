@@ -342,6 +342,18 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
     );
   }
 
+  
+  void _showAddBottomSheet(BuildContext context, String currentMonth) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => MonthlyPensionDialog(yearMonth: currentMonth),
+    );
+  }
+
   void _showEditBottomSheet(
     BuildContext context,
     WidgetRef ref,
@@ -352,7 +364,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
       text: balanceItem.balance.toCommaString(),
     );
     final formKey = GlobalKey<FormState>();
-
+ 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -485,14 +497,4 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
     );
   }
 
-  void _showAddBottomSheet(BuildContext context, String currentMonth) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => MonthlyPensionDialog(yearMonth: currentMonth),
-    );
-  }
 }

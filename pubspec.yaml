@@ -39,6 +39,7 @@ dependencies:
   google_fonts: ^8.2.1
   file_picker: ^8.0.0
   http: ^1.6.0
+  yahoo_finance_data_reader: ^1.0.14
 
 dev_dependencies:
   flutter_test:

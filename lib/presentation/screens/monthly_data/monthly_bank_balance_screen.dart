@@ -323,6 +323,18 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
     );
   }
 
+ void _showAddBottomSheet(BuildContext context, String currentMonth) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (context) => MonthlyBankDialog(yearMonth: currentMonth),
+    );
+  }
+  
   void _showEditBottomSheet(
     BuildContext context,
     WidgetRef ref,
@@ -465,18 +477,6 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
               ),
             ],
           ),
-    );
-  }
-
-  void _showAddBottomSheet(BuildContext context, String currentMonth) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder:
-          (context) => MonthlyBankDialog(yearMonth: currentMonth),
     );
   }
 }

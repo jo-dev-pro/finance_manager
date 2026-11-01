@@ -190,7 +190,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       DropdownButtonFormField<String>(
-                        value: _selectedAccountId,
+                        initialValue: _selectedAccountId,
                         decoration: const InputDecoration(
                           labelText: '계좌 선택',
                           border: OutlineInputBorder(),

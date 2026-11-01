@@ -1,24 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/utils/yahoo_service.dart';
 import '../../../../models/monthly_data/monthly_stock_balance.dart';
+import '../../../../models/stock/stock_item.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
+import '../../../../providers/stock/stock_holding_item_provider.dart';
 import '../../../../providers/stock/stock_item_provider.dart';
+
+class _GroupedStockItem {
+  final String accountId;
+  final String stockItemId;
+  double principal;
+  double totalPayout;
+  double totalWithdrawal;
+  String? purchaseDate;
+
+  _GroupedStockItem({
+    required this.accountId,
+    required this.stockItemId,
+    required this.principal,
+    required this.totalPayout,
+    required this.totalWithdrawal,
+    this.purchaseDate,
+  });
+}
 
 class MonthlyStockBalanceDialog extends ConsumerStatefulWidget {
   final String yearMonth;
-  final MonthlyStockBalance? initialData;
 
-  const MonthlyStockBalanceDialog({
-    super.key,
-    required this.yearMonth,
-    this.initialData,
-  });
+  const MonthlyStockBalanceDialog({super.key, required this.yearMonth});
 
   @override
   ConsumerState<MonthlyStockBalanceDialog> createState() =>
@@ -27,90 +43,69 @@ class MonthlyStockBalanceDialog extends ConsumerStatefulWidget {
 
 class _MonthlyStockBalanceDialogState
     extends ConsumerState<MonthlyStockBalanceDialog> {
-  final _formKey = GlobalKey<FormState>();
-
+  late String _selectedYearMonth;
   String? _selectedAccountId;
-  String? _selectedStockItemId;
 
-  late TextEditingController _quantityController;
-  late TextEditingController _currentPriceController;
-  late TextEditingController _principalController;
-  late TextEditingController _payoutController;
-  late TextEditingController _withdrawalController;
+  final Map<String, TextEditingController> _quantityControllers = {};
+  final Map<String, TextEditingController> _priceControllers = {};
+  final Map<String, TextEditingController> _addPrincipalControllers = {};
+  final Map<String, TextEditingController> _addPayoutControllers = {};
+  final Map<String, TextEditingController> _addWithdrawalControllers = {};
 
-  bool _isLoadingPrice = false;
-  bool get _isEditing => widget.initialData != null;
+  final Map<String, bool> _isLoadingPriceMap = {};
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    _selectedAccountId = widget.initialData?.accountId;
-    _selectedStockItemId = widget.initialData?.stockItemId;
-
-    _quantityController = TextEditingController(
-      text:
-          widget.initialData != null && widget.initialData!.quantity > 0
-              ? widget.initialData!.quantity.toString()
-              : '',
-    );
-    _currentPriceController = TextEditingController(
-      text:
-          widget.initialData != null && widget.initialData!.currentPrice > 0
-              ? widget.initialData!.currentPrice.toCommaString()
-              : '',
-    );
-    _principalController = TextEditingController(
-      text:
-          widget.initialData != null && widget.initialData!.principal > 0
-              ? widget.initialData!.principal.toCommaString()
-              : '',
-    );
-    _payoutController = TextEditingController(
-      text:
-          widget.initialData != null && widget.initialData!.totalPayout > 0
-              ? widget.initialData!.totalPayout.toCommaString()
-              : '',
-    );
-    _withdrawalController = TextEditingController(
-      text:
-          widget.initialData != null && widget.initialData!.totalWithdrawal > 0
-              ? widget.initialData!.totalWithdrawal.toCommaString()
-              : '',
-    );
+    _selectedYearMonth = widget.yearMonth;
   }
 
   @override
   void dispose() {
-    _quantityController.dispose();
-    _currentPriceController.dispose();
-    _principalController.dispose();
-    _payoutController.dispose();
-    _withdrawalController.dispose();
+    for (var c in _quantityControllers.values) {
+      c.dispose();
+    }
+    for (var c in _priceControllers.values) {
+      c.dispose();
+    }
+    for (var c in _addPrincipalControllers.values) {
+      c.dispose();
+    }
+    for (var c in _addPayoutControllers.values) {
+      c.dispose();
+    }
+    for (var c in _addWithdrawalControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  double _calculateBalance() {
-    final cleanQty = _quantityController.text.replaceAll(',', '').trim();
-    final cleanPrice = _currentPriceController.text.replaceAll(',', '').trim();
-    final qty = double.tryParse(cleanQty) ?? 0.0;
-    final price = double.tryParse(cleanPrice) ?? 0.0;
-    return qty * price;
+  String _getPreviousYearMonth(String ym) {
+    try {
+      final parts = ym.split('-');
+      int year = int.parse(parts[0]);
+      int month = int.parse(parts[1]);
+      DateTime lastMonthDate = DateTime(year, month - 1, 1);
+      return DateFormat('yyyy-MM').format(lastMonthDate);
+    } catch (_) {
+      return ym;
+    }
   }
 
-  Future<void> _fetchYahooPrice() async {
-    if (_selectedStockItemId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('먼저 종목을 선택해 주세요.')));
-      return;
-    }
-
-    final stockItems = ref.read(stockItemNotifierProvider).value ?? [];
+  Future<void> _fetchYahooPriceForStock(
+    String key,
+    String stockItemId,
+    List<StockItem> stockItems,
+  ) async {
+    print('🚀 _fetchYahooPriceForStock 함수 진입! stockItemId: $stockItemId, yearMonth: $_selectedYearMonth');
     final selectedStock = stockItems.firstWhere(
-      (s) => s.id == _selectedStockItemId,
+      (s) => s.id == stockItemId,
       orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
     );
 
+print('📌 찾은 종목명: ${selectedStock.itemName}, stockCode: ${selectedStock.stockCode}, yahooName: ${selectedStock.yahooName}');
     String ticker = selectedStock.stockCode;
     if (selectedStock.yahooName == 'KS') {
       ticker += '.KS';
@@ -118,22 +113,25 @@ class _MonthlyStockBalanceDialogState
       ticker += '.KQ';
     }
 
-    setState(() => _isLoadingPrice = true);
+print('🎯 최종 티커(Ticker): $ticker');
+
+    setState(() => _isLoadingPriceMap[key] = true);
 
     try {
+          print('$ticker $_selectedYearMonth');
       final price = await YahooFinanceService.getMonthlyClosePrice(
         ticker,
-        widget.yearMonth,
+        _selectedYearMonth,
       );
-      if (price != null) {
+      if (price != null && _priceControllers.containsKey(key)) {
         setState(() {
-          _currentPriceController.text = price.toCommaString();
+          _priceControllers[key]!.text = price.toCommaString();
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${selectedStock.itemName}의 ${widget.yearMonth} 종가(${price.toCommaString()}원)를 불러왔습니다!',
+                '${selectedStock.itemName}의 $_selectedYearMonth 종가(${price.toCommaString()}원)를 불러왔습니다!',
               ),
             ),
           );
@@ -152,76 +150,7 @@ class _MonthlyStockBalanceDialogState
         ).showSnackBar(SnackBar(content: Text('시세 조회 실패: $e')));
       }
     } finally {
-      if (mounted) setState(() => _isLoadingPrice = false);
-    }
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedAccountId == null || _selectedStockItemId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('계좌와 종목을 모두 선택해 주세요.')));
-      return;
-    }
-
-    try {
-      final qty =
-          double.tryParse(
-            _quantityController.text.replaceAll(',', '').trim(),
-          ) ??
-          0.0;
-      final price =
-          double.tryParse(
-            _currentPriceController.text
-                .replaceAll(RegExp(r'[^0-9.]'), '')
-                .trim(),
-          ) ??
-          0.0;
-      final principal =
-          double.tryParse(
-            _principalController.text.replaceAll(RegExp(r'[^0-9]'), '').trim(),
-          ) ??
-          0.0;
-      final payout =
-          double.tryParse(
-            _payoutController.text.replaceAll(RegExp(r'[^0-9]'), '').trim(),
-          ) ??
-          0.0;
-      final withdrawal =
-          double.tryParse(
-            _withdrawalController.text.replaceAll(RegExp(r'[^0-9]'), '').trim(),
-          ) ??
-          0.0;
-
-      final balance = qty * price;
-
-      final item = MonthlyStockBalance(
-        id: widget.initialData?.id,
-        yearMonth: widget.yearMonth,
-        accountId: _selectedAccountId!,
-        stockItemId: _selectedStockItemId!,
-        quantity: qty,
-        currentPrice: price,
-        balance: balance,
-        principal: principal,
-        totalPayout: payout,
-        totalWithdrawal: withdrawal,
-        purchaseDate: widget.initialData?.purchaseDate,
-      );
-
-      final notifier = ref.read(
-        monthlyStockBalanceNotifierProvider(widget.yearMonth).notifier,
-      );
-      await notifier.saveBalance(item);
-
-      if (mounted) Navigator.of(context).pop();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
-      }
+      if (mounted) setState(() => _isLoadingPriceMap[key] = false);
     }
   }
 
@@ -229,7 +158,17 @@ class _MonthlyStockBalanceDialogState
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final holdingItemsAsync = ref.watch(stockHoldingItemNotifierProvider);
     final stockItemsAsync = ref.watch(stockItemNotifierProvider);
+
+    final existingCurrentBalancesAsync = ref.watch(
+      monthlyStockBalanceNotifierProvider(_selectedYearMonth),
+    );
+    final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
+    final existingPrevBalancesAsync = ref.watch(
+      monthlyStockBalanceNotifierProvider(prevYearMonth),
+    );
+
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
@@ -245,37 +184,42 @@ class _MonthlyStockBalanceDialogState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${widget.yearMonth} 주식 월말 평가 입력',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const Text(
+                    '월말 주식 평가액/수량 일괄 입력',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
               const Divider(),
               const SizedBox(height: 12),
 
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.indigo.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.indigo.shade200),
+              TextFormField(
+                initialValue: _selectedYearMonth,
+                decoration: const InputDecoration(
+                  labelText: '기준월',
+                  hintText: 'YYYY-MM',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.calendar_today),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
                 ),
-                child: const Text(
-                  '💡 안내: 해당 월 말일 기준의 보유 수량과 주당 현재가를 입력하면 평가액이 자동으로 계산됩니다.',
-                  style: TextStyle(fontSize: 12, color: Colors.indigoAccent),
-                ),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedYearMonth = val.trim();
+                  });
+                },
+                validator:
+                    (val) => val == null || val.isEmpty ? '기준월을 입력해주세요.' : null,
               ),
               const SizedBox(height: 16),
 
-              // 1. 계좌 선택
               accountsAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (err, _) => Text('계좌 로딩 실패: $err'),
@@ -289,238 +233,384 @@ class _MonthlyStockBalanceDialogState
                       accounts
                           .where(
                             (a) =>
-                                a.accountType.trim() == '주식' &&
+                                a.accountType.trim() == '증권' &&
                                 a.status == '활동',
                           )
                           .toList();
 
-                  if (_selectedAccountId == null && stockAccounts.isNotEmpty) {
-                    _selectedAccountId = stockAccounts.first.id;
-                  }
-
                   if (stockAccounts.isEmpty) {
                     return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      padding: EdgeInsets.symmetric(vertical: 20),
                       child: Text(
                         '등록된 주식 계좌가 없습니다. 계좌 관리에서 주식 계좌를 먼저 추가해 주세요.',
-                        style: TextStyle(color: Colors.red, fontSize: 13),
+                        style: TextStyle(color: Colors.red),
                       ),
                     );
                   }
 
-                  return DropdownButtonFormField<String>(
-                    initialValue:
-                        stockAccounts.any((a) => a.id == _selectedAccountId)
-                            ? _selectedAccountId
-                            : null,
-                    decoration: const InputDecoration(
-                      labelText: '계좌 선택',
-                      border: OutlineInputBorder(),
-                    ),
-                    items:
-                        stockAccounts.map((acc) {
-                          final nameObj = accountNameMap[acc.accountNameId];
-                          return DropdownMenuItem(
-                            value: acc.id,
-                            child: Text(
-                              '${acc.financialInstitution} - ${nameObj?.accountName ?? '계좌'}',
+                  if (_selectedAccountId == null ||
+                      !stockAccounts.any((a) => a.id == _selectedAccountId)) {
+                    _selectedAccountId = stockAccounts.first.id;
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedAccountId,
+                        decoration: const InputDecoration(
+                          labelText: '계좌 선택',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 14,
+                          ),
+                        ),
+                        items:
+                            stockAccounts.map((acc) {
+                              final institution = acc.financialInstitution;
+                              final nameObj = accountNameMap[acc.accountNameId];
+                              final nameDisplay = nameObj?.accountName ?? '계좌';
+                              return DropdownMenuItem(
+                                value: acc.id,
+                                child: Text('$institution - $nameDisplay'),
+                              );
+                            }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedAccountId = val;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      holdingItemsAsync.when(
+                        loading:
+                            () => const Center(
+                              child: CircularProgressIndicator(),
                             ),
+                        error: (err, _) => Text('보유 종목 로딩 실패: $err'),
+                        data: (holdingItems) {
+                          final stockItems = stockItemsAsync.value ?? [];
+                          final stockMap = {
+                            for (var s in stockItems)
+                              s.id!: '${s.itemName} (${s.stockCode})',
+                          };
+
+                          final Map<String, _GroupedStockItem> groupedMap = {};
+
+                          final currentBalances =
+                              existingCurrentBalancesAsync.value ?? [];
+                          final prevBalances =
+                              existingPrevBalancesAsync.value ?? [];
+
+                          final prevBalanceMap = {
+                            for (var b in prevBalances)
+                              '${b.accountId}_${b.stockItemId}': b,
+                          };
+
+                          final matchedHoldings =
+                              holdingItems
+                                  .where(
+                                    (hi) =>
+                                        hi.accountId == _selectedAccountId &&
+                                        hi.isActive,
+                                  )
+                                  .toList();
+
+                          for (var hi in matchedHoldings) {
+                            final stockId = hi.stockItemId;
+                            final prevData =
+                                prevBalanceMap['${hi.accountId}_$stockId'];
+                            final basePrincipal = prevData?.principal ?? 0.0;
+                            final basePayout = prevData?.totalPayout ?? 0.0;
+                            final baseWithdrawal =
+                                prevData?.totalWithdrawal ?? 0.0;
+
+                            groupedMap[stockId] = _GroupedStockItem(
+                              accountId: hi.accountId,
+                              stockItemId: stockId,
+                              principal: basePrincipal,
+                              totalPayout: basePayout,
+                              totalWithdrawal: baseWithdrawal,
+                              purchaseDate: hi.initialPurchaseDate,
+                            );
+                          }
+
+                          final groupedItems = groupedMap.values.toList();
+                          final currentBalanceMap = {
+                            for (var b in currentBalances)
+                              '${b.accountId}_${b.stockItemId}': b,
+                          };
+
+                          if (groupedItems.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Text('해당 계좌에 등록된 보유 종목이 없습니다.'),
+                            );
+                          }
+
+                          return ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: groupedItems.length,
+                            separatorBuilder:
+                                (_, __) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final groupItem = groupedItems[index];
+                              final stockId = groupItem.stockItemId;
+                              final stockName =
+                                  stockMap[stockId] ?? '알 수 없는 종목';
+
+                              final key = '${_selectedAccountId}_$stockId';
+                              final currentData = currentBalanceMap[key];
+
+                              if (!_quantityControllers.containsKey(key)) {
+                                _quantityControllers[key] =
+                                    TextEditingController(
+                                      text:
+                                          (currentData != null &&
+                                                  currentData.quantity > 0)
+                                              ? currentData.quantity.toString()
+                                              : '',
+                                    );
+                                _priceControllers[key] = TextEditingController(
+                                  text:
+                                      (currentData != null &&
+                                              currentData.currentPrice > 0)
+                                          ? currentData.currentPrice
+                                              .toCommaString()
+                                          : '',
+                                );
+                                _addPrincipalControllers[key] =
+                                    TextEditingController();
+                                _addPayoutControllers[key] =
+                                    TextEditingController();
+                                _addWithdrawalControllers[key] =
+                                    TextEditingController();
+                              }
+
+                              final isLoading =
+                                  _isLoadingPriceMap[key] ?? false;
+
+                              // 실시간 산출 평가액 계산
+                              final qty =
+                                  double.tryParse(
+                                    _quantityControllers[key]!.text
+                                        .replaceAll(',', '')
+                                        .trim(),
+                                  ) ??
+                                  0.0;
+                              final price =
+                                  double.tryParse(
+                                    _priceControllers[key]!.text
+                                        .replaceAll(',', '')
+                                        .trim(),
+                                  ) ??
+                                  0.0;
+                              final calcBalance = qty * price;
+
+                              return Card(
+                                elevation: 1.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: BorderSide(color: Colors.grey.shade300),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              stockName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          OutlinedButton.icon(
+                                            onPressed: isLoading ? null : () {
+    print('👉 시세조회 버튼 클릭됨! key: $key, stockId: $stockId');
+    _fetchYahooPriceForStock(key, stockId, stockItems);
+  },
+                                            icon:
+                                                isLoading
+                                                    ? const SizedBox(
+                                                      width: 12,
+                                                      height: 12,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                          ),
+                                                    )
+                                                    : const Icon(
+                                                      Icons.cloud_download,
+                                                      size: 14,
+                                                    ),
+                                            label: const Text(
+                                              '시세조회',
+                                              style: TextStyle(fontSize: 11),
+                                            ),
+                                            style: OutlinedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 2,
+                                                  ),
+                                              minimumSize: Size.zero,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '누적원금: ${groupItem.principal.toWon()} | 수령액: ${groupItem.totalPayout.toWon()} | 인출금: ${groupItem.totalWithdrawal.toWon()}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      const Divider(height: 16),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller:
+                                                  _quantityControllers[key],
+                                              keyboardType:
+                                                  const TextInputType.numberWithOptions(
+                                                    decimal: true,
+                                                  ),
+                                              decoration: const InputDecoration(
+                                                labelText: '보유 수량',
+                                                suffixText: '주',
+                                                border: OutlineInputBorder(),
+                                                isDense: true,
+                                              ),
+                                              onChanged: (_) => setState(() {}),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            flex: 2,
+                                            child: TextFormField(
+                                              controller:
+                                                  _priceControllers[key],
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                                ThousandsSeparatorInputFormatter(),
+                                              ],
+                                              decoration: const InputDecoration(
+                                                labelText: '주당 현재가',
+                                                suffixText: '원',
+                                                border: OutlineInputBorder(),
+                                                isDense: true,
+                                              ),
+                                              onChanged: (_) => setState(() {}),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '산출 평가액: ${calcBalance.toWon()}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.indigo.shade700,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller:
+                                                  _addPrincipalControllers[key],
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                                ThousandsSeparatorInputFormatter(),
+                                              ],
+                                              decoration: const InputDecoration(
+                                                labelText: '추가 매수액',
+                                                hintText: '0',
+                                                suffixText: '원',
+                                                border: OutlineInputBorder(),
+                                                isDense: true,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller:
+                                                  _addPayoutControllers[key],
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                                ThousandsSeparatorInputFormatter(),
+                                              ],
+                                              decoration: const InputDecoration(
+                                                labelText: '배당금',
+                                                hintText: '0',
+                                                suffixText: '원',
+                                                border: OutlineInputBorder(),
+                                                isDense: true,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller:
+                                                  _addWithdrawalControllers[key],
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                                ThousandsSeparatorInputFormatter(),
+                                              ],
+                                              decoration: const InputDecoration(
+                                                labelText: '인출액',
+                                                hintText: '0',
+                                                suffixText: '원',
+                                                border: OutlineInputBorder(),
+                                                isDense: true,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           );
-                        }).toList(),
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedAccountId = val;
-                      });
-                    },
+                        },
+                      ),
+                    ],
                   );
                 },
-              ),
-              const SizedBox(height: 16),
-
-              // 2. 종목 선택
-              stockItemsAsync.when(
-                loading: () => const LinearProgressIndicator(),
-                error: (err, _) => Text('종목 로딩 실패: $err'),
-                data: (stockItems) {
-                  if (stockItems.isEmpty) {
-                    return const Text('등록된 종목이 없습니다.');
-                  }
-
-                  if (_selectedStockItemId == null && stockItems.isNotEmpty) {
-                    _selectedStockItemId = stockItems.first.id;
-                  }
-
-                  return DropdownButtonFormField<String>(
-                    initialValue:
-                        stockItems.any((s) => s.id == _selectedStockItemId)
-                            ? _selectedStockItemId
-                            : null,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: '종목 선택',
-                      border: OutlineInputBorder(),
-                    ),
-                    items:
-                        stockItems.map((stock) {
-                          return DropdownMenuItem(
-                            value: stock.id,
-                            child: Text(
-                              '${stock.itemName} (${stock.stockCode})',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }).toList(),
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedStockItemId = val;
-                      });
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // 3. 보유 수량 & 현재가 입력
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _quantityController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(
-                        labelText: '보유 수량',
-                        suffixText: '주',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) return '수량 입력';
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: _currentPriceController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        ThousandsSeparatorInputFormatter(),
-                      ],
-                      decoration: const InputDecoration(
-                        labelText: '주당 현재가',
-                        suffixText: '원',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) return '현재가 입력';
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: Text(
-                      '🧮 산출 평가액: ${_calculateBalance().toCommaString()} 원',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.indigo.shade700,
-                      ),
-                    ),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _isLoadingPrice ? null : _fetchYahooPrice,
-                    icon:
-                        _isLoadingPrice
-                            ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                            : const Icon(Icons.cloud_download, size: 16),
-                    label: const Text('시세조회', style: TextStyle(fontSize: 12)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      foregroundColor: Colors.indigo.shade700,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // 4. 누적 투자 원금
-              TextFormField(
-                controller: _principalController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  ThousandsSeparatorInputFormatter(),
-                ],
-                decoration: const InputDecoration(
-                  labelText: '누적 투자 원금',
-                  suffixText: '원',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return '누적 원금을 입력해 주세요.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // 5. 누적 배당금 및 인출액
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _payoutController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        ThousandsSeparatorInputFormatter(),
-                      ],
-                      decoration: const InputDecoration(
-                        labelText: '누적 배당금 (선택)',
-                        suffixText: '원',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _withdrawalController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        ThousandsSeparatorInputFormatter(),
-                      ],
-                      decoration: const InputDecoration(
-                        labelText: '누적 인출액 (선택)',
-                        suffixText: '원',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ],
               ),
               const SizedBox(height: 24),
 
@@ -528,7 +618,7 @@ class _MonthlyStockBalanceDialogState
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _submit,
+                  onPressed: _saveBalances,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo.shade600,
                     foregroundColor: Colors.white,
@@ -536,10 +626,7 @@ class _MonthlyStockBalanceDialogState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Text(
-                    _isEditing ? '수정하기' : '등록하기',
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  child: const Text('저장하기', style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],
@@ -547,5 +634,116 @@ class _MonthlyStockBalanceDialogState
         ),
       ),
     );
+  }
+
+  Future<void> _saveBalances() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_selectedAccountId == null) return;
+
+    final notifier = ref.read(
+      monthlyStockBalanceNotifierProvider(_selectedYearMonth).notifier,
+    );
+
+    final holdingItems = ref.read(stockHoldingItemNotifierProvider).value ?? [];
+
+    final Map<String, _GroupedStockItem> groupedMap = {};
+
+    final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
+    final prevBalances =
+        ref.read(monthlyStockBalanceNotifierProvider(prevYearMonth)).value ??
+        [];
+    final prevBalanceMap = {
+      for (var b in prevBalances) '${b.accountId}_${b.stockItemId}': b,
+    };
+
+    final matchedHoldings =
+        holdingItems
+            .where((hi) => hi.accountId == _selectedAccountId && hi.isActive)
+            .toList();
+
+    for (var hi in matchedHoldings) {
+      final stockId = hi.stockItemId;
+      final prevData = prevBalanceMap['${hi.accountId}_$stockId'];
+      final basePrincipal = prevData?.principal ?? 0.0;
+      final basePayout = prevData?.totalPayout ?? 0.0;
+      final baseWithdrawal = prevData?.totalWithdrawal ?? 0.0;
+
+      groupedMap[stockId] = _GroupedStockItem(
+        accountId: hi.accountId,
+        stockItemId: stockId,
+        principal: basePrincipal,
+        totalPayout: basePayout,
+        totalWithdrawal: baseWithdrawal,
+        purchaseDate: hi.initialPurchaseDate,
+      );
+    }
+
+    final List<MonthlyStockBalance> itemsToSave = [];
+
+    for (var entry in groupedMap.entries) {
+      final stockId = entry.key;
+      final groupItem = entry.value;
+      final key = '${_selectedAccountId}_$stockId';
+
+      final qtyCtrl = _quantityControllers[key];
+      final priceCtrl = _priceControllers[key];
+      final addPrinCtrl = _addPrincipalControllers[key];
+      final addPayoutCtrl = _addPayoutControllers[key];
+      final addWithdrawalCtrl = _addWithdrawalControllers[key];
+
+      if (qtyCtrl != null &&
+          qtyCtrl.text.isNotEmpty &&
+          priceCtrl != null &&
+          priceCtrl.text.isNotEmpty) {
+        final qtyVal =
+            double.tryParse(qtyCtrl.text.replaceAll(',', '').trim()) ?? 0.0;
+        final priceVal =
+            double.tryParse(priceCtrl.text.replaceAll(',', '').trim()) ?? 0.0;
+        final balanceVal = qtyVal * priceVal;
+
+        final addPrinVal =
+            double.tryParse(
+              addPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+            ) ??
+            0.0;
+        final addPayoutVal =
+            double.tryParse(
+              addPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+            ) ??
+            0.0;
+        final addWithdrawalVal =
+            double.tryParse(
+              addWithdrawalCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+            ) ??
+            0.0;
+
+        final finalPrincipal = groupItem.principal + addPrinVal;
+        final finalPayout = groupItem.totalPayout + addPayoutVal;
+        final finalWithdrawal = groupItem.totalWithdrawal + addWithdrawalVal;
+
+        itemsToSave.add(
+          MonthlyStockBalance(
+            yearMonth: _selectedYearMonth,
+            accountId: _selectedAccountId!,
+            stockItemId: stockId,
+            quantity: qtyVal,
+            currentPrice: priceVal,
+            balance: balanceVal,
+            principal: finalPrincipal,
+            totalPayout: finalPayout,
+            totalWithdrawal: finalWithdrawal,
+            purchaseDate: groupItem.purchaseDate,
+          ),
+        );
+      }
+    }
+
+    if (itemsToSave.isNotEmpty) {
+      await notifier.saveBatchBalances(itemsToSave);
+    }
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 }
