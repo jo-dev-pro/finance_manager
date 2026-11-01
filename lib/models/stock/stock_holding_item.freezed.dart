@@ -26,6 +26,10 @@ mixin _$StockHoldingItem {
   String get accountId => throw _privateConstructorUsedError; // 계좌 ID
   @JsonKey(name: 'stock_item_id')
   String get stockItemId => throw _privateConstructorUsedError; // 종목 ID
+  @JsonKey(name: 'account_name')
+  String? get accountName => throw _privateConstructorUsedError; // 콘솔 확인용 계좌명
+  @JsonKey(name: 'stock_item_name')
+  String? get stockItemName => throw _privateConstructorUsedError; // 콘솔 확인용 종목명
   @JsonKey(name: 'is_active')
   bool get isActive => throw _privateConstructorUsedError; // 활동 / 비활동 여부
   @JsonKey(name: 'initial_purchase_date')
@@ -52,6 +56,8 @@ abstract class $StockHoldingItemCopyWith<$Res> {
     String? id,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'stock_item_id') String stockItemId,
+    @JsonKey(name: 'account_name') String? accountName,
+    @JsonKey(name: 'stock_item_name') String? stockItemName,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate,
   });
@@ -75,6 +81,8 @@ class _$StockHoldingItemCopyWithImpl<$Res, $Val extends StockHoldingItem>
     Object? id = freezed,
     Object? accountId = null,
     Object? stockItemId = null,
+    Object? accountName = freezed,
+    Object? stockItemName = freezed,
     Object? isActive = null,
     Object? initialPurchaseDate = freezed,
   }) {
@@ -95,6 +103,16 @@ class _$StockHoldingItemCopyWithImpl<$Res, $Val extends StockHoldingItem>
                     ? _value.stockItemId
                     : stockItemId // ignore: cast_nullable_to_non_nullable
                         as String,
+            accountName:
+                freezed == accountName
+                    ? _value.accountName
+                    : accountName // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            stockItemName:
+                freezed == stockItemName
+                    ? _value.stockItemName
+                    : stockItemName // ignore: cast_nullable_to_non_nullable
+                        as String?,
             isActive:
                 null == isActive
                     ? _value.isActive
@@ -124,6 +142,8 @@ abstract class _$$StockHoldingItemImplCopyWith<$Res>
     String? id,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'stock_item_id') String stockItemId,
+    @JsonKey(name: 'account_name') String? accountName,
+    @JsonKey(name: 'stock_item_name') String? stockItemName,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate,
   });
@@ -146,6 +166,8 @@ class __$$StockHoldingItemImplCopyWithImpl<$Res>
     Object? id = freezed,
     Object? accountId = null,
     Object? stockItemId = null,
+    Object? accountName = freezed,
+    Object? stockItemName = freezed,
     Object? isActive = null,
     Object? initialPurchaseDate = freezed,
   }) {
@@ -166,6 +188,16 @@ class __$$StockHoldingItemImplCopyWithImpl<$Res>
                 ? _value.stockItemId
                 : stockItemId // ignore: cast_nullable_to_non_nullable
                     as String,
+        accountName:
+            freezed == accountName
+                ? _value.accountName
+                : accountName // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        stockItemName:
+            freezed == stockItemName
+                ? _value.stockItemName
+                : stockItemName // ignore: cast_nullable_to_non_nullable
+                    as String?,
         isActive:
             null == isActive
                 ? _value.isActive
@@ -188,6 +220,8 @@ class _$StockHoldingItemImpl extends _StockHoldingItem {
     this.id,
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'stock_item_id') required this.stockItemId,
+    @JsonKey(name: 'account_name') this.accountName,
+    @JsonKey(name: 'stock_item_name') this.stockItemName,
     @JsonKey(name: 'is_active') this.isActive = true,
     @JsonKey(name: 'initial_purchase_date') this.initialPurchaseDate,
   }) : super._();
@@ -206,6 +240,14 @@ class _$StockHoldingItemImpl extends _StockHoldingItem {
   final String stockItemId;
   // 종목 ID
   @override
+  @JsonKey(name: 'account_name')
+  final String? accountName;
+  // 콘솔 확인용 계좌명
+  @override
+  @JsonKey(name: 'stock_item_name')
+  final String? stockItemName;
+  // 콘솔 확인용 종목명
+  @override
   @JsonKey(name: 'is_active')
   final bool isActive;
   // 활동 / 비활동 여부
@@ -215,7 +257,7 @@ class _$StockHoldingItemImpl extends _StockHoldingItem {
 
   @override
   String toString() {
-    return 'StockHoldingItem(id: $id, accountId: $accountId, stockItemId: $stockItemId, isActive: $isActive, initialPurchaseDate: $initialPurchaseDate)';
+    return 'StockHoldingItem(id: $id, accountId: $accountId, stockItemId: $stockItemId, accountName: $accountName, stockItemName: $stockItemName, isActive: $isActive, initialPurchaseDate: $initialPurchaseDate)';
   }
 
   @override
@@ -228,6 +270,10 @@ class _$StockHoldingItemImpl extends _StockHoldingItem {
                 other.accountId == accountId) &&
             (identical(other.stockItemId, stockItemId) ||
                 other.stockItemId == stockItemId) &&
+            (identical(other.accountName, accountName) ||
+                other.accountName == accountName) &&
+            (identical(other.stockItemName, stockItemName) ||
+                other.stockItemName == stockItemName) &&
             (identical(other.isActive, isActive) ||
                 other.isActive == isActive) &&
             (identical(other.initialPurchaseDate, initialPurchaseDate) ||
@@ -241,6 +287,8 @@ class _$StockHoldingItemImpl extends _StockHoldingItem {
     id,
     accountId,
     stockItemId,
+    accountName,
+    stockItemName,
     isActive,
     initialPurchaseDate,
   );
@@ -267,6 +315,8 @@ abstract class _StockHoldingItem extends StockHoldingItem {
     final String? id,
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'stock_item_id') required final String stockItemId,
+    @JsonKey(name: 'account_name') final String? accountName,
+    @JsonKey(name: 'stock_item_name') final String? stockItemName,
     @JsonKey(name: 'is_active') final bool isActive,
     @JsonKey(name: 'initial_purchase_date') final String? initialPurchaseDate,
   }) = _$StockHoldingItemImpl;
@@ -283,6 +333,12 @@ abstract class _StockHoldingItem extends StockHoldingItem {
   @override
   @JsonKey(name: 'stock_item_id')
   String get stockItemId; // 종목 ID
+  @override
+  @JsonKey(name: 'account_name')
+  String? get accountName; // 콘솔 확인용 계좌명
+  @override
+  @JsonKey(name: 'stock_item_name')
+  String? get stockItemName; // 콘솔 확인용 종목명
   @override
   @JsonKey(name: 'is_active')
   bool get isActive; // 활동 / 비활동 여부

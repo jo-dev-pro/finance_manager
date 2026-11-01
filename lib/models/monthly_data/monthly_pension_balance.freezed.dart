@@ -30,6 +30,10 @@ mixin _$MonthlyPensionBalance {
   String get accountId => throw _privateConstructorUsedError;
   @JsonKey(name: 'product_id')
   String get productId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_name')
+  String? get accountName => throw _privateConstructorUsedError; // 💡 콘솔 확인용 계좌명
+  @JsonKey(name: 'product_name')
+  String? get productName => throw _privateConstructorUsedError; // 💡 콘솔 확인용 상품명
   double get balance => throw _privateConstructorUsedError; // 당월 말 평가액
   double get principal => throw _privateConstructorUsedError; // 누적 투자 원금
   @JsonKey(name: 'total_payout')
@@ -61,6 +65,8 @@ abstract class $MonthlyPensionBalanceCopyWith<$Res> {
     @JsonKey(name: 'year_month') String yearMonth,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_id') String productId,
+    @JsonKey(name: 'account_name') String? accountName,
+    @JsonKey(name: 'product_name') String? productName,
     double balance,
     double principal,
     @JsonKey(name: 'total_payout') double totalPayout,
@@ -91,6 +97,8 @@ class _$MonthlyPensionBalanceCopyWithImpl<
     Object? yearMonth = null,
     Object? accountId = null,
     Object? productId = null,
+    Object? accountName = freezed,
+    Object? productName = freezed,
     Object? balance = null,
     Object? principal = null,
     Object? totalPayout = null,
@@ -119,6 +127,16 @@ class _$MonthlyPensionBalanceCopyWithImpl<
                     ? _value.productId
                     : productId // ignore: cast_nullable_to_non_nullable
                         as String,
+            accountName:
+                freezed == accountName
+                    ? _value.accountName
+                    : accountName // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            productName:
+                freezed == productName
+                    ? _value.productName
+                    : productName // ignore: cast_nullable_to_non_nullable
+                        as String?,
             balance:
                 null == balance
                     ? _value.balance
@@ -164,6 +182,8 @@ abstract class _$$MonthlyPensionBalanceImplCopyWith<$Res>
     @JsonKey(name: 'year_month') String yearMonth,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_id') String productId,
+    @JsonKey(name: 'account_name') String? accountName,
+    @JsonKey(name: 'product_name') String? productName,
     double balance,
     double principal,
     @JsonKey(name: 'total_payout') double totalPayout,
@@ -191,6 +211,8 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
     Object? yearMonth = null,
     Object? accountId = null,
     Object? productId = null,
+    Object? accountName = freezed,
+    Object? productName = freezed,
     Object? balance = null,
     Object? principal = null,
     Object? totalPayout = null,
@@ -219,6 +241,16 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
                 ? _value.productId
                 : productId // ignore: cast_nullable_to_non_nullable
                     as String,
+        accountName:
+            freezed == accountName
+                ? _value.accountName
+                : accountName // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        productName:
+            freezed == productName
+                ? _value.productName
+                : productName // ignore: cast_nullable_to_non_nullable
+                    as String?,
         balance:
             null == balance
                 ? _value.balance
@@ -257,6 +289,8 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
     @JsonKey(name: 'year_month') required this.yearMonth,
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'product_id') required this.productId,
+    @JsonKey(name: 'account_name') this.accountName,
+    @JsonKey(name: 'product_name') this.productName,
     this.balance = 0.0,
     this.principal = 0.0,
     @JsonKey(name: 'total_payout') this.totalPayout = 0.0,
@@ -279,6 +313,14 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
   @JsonKey(name: 'product_id')
   final String productId;
   @override
+  @JsonKey(name: 'account_name')
+  final String? accountName;
+  // 💡 콘솔 확인용 계좌명
+  @override
+  @JsonKey(name: 'product_name')
+  final String? productName;
+  // 💡 콘솔 확인용 상품명
+  @override
   @JsonKey()
   final double balance;
   // 당월 말 평가액
@@ -300,7 +342,7 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
 
   @override
   String toString() {
-    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, productId: $productId, balance: $balance, principal: $principal, totalPayout: $totalPayout, totalWithdrawal: $totalWithdrawal, purchaseDate: $purchaseDate)';
+    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, productId: $productId, accountName: $accountName, productName: $productName, balance: $balance, principal: $principal, totalPayout: $totalPayout, totalWithdrawal: $totalWithdrawal, purchaseDate: $purchaseDate)';
   }
 
   @override
@@ -315,6 +357,10 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
                 other.accountId == accountId) &&
             (identical(other.productId, productId) ||
                 other.productId == productId) &&
+            (identical(other.accountName, accountName) ||
+                other.accountName == accountName) &&
+            (identical(other.productName, productName) ||
+                other.productName == productName) &&
             (identical(other.balance, balance) || other.balance == balance) &&
             (identical(other.principal, principal) ||
                 other.principal == principal) &&
@@ -334,6 +380,8 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
     yearMonth,
     accountId,
     productId,
+    accountName,
+    productName,
     balance,
     principal,
     totalPayout,
@@ -365,6 +413,8 @@ abstract class _MonthlyPensionBalance extends MonthlyPensionBalance {
     @JsonKey(name: 'year_month') required final String yearMonth,
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'product_id') required final String productId,
+    @JsonKey(name: 'account_name') final String? accountName,
+    @JsonKey(name: 'product_name') final String? productName,
     final double balance,
     final double principal,
     @JsonKey(name: 'total_payout') final double totalPayout,
@@ -387,6 +437,12 @@ abstract class _MonthlyPensionBalance extends MonthlyPensionBalance {
   @override
   @JsonKey(name: 'product_id')
   String get productId;
+  @override
+  @JsonKey(name: 'account_name')
+  String? get accountName; // 💡 콘솔 확인용 계좌명
+  @override
+  @JsonKey(name: 'product_name')
+  String? get productName; // 💡 콘솔 확인용 상품명
   @override
   double get balance; // 당월 말 평가액
   @override

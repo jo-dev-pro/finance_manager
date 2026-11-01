@@ -25,11 +25,15 @@ PensionHoldingProduct _$PensionHoldingProductFromJson(
 mixin _$PensionHoldingProduct {
   String? get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_id')
-  String get accountId => throw _privateConstructorUsedError; // 연금 계좌 ID[cite: 6]
+  String get accountId => throw _privateConstructorUsedError; // 연금 계좌 ID
   @JsonKey(name: 'product_id')
-  String get productId => throw _privateConstructorUsedError; // 공용 상품 ID[cite: 6]
+  String get productId => throw _privateConstructorUsedError; // 공용 상품 ID
+  @JsonKey(name: 'account_name')
+  String? get accountName => throw _privateConstructorUsedError; // 콘솔 확인용 계좌명
+  @JsonKey(name: 'product_name')
+  String? get productName => throw _privateConstructorUsedError; // 콘솔 확인용 상품명
   @JsonKey(name: 'is_active')
-  bool get isActive => throw _privateConstructorUsedError; // 활동 / 비활동 여부[cite: 6]
+  bool get isActive => throw _privateConstructorUsedError; // 활동 / 비활동 여부
   @JsonKey(name: 'initial_purchase_date')
   String? get initialPurchaseDate => throw _privateConstructorUsedError;
 
@@ -54,6 +58,8 @@ abstract class $PensionHoldingProductCopyWith<$Res> {
     String? id,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_id') String productId,
+    @JsonKey(name: 'account_name') String? accountName,
+    @JsonKey(name: 'product_name') String? productName,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate,
   });
@@ -80,6 +86,8 @@ class _$PensionHoldingProductCopyWithImpl<
     Object? id = freezed,
     Object? accountId = null,
     Object? productId = null,
+    Object? accountName = freezed,
+    Object? productName = freezed,
     Object? isActive = null,
     Object? initialPurchaseDate = freezed,
   }) {
@@ -100,6 +108,16 @@ class _$PensionHoldingProductCopyWithImpl<
                     ? _value.productId
                     : productId // ignore: cast_nullable_to_non_nullable
                         as String,
+            accountName:
+                freezed == accountName
+                    ? _value.accountName
+                    : accountName // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            productName:
+                freezed == productName
+                    ? _value.productName
+                    : productName // ignore: cast_nullable_to_non_nullable
+                        as String?,
             isActive:
                 null == isActive
                     ? _value.isActive
@@ -129,6 +147,8 @@ abstract class _$$PensionHoldingProductImplCopyWith<$Res>
     String? id,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'product_id') String productId,
+    @JsonKey(name: 'account_name') String? accountName,
+    @JsonKey(name: 'product_name') String? productName,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate,
   });
@@ -152,6 +172,8 @@ class __$$PensionHoldingProductImplCopyWithImpl<$Res>
     Object? id = freezed,
     Object? accountId = null,
     Object? productId = null,
+    Object? accountName = freezed,
+    Object? productName = freezed,
     Object? isActive = null,
     Object? initialPurchaseDate = freezed,
   }) {
@@ -172,6 +194,16 @@ class __$$PensionHoldingProductImplCopyWithImpl<$Res>
                 ? _value.productId
                 : productId // ignore: cast_nullable_to_non_nullable
                     as String,
+        accountName:
+            freezed == accountName
+                ? _value.accountName
+                : accountName // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        productName:
+            freezed == productName
+                ? _value.productName
+                : productName // ignore: cast_nullable_to_non_nullable
+                    as String?,
         isActive:
             null == isActive
                 ? _value.isActive
@@ -194,6 +226,8 @@ class _$PensionHoldingProductImpl extends _PensionHoldingProduct {
     this.id,
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'product_id') required this.productId,
+    @JsonKey(name: 'account_name') this.accountName,
+    @JsonKey(name: 'product_name') this.productName,
     @JsonKey(name: 'is_active') this.isActive = true,
     @JsonKey(name: 'initial_purchase_date') this.initialPurchaseDate,
   }) : super._();
@@ -206,22 +240,30 @@ class _$PensionHoldingProductImpl extends _PensionHoldingProduct {
   @override
   @JsonKey(name: 'account_id')
   final String accountId;
-  // 연금 계좌 ID[cite: 6]
+  // 연금 계좌 ID
   @override
   @JsonKey(name: 'product_id')
   final String productId;
-  // 공용 상품 ID[cite: 6]
+  // 공용 상품 ID
+  @override
+  @JsonKey(name: 'account_name')
+  final String? accountName;
+  // 콘솔 확인용 계좌명
+  @override
+  @JsonKey(name: 'product_name')
+  final String? productName;
+  // 콘솔 확인용 상품명
   @override
   @JsonKey(name: 'is_active')
   final bool isActive;
-  // 활동 / 비활동 여부[cite: 6]
+  // 활동 / 비활동 여부
   @override
   @JsonKey(name: 'initial_purchase_date')
   final String? initialPurchaseDate;
 
   @override
   String toString() {
-    return 'PensionHoldingProduct(id: $id, accountId: $accountId, productId: $productId, isActive: $isActive, initialPurchaseDate: $initialPurchaseDate)';
+    return 'PensionHoldingProduct(id: $id, accountId: $accountId, productId: $productId, accountName: $accountName, productName: $productName, isActive: $isActive, initialPurchaseDate: $initialPurchaseDate)';
   }
 
   @override
@@ -234,6 +276,10 @@ class _$PensionHoldingProductImpl extends _PensionHoldingProduct {
                 other.accountId == accountId) &&
             (identical(other.productId, productId) ||
                 other.productId == productId) &&
+            (identical(other.accountName, accountName) ||
+                other.accountName == accountName) &&
+            (identical(other.productName, productName) ||
+                other.productName == productName) &&
             (identical(other.isActive, isActive) ||
                 other.isActive == isActive) &&
             (identical(other.initialPurchaseDate, initialPurchaseDate) ||
@@ -247,6 +293,8 @@ class _$PensionHoldingProductImpl extends _PensionHoldingProduct {
     id,
     accountId,
     productId,
+    accountName,
+    productName,
     isActive,
     initialPurchaseDate,
   );
@@ -274,6 +322,8 @@ abstract class _PensionHoldingProduct extends PensionHoldingProduct {
     final String? id,
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'product_id') required final String productId,
+    @JsonKey(name: 'account_name') final String? accountName,
+    @JsonKey(name: 'product_name') final String? productName,
     @JsonKey(name: 'is_active') final bool isActive,
     @JsonKey(name: 'initial_purchase_date') final String? initialPurchaseDate,
   }) = _$PensionHoldingProductImpl;
@@ -286,13 +336,19 @@ abstract class _PensionHoldingProduct extends PensionHoldingProduct {
   String? get id;
   @override
   @JsonKey(name: 'account_id')
-  String get accountId; // 연금 계좌 ID[cite: 6]
+  String get accountId; // 연금 계좌 ID
   @override
   @JsonKey(name: 'product_id')
-  String get productId; // 공용 상품 ID[cite: 6]
+  String get productId; // 공용 상품 ID
+  @override
+  @JsonKey(name: 'account_name')
+  String? get accountName; // 콘솔 확인용 계좌명
+  @override
+  @JsonKey(name: 'product_name')
+  String? get productName; // 콘솔 확인용 상품명
   @override
   @JsonKey(name: 'is_active')
-  bool get isActive; // 활동 / 비활동 여부[cite: 6]
+  bool get isActive; // 활동 / 비활동 여부
   @override
   @JsonKey(name: 'initial_purchase_date')
   String? get initialPurchaseDate;

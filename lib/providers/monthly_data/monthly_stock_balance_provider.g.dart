@@ -28,7 +28,7 @@ final allMonthlyStockBalancesProvider = AutoDisposeAsyncNotifierProvider<
 typedef _$AllMonthlyStockBalances =
     AutoDisposeAsyncNotifier<List<MonthlyStockBalanceWithDetail>>;
 String _$monthlyStockBalanceNotifierHash() =>
-    r'9366fb1dd41200d297705ba5a142a8108e9ead8e';
+    r'd9605949fa0de9b284a14c60f92ffdaa2e99ab55';
 
 /// Copied from Dart SDK
 class _SystemHash {

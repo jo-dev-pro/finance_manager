@@ -12,6 +12,7 @@ _$MonthlyBankBalanceImpl _$$MonthlyBankBalanceImplFromJson(
   id: json['id'] as String?,
   yearMonth: json['year_month'] as String,
   accountId: json['account_id'] as String,
+  accountName: json['account_name'] as String?,
   balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
 );
 
@@ -21,5 +22,6 @@ Map<String, dynamic> _$$MonthlyBankBalanceImplToJson(
   'id': instance.id,
   'year_month': instance.yearMonth,
   'account_id': instance.accountId,
+  'account_name': instance.accountName,
   'balance': instance.balance,
 };

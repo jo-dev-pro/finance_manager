@@ -28,7 +28,7 @@ final allMonthlyBankBalancesProvider =
 typedef AllMonthlyBankBalancesRef =
     AutoDisposeFutureProviderRef<List<MonthlyBankBalanceWithAccount>>;
 String _$monthlyBankBalanceNotifierHash() =>
-    r'6423efbf90ebe75bc2c4759dbed92eeb91b278b7';
+    r'26af9345b1b5ca54f096a373e503fc525f9d4b57';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -9,6 +9,7 @@ class MonthlyBankBalance with _$MonthlyBankBalance {
     String? id,
     @JsonKey(name: 'year_month') required String yearMonth,
     @JsonKey(name: 'account_id') required String accountId,
+    @JsonKey(name: 'account_name') String? accountName,
     @Default(0.0) double balance,
   }) = _MonthlyBankBalance;
 

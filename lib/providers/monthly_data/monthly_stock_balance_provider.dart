@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers/firestore_provider.dart';
@@ -154,44 +155,77 @@ class MonthlyStockBalanceNotifier extends _$MonthlyStockBalanceNotifier {
     }).toList();
   }
 
+Future<MonthlyStockBalance> _enrichBalanceNames(MonthlyStockBalance balance) async {
+    String? resolvedAccountName = balance.accountName;
+    String? resolvedStockName = balance.stockItemName;
+
+    try {
+      final accounts = await ref.read(accountNotifierProvider.future);
+      final accountNames = await ref.read(accountNameNotifierProvider.future);
+      final stockItems = await ref.read(stockItemNotifierProvider.future);
+
+      if (resolvedAccountName == null || resolvedAccountName.isEmpty) {
+        final matchedAcc = accounts.firstWhereOrNull((a) => a.id == balance.accountId);
+        final matchedNameObj = accountNames.firstWhereOrNull((an) => an.id == matchedAcc?.accountNameId);
+        if (matchedNameObj != null) {
+          final inst = matchedAcc?.financialInstitution ?? '';
+          resolvedAccountName = '[$inst] ${matchedNameObj.accountName}';
+        }
+      }
+
+      if (resolvedStockName == null || resolvedStockName.isEmpty) {
+        final matchedStock = stockItems.firstWhereOrNull((s) => s.id == balance.stockItemId);
+        if (matchedStock != null) {
+          resolvedStockName = '${matchedStock.itemName} (${matchedStock.stockCode})';
+        }
+      }
+    } catch (_) {}
+
+    return balance.copyWith(
+      accountName: resolvedAccountName,
+      stockItemName: resolvedStockName,
+    );
+  }
+
   Future<void> saveBalance(MonthlyStockBalance balance) async {
     final firestore = ref.read(firestoreProvider);
-    final data = balance.toJson()..remove('id');
+    final targetItem = await _enrichBalanceNames(balance);
+    final data = targetItem.toJson()..remove('id');
 
-    if (balance.id == null) {
+    if (targetItem.id == null) {
       await firestore.collection(monthlyStockBalanceDBName).add(data);
     } else {
       await firestore
           .collection(monthlyStockBalanceDBName)
-          .doc(balance.id)
+          .doc(targetItem.id)
           .update(data);
     }
     ref.invalidateSelf();
-    ref.invalidate(allMonthlyStockBalancesProvider); // 전체 목록 프로바이더 갱신 추가
+    ref.invalidate(allMonthlyStockBalancesProvider);
   }
 
   Future<void> deleteBalance(String id) async {
     final firestore = ref.read(firestoreProvider);
     await firestore.collection(monthlyStockBalanceDBName).doc(id).delete();
     ref.invalidateSelf();
-    ref.invalidate(allMonthlyStockBalancesProvider); // 전체 목록 프로바이더 갱신 추가
+    ref.invalidate(allMonthlyStockBalancesProvider);
   }
 
-  // 여러 월말 데이터를 한 번에 저장하는 Batch 메서드
   Future<void> saveBatchBalances(List<MonthlyStockBalance> items) async {
     final firestore = ref.read(firestoreProvider);
     final batch = firestore.batch();
     final collectionRef = firestore.collection(monthlyStockBalanceDBName);
 
     for (var item in items) {
-      final docId = '${item.yearMonth}_${item.accountId}_${item.stockItemId}';
+      final targetItem = await _enrichBalanceNames(item);
+      final docId = '${targetItem.yearMonth}_${targetItem.accountId}_${targetItem.stockItemId}';
       final docRef = collectionRef.doc(docId);
-      final data = item.toJson()..remove('id');
+      final data = targetItem.toJson()..remove('id');
       batch.set(docRef, data, SetOptions(merge: true));
     }
 
     await batch.commit();
     ref.invalidateSelf();
-    ref.invalidate(allMonthlyStockBalancesProvider); // 전체 목록 프로바이더 갱신 추가
+    ref.invalidate(allMonthlyStockBalancesProvider);
   }
 }

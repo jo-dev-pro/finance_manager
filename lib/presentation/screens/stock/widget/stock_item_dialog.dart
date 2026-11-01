@@ -20,7 +20,6 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
   
   // 💡 야후 파이낸스 접미사 기준에 맞춘 시장 구분 값 설정 (KS: 코스피, KQ: 코스닥, 빈값: 미국/기타)
   String _selectedYahooName = 'KS';
-  bool _isSubmitting = false;
 
   bool get _isEditing => widget.initialData != null;
 
@@ -58,8 +57,6 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSubmitting = true);
-
     try {
       final stockItem = StockItem(
         id: widget.initialData?.id,
@@ -83,8 +80,6 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
           SnackBar(content: Text('저장 실패: $e')),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -193,24 +188,18 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
+                  onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Colors.indigo.shade600,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          _isEditing ? '수정하기' : '등록하기',
-                          style: const TextStyle(fontSize: 16),
-                        ),
+                  child: Text(
+                    _isEditing ? '수정하기' : '등록하기',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],

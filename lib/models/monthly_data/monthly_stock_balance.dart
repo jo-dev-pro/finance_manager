@@ -13,6 +13,8 @@ class MonthlyStockBalance with _$MonthlyStockBalance {
     @JsonKey(name: 'year_month') required String yearMonth,
     @JsonKey(name: 'account_id') required String accountId,
     @JsonKey(name: 'stock_item_id') required String stockItemId,
+    @JsonKey(name: 'account_name') String? accountName,       // 💡 콘솔 확인용 계좌명 추가
+    @JsonKey(name: 'stock_item_name') String? stockItemName, // 💡 콘솔 확인용 주식 종목명 추가
     @Default(0.0) double quantity,                        // 당월 말 보유 수량
     @JsonKey(name: 'current_price') @Default(0.0) double currentPrice, // 당월 말 현재가
     @Default(0.0) double balance,                         // 당월 말 평가액 (quantity * currentPrice)
@@ -21,7 +23,7 @@ class MonthlyStockBalance with _$MonthlyStockBalance {
     @JsonKey(name: 'total_withdrawal') @Default(0.0) double totalWithdrawal, // 누적 인출액
     @JsonKey(name: 'purchase_date') String? purchaseDate, // 최초 매수일 (마스터 연동)
   }) = _MonthlyStockBalance;
-
+  
   factory MonthlyStockBalance.fromJson(Map<String, dynamic> json) =>
       _$MonthlyStockBalanceFromJson(json);
 

@@ -120,6 +120,50 @@ class AccountNotifier extends _$AccountNotifier {
             SetOptions(merge: true),
           );
 
+      // 💡 계좌 정보 변경 시 하위 컬렉션(월말 잔액, 보유 항목 등)의 account_name 갱신 전파
+      try {
+        // 최신 계좌명(AccountName) 가져오기
+        final accountNamesSnap = await firestore.collection(accountNameDBName).get();
+        final nameMap = {
+          for (var doc in accountNamesSnap.docs) doc.id: doc.data()['account_name'] ?? ''
+        };
+        final nameStr = nameMap[updatedAccount.accountNameId] ?? '';
+        final newAccountNameDisplay = '[${updatedAccount.financialInstitution}] $nameStr';
+
+        final collections = [
+          monthlyBankBalanceDBName,
+          monthlyPensionBalanceDBName,
+          monthlyStockBalanceDBName,
+          stockHoldingItemDBName,
+          pensionHoldingProductDBName,
+        ];
+
+        for (final colName in collections) {
+          final snapshot = await firestore
+              .collection(colName)
+              .where('account_id', isEqualTo: account.id)
+              .get();
+
+          if (snapshot.docs.isEmpty) continue;
+
+          WriteBatch batch = firestore.batch();
+          int count = 0;
+
+          for (final doc in snapshot.docs) {
+            batch.update(doc.reference, {'account_name': newAccountNameDisplay});
+            count++;
+
+            if (count % 400 == 0) {
+              await batch.commit();
+              batch = firestore.batch();
+            }
+          }
+          await batch.commit();
+        }
+      } catch (e) {
+        print('하위 계좌명 동기화 중 오류 발생: $e');
+      }
+
       return _fetchAccounts();
     });
   }

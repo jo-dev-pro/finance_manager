@@ -27,7 +27,6 @@ class _StockHoldingItemDialogState
   late TextEditingController _dateController;
   bool _isActive = true;
 
-  bool _isSubmitting = false;
   bool get _isEditing => widget.initialData != null;
 
   @override
@@ -57,8 +56,6 @@ class _StockHoldingItemDialogState
       return;
     }
 
-    setState(() => _isSubmitting = true);
-
     try {
       final dateText = _dateController.text.trim();
 
@@ -84,8 +81,6 @@ class _StockHoldingItemDialogState
           SnackBar(content: Text('저장 실패: $e')),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -95,10 +90,12 @@ class _StockHoldingItemDialogState
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
     final stockItemsAsync = ref.watch(stockItemNotifierProvider);
 
-    return AlertDialog(
-      title: Text(_isEditing ? '계좌별 보유종목 수정' : '계좌별 종목 등록'),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.85,
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    // 💡 바텀시트 레이아웃 안정성 개선 (SafeArea 및 가변 높이 대응)
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -106,6 +103,26 @@ class _StockHoldingItemDialogState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 상단 타이틀 및 닫기 버튼
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _isEditing ? '계좌별 보유종목 수정' : '계좌별 종목 등록',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                const SizedBox(height: 12),
+
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -121,26 +138,24 @@ class _StockHoldingItemDialogState
                 ),
                 const SizedBox(height: 16),
 
-                // 1. 주식 계좌 선택
+                // 1. 주식/증권 계좌 선택
                 accountsAsync.when(
                   loading: () => const LinearProgressIndicator(),
                   error: (err, _) => Text('계좌 로딩 실패: $err'),
                   data: (accounts) {
                     final accountNames = accountNamesAsync.value ?? [];
-                    final stockAccounts = accounts
+                    
+                    final targetAccounts = accounts
                         .where(
                           (a) =>
-                              a.accountType.toUpperCase() == '주식',
+                              a.accountType.toUpperCase().contains('증권') ||
+                              a.accountType.toUpperCase().contains('주식'),
                         )
                         .toList()
                       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-                    final targetAccounts = stockAccounts.isNotEmpty
-                        ? stockAccounts
-                        : accounts;
-
                     if (targetAccounts.isEmpty) {
-                      return const Text('등록된 주식 계좌가 없습니다.');
+                      return const Text('등록된 증권/주식 계좌가 없습니다.');
                     }
 
                     final accountNameMap = {
@@ -153,9 +168,11 @@ class _StockHoldingItemDialogState
                     }
 
                     return DropdownButtonFormField<String>(
-                      initialValue: _selectedAccountId,
+                      initialValue: targetAccounts.any((a) => a.id == _selectedAccountId)
+                          ? _selectedAccountId
+                          : null,
                       decoration: const InputDecoration(
-                        labelText: '주식 계좌 선택',
+                        labelText: '증권 계좌 선택',
                         border: OutlineInputBorder(),
                       ),
                       items: targetAccounts.map((acc) {
@@ -178,7 +195,7 @@ class _StockHoldingItemDialogState
                 ),
                 const SizedBox(height: 16),
 
-                // 2. 종목 마스터 선택 (StockItem)
+                // 2. 종목 마스터 선택
                 stockItemsAsync.when(
                   loading: () => const LinearProgressIndicator(),
                   error: (err, _) => Text('종목 로딩 실패: $err'),
@@ -192,7 +209,9 @@ class _StockHoldingItemDialogState
                     }
 
                     return DropdownButtonFormField<String>(
-                      initialValue: _selectedStockItemId,
+                      initialValue: stockItems.any((s) => s.id == _selectedStockItemId)
+                          ? _selectedStockItemId
+                          : null,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: '종목 선택',
@@ -217,7 +236,7 @@ class _StockHoldingItemDialogState
                 ),
                 const SizedBox(height: 16),
 
-                // 3. 최초 매수일 입력
+                // 3. 최초 매수일 입력 (마우스 오버 시 흔들림 방지 구조 보완)
                 TextFormField(
                   controller: _dateController,
                   readOnly: true,
@@ -268,31 +287,36 @@ class _StockHoldingItemDialogState
                   contentPadding: EdgeInsets.zero,
                   onChanged: (val) {
                     setState(() {
-                      _isActive = val;   // true: 활동 중, false: 비활동/종료
+                      _isActive = val;
                     });
                   },
+                ),
+                const SizedBox(height: 24),
+
+                // 5. 하단 등록/수정 액션 버튼
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                 child: ElevatedButton(
+                  onPressed: _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    _isEditing ? '수정하기' : '등록하기',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
                 ),
               ],
             ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _submit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(_isEditing ? '수정' : '등록'),
-        ),
-      ],
     );
   }
 }

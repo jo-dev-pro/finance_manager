@@ -43,134 +43,156 @@ class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return AlertDialog(
-      title: const Text('월말 잔액 일괄 입력'),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextFormField(
-                  initialValue: _selectedYearMonth,
-                  decoration: const InputDecoration(
-                    labelText: '기준월 (YYYY-MM)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.calendar_today),
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '월말 잔액 일괄 입력',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  onChanged: (val) {
-                    _selectedYearMonth = val.trim();
-                  },
-                  validator: (val) {
-                    if (val == null || val.isEmpty) {
-                      return '기준월을 입력해주세요.';
-                    }
-                    return null;
-                  },
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                initialValue: _selectedYearMonth,
+                decoration: const InputDecoration(
+                  labelText: '기준월 (YYYY-MM)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.calendar_today),
+                  isDense: true,
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  '은행 계좌별 월말 잔액',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                onChanged: (val) {
+                  _selectedYearMonth = val.trim();
+                },
+                validator: (val) {
+                  if (val == null || val.isEmpty) {
+                    return '기준월을 입력해주세요.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                '은행 계좌별 월말 잔액',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+              const SizedBox(height: 10),
+              accountsAsync.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: CircularProgressIndicator(),
+                  ),
                 ),
-                const SizedBox(height: 10),
-                accountsAsync.when(
-                  loading:
-                      () => const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(20.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      ),
-                  error: (err, stack) => Text('계좌 목록 불러오기 실패: $err'),
-                  data: (accounts) {
-                    // 💡 은행 타입이면서 현재 '활동' 상태인 계좌만 입력 대상에 포함
-                    final bankAccounts =
-                        accounts
-                            .where(
-                              (a) =>
-                                  a.accountType.toUpperCase() == '은행' &&
-                                  a.status == '활동',
-                            ) // status 조건 추가
-                            .toList();
+                error: (err, stack) => Text('계좌 목록 불러오기 실패: $err'),
+                data: (accounts) {
+                  final bankAccounts = accounts
+                      .where(
+                        (a) =>
+                            a.accountType.toUpperCase() == '은행' &&
+                            a.status == '활동',
+                      )
+                      .toList();
 
-                    if (bankAccounts.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Text('입력 가능한 활동 은행 계좌가 없습니다.'),
-                      );
-                    }
-
-                    final accountNames = accountNamesAsync.value ?? [];
-
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: bankAccounts.length,
-                      separatorBuilder:
-                          (context, index) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final acc = bankAccounts[index];
-                        final accId = acc.id ?? '';
-
-                        // accountNameId 로 계좌명 매핑
-                        final matchedName = accountNames.firstWhereOrNull(
-                          (an) => an.id == acc.accountNameId,
-                        );
-
-                        final displayName = matchedName?.accountName ?? '계좌';
-
-                        if (!_controllers.containsKey(accId)) {
-                          _controllers[accId] = TextEditingController();
-                        }
-
-                        final accNumberDisplay =
-                            (acc.accountNumber != null &&
-                                    acc.accountNumber!.isNotEmpty)
-                                ? ' (${acc.accountNumber})'
-                                : '';
-
-                        return TextFormField(
-                          controller: _controllers[accId],
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            ThousandsSeparatorInputFormatter(),
-                          ],
-                          decoration: InputDecoration(
-                            labelText:
-                                '${acc.financialInstitution} - $displayName$accNumberDisplay',
-                            suffixText: '원',
-                            border: const OutlineInputBorder(),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
-                          ),
-                        );
-                      },
+                  if (bankAccounts.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Text('입력 가능한 활동 은행 계좌가 없습니다.'),
                     );
-                  },
+                  }
+
+                  final accountNames = accountNamesAsync.value ?? [];
+
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: bankAccounts.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final acc = bankAccounts[index];
+                      final accId = acc.id ?? '';
+
+                      final matchedName = accountNames.firstWhereOrNull(
+                        (an) => an.id == acc.accountNameId,
+                      );
+
+                      final displayName = matchedName?.accountName ?? '계좌';
+
+                      if (!_controllers.containsKey(accId)) {
+                        _controllers[accId] = TextEditingController();
+                      }
+
+                      final accNumberDisplay = (acc.accountNumber != null &&
+                              acc.accountNumber!.isNotEmpty)
+                          ? ' (${acc.accountNumber})'
+                          : '';
+
+                      return TextFormField(
+                        controller: _controllers[accId],
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          ThousandsSeparatorInputFormatter(),
+                        ],
+                        decoration: InputDecoration(
+                          labelText:
+                              '${acc.financialInstitution} - $displayName$accNumberDisplay',
+                          suffixText: '원',
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => _saveAllBalances(accountsAsync.value ?? []),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('전체 저장', style: TextStyle(fontSize: 16)),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: () => _saveAllBalances(accountsAsync.value ?? []),
-          child: const Text('전체 저장'),
-        ),
-      ],
     );
   }
 
@@ -183,11 +205,10 @@ class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
     final accountNotifier = ref.read(accountNotifierProvider.notifier);
     final accountNames = ref.read(accountNameNotifierProvider).value ?? [];
 
-    final bankAccounts =
-        rawAccounts
-            .where((a) => a is Account && a.accountType.toUpperCase() == '은행')
-            .cast<Account>()
-            .toList();
+    final bankAccounts = rawAccounts
+        .where((a) => a is Account && a.accountType.toUpperCase() == '은행')
+        .cast<Account>()
+        .toList();
 
     for (var acc in bankAccounts) {
       final accId = acc.id ?? '';
@@ -197,7 +218,6 @@ class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
         final cleanText = controller.text.replaceAll(RegExp(r'[^0-9]'), '');
         final balanceVal = double.tryParse(cleanText) ?? 0.0;
 
-        // 1. 월말 잔액 저장
         final newBalanceItem = MonthlyBankBalance(
           yearMonth: _selectedYearMonth,
           accountId: accId,
@@ -205,13 +225,11 @@ class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
         );
         await notifier.saveBalance(newBalanceItem);
 
-        // 2. 계좌구분명(account_name) 조회
         final matchedName = accountNames.firstWhereOrNull(
           (an) => an.id.toString() == acc.accountNameId.toString(),
         );
         final productName = matchedName?.accountName ?? '';
 
-        // 3. "입출금"이 아닌 경우, 잔액이 0 이하이면 "비활동"으로 변경
         if (productName != '입출금' && balanceVal <= 0.0) {
           await accountNotifier.updateAccountStatus(accId, '비활동');
         }

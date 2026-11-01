@@ -17,7 +17,6 @@ class PensionProductDialog extends ConsumerStatefulWidget {
 class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _productNameController;
-  bool _isSubmitting = false;
 
   bool get _isEditing => widget.initialData != null;
 
@@ -38,8 +37,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSubmitting = true);
-
     try {
       final product = PensionProduct(
         id: widget.initialData?.id,
@@ -56,12 +53,10 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
       }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -120,24 +115,18 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
+                  onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Colors.indigo.shade600,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          _isEditing ? '수정하기' : '등록하기',
-                          style: const TextStyle(fontSize: 16),
-                        ),
+                  child: Text(
+                    _isEditing ? '수정하기' : '등록하기',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],

@@ -7,7 +7,7 @@ part of 'pension_holding_product_provider.dart';
 // **************************************************************************
 
 String _$pensionHoldingProductNotifierHash() =>
-    r'b1b4070de5ae4a36ada0a3cf8fb4d4c6bedcb583';
+    r'dc251d2622d4d72c02fa3c1d2cd73ca1d9755e5c';
 
 /// See also [PensionHoldingProductNotifier].
 @ProviderFor(PensionHoldingProductNotifier)

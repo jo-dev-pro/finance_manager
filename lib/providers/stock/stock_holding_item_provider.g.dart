@@ -7,7 +7,7 @@ part of 'stock_holding_item_provider.dart';
 // **************************************************************************
 
 String _$stockHoldingItemNotifierHash() =>
-    r'b6cccdaf63a3635871c11560996ab1fad523bce2';
+    r'e08174cdb7cd616d9575798b87f4a977bd32917e';
 
 /// See also [StockHoldingItemNotifier].
 @ProviderFor(StockHoldingItemNotifier)

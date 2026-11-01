@@ -11,6 +11,8 @@ class StockHoldingItem with _$StockHoldingItem {
     String? id,
     @JsonKey(name: 'account_id') required String accountId,       // 계좌 ID
     @JsonKey(name: 'stock_item_id') required String stockItemId, // 종목 ID
+    @JsonKey(name: 'account_name') String? accountName,          // 콘솔 확인용 계좌명
+    @JsonKey(name: 'stock_item_name') String? stockItemName,     // 콘솔 확인용 종목명
     @JsonKey(name: 'is_active') @Default(true) bool isActive,    // 활동 / 비활동 여부
     @JsonKey(name: 'initial_purchase_date') String? initialPurchaseDate, // 최초 매수일 (고정)
   }) = _StockHoldingItem;

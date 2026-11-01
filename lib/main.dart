@@ -28,7 +28,7 @@ class MyApp extends ConsumerWidget {
         
         // 1. ColorScheme의 surface(표면색)를 흰색으로 지정
         colorScheme: ColorScheme.light(
-          primary: Colors.blue,
+          primary: Colors.indigo,
           surface: Colors.white, // M3 기본 표면색을 순백색으로 오버라이드
         ),
 

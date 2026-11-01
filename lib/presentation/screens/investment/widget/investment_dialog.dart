@@ -24,7 +24,6 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
   late TextEditingController _dateController;
 
   DateTime _selectedDate = DateTime.now();
-  bool _isSubmitting = false;
 
   bool get _isEditing => widget.initialData != null;
 
@@ -75,8 +74,6 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSubmitting = true);
-
     try {
       final description = _descriptionController.text.trim();
       final cleanAmountText = _amountController.text.replaceAll(',', '').trim();
@@ -103,9 +100,7 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
           context,
         ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
       }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+    } 
   }
 
   @override
@@ -208,25 +203,18 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
+                  onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Colors.indigo.shade600,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child:
-                      _isSubmitting
-                          ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                          : Text(
-                            _isEditing ? '수정하기' : '등록하기',
-                            style: const TextStyle(fontSize: 16),
-                          ),
+                  child: Text(
+                    _isEditing ? '수정하기' : '등록하기',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],

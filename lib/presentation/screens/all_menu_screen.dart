@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/raw_upload/bank_monthly_upload.dart';
 import '../../core/raw_upload/pension_monthly_upload.dart';
 import '../../core/migrate/firestore_db_migrate.dart';
+import '../../core/raw_upload/stock_holding_item_upload.dart';
 import '../../core/router/app_router_path.dart';
 
 class AllMenuScreen extends StatelessWidget {
@@ -78,7 +79,7 @@ class AllMenuScreen extends StatelessWidget {
                 Icons.show_chart_outlined,
                 color: Colors.indigo,
               ),
-              title: const Text('주식 보유종목 관리'),
+              title: const Text('주식 계좌별 보유종목 관리'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push(AppRoutePath.stockHoldingItem),
             ),
@@ -101,7 +102,7 @@ class AllMenuScreen extends StatelessWidget {
 
             ListTile(
               leading: const Icon(Icons.savings_outlined, color: Colors.indigo),
-              title: const Text('연금 계좌별 상품 관리'),
+              title: const Text('연금 계좌별 보유상품 관리'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push(AppRoutePath.pensionAccountProduct),
             ),
@@ -128,6 +129,19 @@ class AllMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const PensionMonthlyUploadScreen(),
+                    ),
+                  ),
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.savings_outlined, color: Colors.indigo),
+              title: const Text('(Batch)주식 보유종목 업로드'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockHoldingUploadScreen(),
                     ),
                   ),
             ),

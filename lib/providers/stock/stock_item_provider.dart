@@ -80,7 +80,44 @@ class StockItemNotifier extends _$StockItemNotifier {
     final data = item.toJson()..remove('id');
 
     await firestore.collection(stockItemDBName).doc(item.id).update(data);
+
+    // 💡 종목 정보 변경 시 연관된 하위 컬렉션 동기화 전파
+    try {
+      final newStockNameDisplay = '${item.itemName} (${item.stockCode})';
+      final collections = [
+        monthlyStockBalanceDBName,
+        stockHoldingItemDBName,
+      ];
+
+      for (final colName in collections) {
+        final snapshot = await firestore
+            .collection(colName)
+            .where('stock_item_id', isEqualTo: item.id)
+            .get();
+
+        if (snapshot.docs.isEmpty) continue;
+
+        WriteBatch batch = firestore.batch();
+        int count = 0;
+
+        for (final doc in snapshot.docs) {
+          batch.update(doc.reference, {'stock_item_name': newStockNameDisplay});
+          count++;
+
+          if (count % 400 == 0) {
+            await batch.commit();
+            batch = firestore.batch();
+          }
+        }
+        await batch.commit();
+      }
+    } catch (e) {
+      print('하위 주식 종목명 동기화 중 오류 발생: $e');
+    }
+    
     ref.invalidateSelf();
+
+
   }
 
   // 종목 삭제

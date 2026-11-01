@@ -26,6 +26,8 @@ mixin _$MonthlyBankBalance {
   String get yearMonth => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_id')
   String get accountId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_name')
+  String? get accountName => throw _privateConstructorUsedError;
   double get balance => throw _privateConstructorUsedError;
 
   /// Serializes this MonthlyBankBalance to a JSON map.
@@ -49,6 +51,7 @@ abstract class $MonthlyBankBalanceCopyWith<$Res> {
     String? id,
     @JsonKey(name: 'year_month') String yearMonth,
     @JsonKey(name: 'account_id') String accountId,
+    @JsonKey(name: 'account_name') String? accountName,
     double balance,
   });
 }
@@ -71,6 +74,7 @@ class _$MonthlyBankBalanceCopyWithImpl<$Res, $Val extends MonthlyBankBalance>
     Object? id = freezed,
     Object? yearMonth = null,
     Object? accountId = null,
+    Object? accountName = freezed,
     Object? balance = null,
   }) {
     return _then(
@@ -90,6 +94,11 @@ class _$MonthlyBankBalanceCopyWithImpl<$Res, $Val extends MonthlyBankBalance>
                     ? _value.accountId
                     : accountId // ignore: cast_nullable_to_non_nullable
                         as String,
+            accountName:
+                freezed == accountName
+                    ? _value.accountName
+                    : accountName // ignore: cast_nullable_to_non_nullable
+                        as String?,
             balance:
                 null == balance
                     ? _value.balance
@@ -114,6 +123,7 @@ abstract class _$$MonthlyBankBalanceImplCopyWith<$Res>
     String? id,
     @JsonKey(name: 'year_month') String yearMonth,
     @JsonKey(name: 'account_id') String accountId,
+    @JsonKey(name: 'account_name') String? accountName,
     double balance,
   });
 }
@@ -135,6 +145,7 @@ class __$$MonthlyBankBalanceImplCopyWithImpl<$Res>
     Object? id = freezed,
     Object? yearMonth = null,
     Object? accountId = null,
+    Object? accountName = freezed,
     Object? balance = null,
   }) {
     return _then(
@@ -154,6 +165,11 @@ class __$$MonthlyBankBalanceImplCopyWithImpl<$Res>
                 ? _value.accountId
                 : accountId // ignore: cast_nullable_to_non_nullable
                     as String,
+        accountName:
+            freezed == accountName
+                ? _value.accountName
+                : accountName // ignore: cast_nullable_to_non_nullable
+                    as String?,
         balance:
             null == balance
                 ? _value.balance
@@ -171,6 +187,7 @@ class _$MonthlyBankBalanceImpl implements _MonthlyBankBalance {
     this.id,
     @JsonKey(name: 'year_month') required this.yearMonth,
     @JsonKey(name: 'account_id') required this.accountId,
+    @JsonKey(name: 'account_name') this.accountName,
     this.balance = 0.0,
   });
 
@@ -186,12 +203,15 @@ class _$MonthlyBankBalanceImpl implements _MonthlyBankBalance {
   @JsonKey(name: 'account_id')
   final String accountId;
   @override
+  @JsonKey(name: 'account_name')
+  final String? accountName;
+  @override
   @JsonKey()
   final double balance;
 
   @override
   String toString() {
-    return 'MonthlyBankBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, balance: $balance)';
+    return 'MonthlyBankBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, accountName: $accountName, balance: $balance)';
   }
 
   @override
@@ -204,13 +224,15 @@ class _$MonthlyBankBalanceImpl implements _MonthlyBankBalance {
                 other.yearMonth == yearMonth) &&
             (identical(other.accountId, accountId) ||
                 other.accountId == accountId) &&
+            (identical(other.accountName, accountName) ||
+                other.accountName == accountName) &&
             (identical(other.balance, balance) || other.balance == balance));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, yearMonth, accountId, balance);
+      Object.hash(runtimeType, id, yearMonth, accountId, accountName, balance);
 
   /// Create a copy of MonthlyBankBalance
   /// with the given fields replaced by the non-null parameter values.
@@ -234,6 +256,7 @@ abstract class _MonthlyBankBalance implements MonthlyBankBalance {
     final String? id,
     @JsonKey(name: 'year_month') required final String yearMonth,
     @JsonKey(name: 'account_id') required final String accountId,
+    @JsonKey(name: 'account_name') final String? accountName,
     final double balance,
   }) = _$MonthlyBankBalanceImpl;
 
@@ -248,6 +271,9 @@ abstract class _MonthlyBankBalance implements MonthlyBankBalance {
   @override
   @JsonKey(name: 'account_id')
   String get accountId;
+  @override
+  @JsonKey(name: 'account_name')
+  String? get accountName;
   @override
   double get balance;
 

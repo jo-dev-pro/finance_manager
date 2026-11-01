@@ -19,213 +19,245 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 💡 사용가능한 기준월 목록 및 현재 선택된 기준월 연동
+    final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
     final selectedMonth = ref.watch(selectedYearMonthProvider);
-    final targetMonth =
-        selectedMonth ??
-        initialYearMonth ??
-        DateFormat('yyyy-MM').format(DateTime.now());
-
-    final balancesAsync = ref.watch(
-      monthlyPensionBalanceNotifierProvider(targetMonth),
-    );
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final productsAsync = ref.watch(pensionProductNotifierProvider);
+    
+    final targetMonth = selectedMonth ?? initialYearMonth;
 
     return Scaffold(
-      appBar: AppBar(title: Text('연금 월말 평가액 관리')),
-      body: balancesAsync.when(
+      appBar: AppBar(title: const Text('연금 월말 평가액 관리')),
+      body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('데이터를 불러오지 못했습니다: $err')),
-        data: (items) {
-          if (items.isEmpty) {
-            return Center(child: Text('$targetMonth에 등록된 연금 월말 데이터가 없습니다.'));
+        error: (err, _) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),
+        data: (months) {
+          if (months.isEmpty) {
+            return const Center(child: Text('등록된 연금 데이터가 없습니다.'));
           }
 
-          final accounts = accountsAsync.value ?? [];
-          final accountNames = accountNamesAsync.value ?? [];
-          final products = productsAsync.value ?? [];
+          final activeCurrentMonth = (targetMonth != null && months.contains(targetMonth))
+              ? targetMonth
+              : months.first;
 
-          final accountMap = {for (var a in accounts) a.id!: a};
-          final accountNameMap = {for (var an in accountNames) an.id: an};
-          final productMap = {for (var p in products) p.id!: p.productName};
-
-          final sortedItems = List<MonthlyPensionBalance>.from(items)
-            ..sort((a, b) {
-              final accA = accountMap[a.accountId];
-              final accB = accountMap[b.accountId];
-
-              final orderA = accA?.sortOrder ?? 9999;
-              final orderB = accB?.sortOrder ?? 9999;
-
-              if (orderA != orderB) {
-                return orderA.compareTo(orderB);
-              }
-
-              final nameA =
-                  a.productId == '_CASH_ASSET_PRODUCT_ID_'
-                      ? '계좌 공통 현금성 자산'
-                      : (productMap[a.productId] ?? '');
-              final nameB =
-                  b.productId == '_CASH_ASSET_PRODUCT_ID_'
-                      ? '계좌 공통 현금성 자산'
-                      : (productMap[b.productId] ?? '');
-              return nameA.compareTo(nameB);
+          // 최초 진입 시 selectedMonth가 비어있다면 최신월로 설정
+          if (selectedMonth == null || !months.contains(selectedMonth)) {
+            Future.microtask(() {
+              ref.read(selectedYearMonthProvider.notifier).select(activeCurrentMonth);
             });
+          }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(
-                monthlyPensionBalanceNotifierProvider(targetMonth),
-              );
-            },
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: sortedItems.length,
-              itemBuilder: (context, index) {
-                final balanceItem = sortedItems[index];
+          final balancesAsync = ref.watch(
+            monthlyPensionBalanceNotifierProvider(activeCurrentMonth),
+          );
+          final accountsAsync = ref.watch(accountNotifierProvider);
+          final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+          final productsAsync = ref.watch(pensionProductNotifierProvider);
 
-                final matchedAcc = accountMap[balanceItem.accountId];
-                final institution =
-                    matchedAcc?.financialInstitution ?? '기타 금융기관';
-                final nameObj =
-                    matchedAcc != null
-                        ? accountNameMap[matchedAcc.accountNameId]
-                        : null;
-                final accountName = nameObj?.accountName ?? '연금계좌';
+          return Column(
+            children: [
+              // 💡 1. 상단 기준월 선택 헤더 콤보박스 추가
+              _buildMonthSelectorHeader(context, ref, months, activeCurrentMonth),
 
-                final String displayName =
-                    balanceItem.productId == '_CASH_ASSET_PRODUCT_ID_'
-                        ? '💵 계좌 공통 현금성 자산 (예수금)'
-                        : (productMap[balanceItem.productId] ?? '알 수 없는 상품');
+              // 💡 2. 선택된 기준월의 월말 내역 리스트
+              Expanded(
+                child: balancesAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('데이터를 불러오지 못했습니다: $err')),
+                  data: (items) {
+                    if (items.isEmpty) {
+                      return Center(child: Text('$activeCurrentMonth에 등록된 연금 월말 데이터가 없습니다.'));
+                    }
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Card(
-                    elevation: 1.5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          // 1. 좌측 정보 영역 (상품명 1줄 고정 + 글자 크기 축소)
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 상단: 상품명 (1줄, 글자 크기 14로 축소하여 여유 확보)
-                                Text(
-                                  displayName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 6),
-                                
-                                // 하단: [금융기관] 계좌명 + 연월 배지 조합
-                                Row(
+                    final accounts = accountsAsync.value ?? [];
+                    final accountNames = accountNamesAsync.value ?? [];
+                    final products = productsAsync.value ?? [];
+
+                    final accountMap = {for (var a in accounts) a.id!: a};
+                    final accountNameMap = {for (var an in accountNames) an.id: an};
+                    final productMap = {for (var p in products) p.id!: p.productName};
+
+                    final sortedItems = List<MonthlyPensionBalance>.from(items)
+                      ..sort((a, b) {
+                        final accA = accountMap[a.accountId];
+                        final accB = accountMap[b.accountId];
+
+                        final orderA = accA?.sortOrder ?? 9999;
+                        final orderB = accB?.sortOrder ?? 9999;
+
+                        if (orderA != orderB) {
+                          return orderA.compareTo(orderB);
+                        }
+
+                        final nameA = a.productId == '_CASH_ASSET_PRODUCT_ID_'
+                            ? '계좌 공통 현금성 자산'
+                            : (productMap[a.productId] ?? '');
+                        final nameB = b.productId == '_CASH_ASSET_PRODUCT_ID_'
+                            ? '계좌 공통 현금성 자산'
+                            : (productMap[b.productId] ?? '');
+                        return nameA.compareTo(nameB);
+                      });
+
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        ref.invalidate(
+                          monthlyPensionBalanceNotifierProvider(activeCurrentMonth),
+                        );
+                      },
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: sortedItems.length,
+                        itemBuilder: (context, index) {
+                          final balanceItem = sortedItems[index];
+
+                          final matchedAcc = accountMap[balanceItem.accountId];
+                          final institution =
+                              matchedAcc?.financialInstitution ?? '기타 금융기관';
+                          final nameObj = matchedAcc != null
+                              ? accountNameMap[matchedAcc.accountNameId]
+                              : null;
+                          final accountName = nameObj?.accountName ?? '연금계좌';
+
+                          final bool isCashAsset =
+                              balanceItem.productId == '_CASH_ASSET_PRODUCT_ID_';
+                          final String displayName = isCashAsset
+                              ? '💵 계좌 공통 현금성 자산 (예수금)'
+                              : (productMap[balanceItem.productId] ?? '알 수 없는 상품');
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Card(
+                              elevation: 1.5,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        '[$institution] $accountName',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            displayName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  '[$institution] $accountName',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 6,
+                                                  vertical: 2,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey.shade200,
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  balanceItem.yearMonth,
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.grey.shade800,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (!isCashAsset) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '최초 매수일: ${balanceItem.purchaseDate ?? '미입력'}',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.indigo.shade600,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade200,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        balanceItem.yearMonth,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.grey.shade800,
-                                          fontWeight: FontWeight.bold,
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          balanceItem.balance.toWon(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                              icon: const Icon(
+                                                Icons.edit,
+                                                size: 19,
+                                                color: Colors.grey,
+                                              ),
+                                              onPressed: () => _showEditBottomSheet(
+                                                context,
+                                                ref,
+                                                balanceItem,
+                                                displayName,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                              icon: const Icon(
+                                                Icons.delete,
+                                                size: 19,
+                                                color: Colors.redAccent,
+                                              ),
+                                              onPressed: () => _confirmDelete(
+                                                context,
+                                                ref,
+                                                balanceItem,
+                                                displayName,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-
-                          // 2. 우측 금액 및 수정/삭제 아이콘 영역
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                balanceItem.balance.toWon(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    padding: EdgeInsets.zero, // 기본 패딩 제거
-                                    constraints: const BoxConstraints(),
-                                    icon: const Icon(
-                                      Icons.edit,
-                                      size: 19,
-                                      color: Colors.grey,
-                                    ),
-                                    onPressed:
-                                        () => _showEditBottomSheet(
-                                          context,
-                                          ref,
-                                          balanceItem,
-                                          displayName,
-                                        ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    padding: EdgeInsets.zero, // 기본 패딩 제거
-                                    constraints: const BoxConstraints(),
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      size: 19,
-                                      color: Colors.redAccent,
-                                    ),
-                                    onPressed:
-                                        () => _confirmDelete(
-                                          context,
-                                          ref,
-                                          balanceItem,
-                                          displayName,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
+                          );
+                        },
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -236,7 +268,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.indigo.shade600,
               foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(50),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -246,9 +277,67 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
               '연금 월말 평가액 추가 입력',
               style: TextStyle(fontSize: 16),
             ),
-            onPressed: () => _showAddBottomSheet(context, targetMonth),
+            onPressed: () {
+              final currentSelected = ref.read(selectedYearMonthProvider) ?? 
+                  initialYearMonth ?? 
+                  DateFormat('yyyy-MM').format(DateTime.now());
+              _showAddBottomSheet(context, currentSelected);
+            },
           ),
         ),
+      ),
+    );
+  }
+
+  // 💡 상단 기준월 선택 헤더 위젯
+  Widget _buildMonthSelectorHeader(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> months,
+    String currentMonth,
+  ) {
+    final currentIndex = months.indexOf(currentMonth);
+
+    return Container(
+      color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: (currentIndex >= 0 && currentIndex < months.length - 1)
+                ? () {
+                    ref.read(selectedYearMonthProvider.notifier).select(months[currentIndex + 1]);
+                  }
+                : null,
+          ),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: months.contains(currentMonth) ? currentMonth : months.first,
+              icon: const Icon(Icons.arrow_drop_down),
+              items: months.map((String month) {
+                return DropdownMenuItem<String>(
+                  value: month,
+                  child: Text(month),
+                );
+              }).toList(),
+              onChanged: (String? newMonth) {
+                if (newMonth != null) {
+                  ref.read(selectedYearMonthProvider.notifier).select(newMonth);
+                }
+              },
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: currentIndex > 0
+                ? () {
+                    ref.read(selectedYearMonthProvider.notifier).select(months[currentIndex - 1]);
+                  }
+                : null,
+          ),
+        ],
       ),
     );
   }
@@ -367,33 +456,32 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder:
-          (dialogContext) => AlertDialog(
-            title: const Text('삭제 확인'),
-            content: Text('$displayName의 ${item.yearMonth} 월말 데이터를 삭제하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('취소'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () async {
-                  if (item.id != null) {
-                    await ref
-                        .read(
-                          monthlyPensionBalanceNotifierProvider(
-                            item.yearMonth,
-                          ).notifier,
-                        )
-                        .deleteBalance(item.id!);
-                  }
-                  if (dialogContext.mounted) Navigator.pop(dialogContext);
-                },
-                child: const Text('삭제', style: TextStyle(color: Colors.white)),
-              ),
-            ],
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('삭제 확인'),
+        content: Text('$displayName의 ${item.yearMonth} 월말 데이터를 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
           ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              if (item.id != null) {
+                await ref
+                    .read(
+                      monthlyPensionBalanceNotifierProvider(
+                        item.yearMonth,
+                      ).notifier,
+                    )
+                    .deleteBalance(item.id!);
+              }
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+            },
+            child: const Text('삭제', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 

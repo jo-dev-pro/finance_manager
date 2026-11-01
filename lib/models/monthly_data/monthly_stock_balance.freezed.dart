@@ -28,6 +28,10 @@ mixin _$MonthlyStockBalance {
   String get accountId => throw _privateConstructorUsedError;
   @JsonKey(name: 'stock_item_id')
   String get stockItemId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'account_name')
+  String? get accountName => throw _privateConstructorUsedError; // 💡 콘솔 확인용 계좌명 추가
+  @JsonKey(name: 'stock_item_name')
+  String? get stockItemName => throw _privateConstructorUsedError; // 💡 콘솔 확인용 주식 종목명 추가
   double get quantity => throw _privateConstructorUsedError; // 당월 말 보유 수량
   @JsonKey(name: 'current_price')
   double get currentPrice => throw _privateConstructorUsedError; // 당월 말 현재가
@@ -63,6 +67,8 @@ abstract class $MonthlyStockBalanceCopyWith<$Res> {
     @JsonKey(name: 'year_month') String yearMonth,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'stock_item_id') String stockItemId,
+    @JsonKey(name: 'account_name') String? accountName,
+    @JsonKey(name: 'stock_item_name') String? stockItemName,
     double quantity,
     @JsonKey(name: 'current_price') double currentPrice,
     double balance,
@@ -92,6 +98,8 @@ class _$MonthlyStockBalanceCopyWithImpl<$Res, $Val extends MonthlyStockBalance>
     Object? yearMonth = null,
     Object? accountId = null,
     Object? stockItemId = null,
+    Object? accountName = freezed,
+    Object? stockItemName = freezed,
     Object? quantity = null,
     Object? currentPrice = null,
     Object? balance = null,
@@ -122,6 +130,16 @@ class _$MonthlyStockBalanceCopyWithImpl<$Res, $Val extends MonthlyStockBalance>
                     ? _value.stockItemId
                     : stockItemId // ignore: cast_nullable_to_non_nullable
                         as String,
+            accountName:
+                freezed == accountName
+                    ? _value.accountName
+                    : accountName // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            stockItemName:
+                freezed == stockItemName
+                    ? _value.stockItemName
+                    : stockItemName // ignore: cast_nullable_to_non_nullable
+                        as String?,
             quantity:
                 null == quantity
                     ? _value.quantity
@@ -177,6 +195,8 @@ abstract class _$$MonthlyStockBalanceImplCopyWith<$Res>
     @JsonKey(name: 'year_month') String yearMonth,
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'stock_item_id') String stockItemId,
+    @JsonKey(name: 'account_name') String? accountName,
+    @JsonKey(name: 'stock_item_name') String? stockItemName,
     double quantity,
     @JsonKey(name: 'current_price') double currentPrice,
     double balance,
@@ -205,6 +225,8 @@ class __$$MonthlyStockBalanceImplCopyWithImpl<$Res>
     Object? yearMonth = null,
     Object? accountId = null,
     Object? stockItemId = null,
+    Object? accountName = freezed,
+    Object? stockItemName = freezed,
     Object? quantity = null,
     Object? currentPrice = null,
     Object? balance = null,
@@ -235,6 +257,16 @@ class __$$MonthlyStockBalanceImplCopyWithImpl<$Res>
                 ? _value.stockItemId
                 : stockItemId // ignore: cast_nullable_to_non_nullable
                     as String,
+        accountName:
+            freezed == accountName
+                ? _value.accountName
+                : accountName // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        stockItemName:
+            freezed == stockItemName
+                ? _value.stockItemName
+                : stockItemName // ignore: cast_nullable_to_non_nullable
+                    as String?,
         quantity:
             null == quantity
                 ? _value.quantity
@@ -283,6 +315,8 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
     @JsonKey(name: 'year_month') required this.yearMonth,
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'stock_item_id') required this.stockItemId,
+    @JsonKey(name: 'account_name') this.accountName,
+    @JsonKey(name: 'stock_item_name') this.stockItemName,
     this.quantity = 0.0,
     @JsonKey(name: 'current_price') this.currentPrice = 0.0,
     this.balance = 0.0,
@@ -306,6 +340,14 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
   @override
   @JsonKey(name: 'stock_item_id')
   final String stockItemId;
+  @override
+  @JsonKey(name: 'account_name')
+  final String? accountName;
+  // 💡 콘솔 확인용 계좌명 추가
+  @override
+  @JsonKey(name: 'stock_item_name')
+  final String? stockItemName;
+  // 💡 콘솔 확인용 주식 종목명 추가
   @override
   @JsonKey()
   final double quantity;
@@ -336,7 +378,7 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
 
   @override
   String toString() {
-    return 'MonthlyStockBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, stockItemId: $stockItemId, quantity: $quantity, currentPrice: $currentPrice, balance: $balance, principal: $principal, totalPayout: $totalPayout, totalWithdrawal: $totalWithdrawal, purchaseDate: $purchaseDate)';
+    return 'MonthlyStockBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, stockItemId: $stockItemId, accountName: $accountName, stockItemName: $stockItemName, quantity: $quantity, currentPrice: $currentPrice, balance: $balance, principal: $principal, totalPayout: $totalPayout, totalWithdrawal: $totalWithdrawal, purchaseDate: $purchaseDate)';
   }
 
   @override
@@ -351,6 +393,10 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
                 other.accountId == accountId) &&
             (identical(other.stockItemId, stockItemId) ||
                 other.stockItemId == stockItemId) &&
+            (identical(other.accountName, accountName) ||
+                other.accountName == accountName) &&
+            (identical(other.stockItemName, stockItemName) ||
+                other.stockItemName == stockItemName) &&
             (identical(other.quantity, quantity) ||
                 other.quantity == quantity) &&
             (identical(other.currentPrice, currentPrice) ||
@@ -374,6 +420,8 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
     yearMonth,
     accountId,
     stockItemId,
+    accountName,
+    stockItemName,
     quantity,
     currentPrice,
     balance,
@@ -406,6 +454,8 @@ abstract class _MonthlyStockBalance extends MonthlyStockBalance {
     @JsonKey(name: 'year_month') required final String yearMonth,
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'stock_item_id') required final String stockItemId,
+    @JsonKey(name: 'account_name') final String? accountName,
+    @JsonKey(name: 'stock_item_name') final String? stockItemName,
     final double quantity,
     @JsonKey(name: 'current_price') final double currentPrice,
     final double balance,
@@ -430,6 +480,12 @@ abstract class _MonthlyStockBalance extends MonthlyStockBalance {
   @override
   @JsonKey(name: 'stock_item_id')
   String get stockItemId;
+  @override
+  @JsonKey(name: 'account_name')
+  String? get accountName; // 💡 콘솔 확인용 계좌명 추가
+  @override
+  @JsonKey(name: 'stock_item_name')
+  String? get stockItemName; // 💡 콘솔 확인용 주식 종목명 추가
   @override
   double get quantity; // 당월 말 보유 수량
   @override

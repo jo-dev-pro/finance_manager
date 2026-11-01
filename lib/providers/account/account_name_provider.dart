@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import '../../core/providers/firestore_provider.dart';
 import '../../core/utils/collection_name.dart';
 import '../../models/account/account_name.dart';
@@ -20,7 +21,7 @@ class AccountNameNotifier extends _$AccountNameNotifier {
     return snapshot.docs.map((doc) {
       final data = doc.data();
       data['id'] = doc.id; // Document ID 매핑
-      return AccountName.fromJson(data);
+      return AccountName.fromJson(data);  
     }).toList();
   }
 

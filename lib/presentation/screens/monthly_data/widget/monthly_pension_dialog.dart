@@ -62,10 +62,18 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
 
   @override
   void dispose() {
-    for (var c in _balanceControllers.values) { c.dispose(); }
-    for (var c in _addPrincipalControllers.values) { c.dispose(); }
-    for (var c in _addPayoutControllers.values) { c.dispose(); }
-    for (var c in _addWithdrawalControllers.values) { c.dispose(); }
+    for (var c in _balanceControllers.values) {
+      c.dispose();
+    }
+    for (var c in _addPrincipalControllers.values) {
+      c.dispose();
+    }
+    for (var c in _addPayoutControllers.values) {
+      c.dispose();
+    }
+    for (var c in _addWithdrawalControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -85,7 +93,8 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final accountProductsAsync = ref.watch(pensionHoldingProductNotifierProvider);
+    final accountProductsAsync =
+        ref.watch(pensionHoldingProductNotifierProvider);
     final productsAsync = ref.watch(pensionProductNotifierProvider);
 
     final existingCurrentBalancesAsync = ref.watch(
@@ -96,330 +105,380 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
       monthlyPensionBalanceNotifierProvider(prevYearMonth),
     );
 
-    return AlertDialog(
-      title: const Text('월말 연금 자산/지급액 입력'),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.9,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                TextFormField(
-                  initialValue: _selectedYearMonth,
-                  decoration: const InputDecoration(
-                    labelText: '기준월',
-                    hintText: 'YYYY-MM',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.calendar_today),
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 14,
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '월말 연금 자산/지급액 입력',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  onChanged: (val) {
-                    setState(() {
-                      _selectedYearMonth = val.trim();
-                    });
-                  },
-                  validator: (val) =>
-                      val == null || val.isEmpty ? '기준월을 입력해주세요.' : null,
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                initialValue: _selectedYearMonth,
+                decoration: const InputDecoration(
+                  labelText: '기준월',
+                  hintText: 'YYYY-MM',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.calendar_today),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedYearMonth = val.trim();
+                  });
+                },
+                validator: (val) =>
+                    val == null || val.isEmpty ? '기준월을 입력해주세요.' : null,
+              ),
+              const SizedBox(height: 16),
 
-                accountsAsync.when(
-                  loading: () => const LinearProgressIndicator(),
-                  error: (err, _) => Text('계좌 로딩 실패: $err'),
-                  data: (accounts) {
-                    final accountNames = accountNamesAsync.value ?? [];
-                    final accountNameMap = {
-                      for (var an in accountNames) an.id: an
-                    };
+              accountsAsync.when(
+                loading: () => const LinearProgressIndicator(),
+                error: (err, _) => Text('계좌 로딩 실패: $err'),
+                data: (accounts) {
+                  final accountNames = accountNamesAsync.value ?? [];
+                  final accountNameMap = {
+                    for (var an in accountNames) an.id: an
+                  };
 
-                    final pensionAccounts = accounts
-                        .where((a) => a.accountType.toUpperCase() == '연금')
-                        .toList()
-                      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+                  final pensionAccounts = accounts
+                      .where((a) => a.accountType.toUpperCase() == '연금')
+                      .toList()
+                    ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-                    if (pensionAccounts.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Text('등록된 연금 계좌가 없습니다.'),
-                      );
-                    }
-
-                    if (_selectedAccountId == null ||
-                        !pensionAccounts.any((a) => a.id == _selectedAccountId)) {
-                      _selectedAccountId = pensionAccounts.first.id;
-                    }
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedAccountId,
-                          decoration: const InputDecoration(
-                            labelText: '계좌 선택',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 14,
-                            ),
-                          ),
-                          items: pensionAccounts.map((acc) {
-                            final institution = acc.financialInstitution;
-                            final nameObj = accountNameMap[acc.accountNameId];
-                            final nameDisplay = nameObj?.accountName ?? '계좌';
-                            return DropdownMenuItem(
-                              value: acc.id,
-                              child: Text('$institution - $nameDisplay'),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedAccountId = val;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        accountProductsAsync.when(
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                          error: (err, _) => Text('보유 상품 로딩 실패: $err'),
-                          data: (accountProducts) {
-                            final products = productsAsync.value ?? [];
-                            final productMap = {
-                              for (var p in products) p.id!: p.productName
-                            };
-
-                            final Map<String, _GroupedPensionItem> groupedMap = {};
-                            
-                            final currentBalances =
-                                existingCurrentBalancesAsync.value ?? [];
-                            final prevBalances =
-                                existingPrevBalancesAsync.value ?? [];
-
-                            final prevBalanceMap = {
-                              for (var b in prevBalances)
-                                '${b.accountId}_${b.productId}': b
-                            };
-
-                            // 1. 계좌 공통 현금성 자산 기본 구성
-                            final cashPrevData = prevBalanceMap['${_selectedAccountId}_$kCashAssetProductId'];
-                            groupedMap[kCashAssetProductId] = _GroupedPensionItem(
-                              accountId: _selectedAccountId!,
-                              productId: kCashAssetProductId,
-                              principal: cashPrevData?.principal ?? 0.0,
-                              totalPayout: 0.0,
-                              totalWithdrawal: 0.0,
-                              isCashAsset: true,
-                            );
-
-                            // 2. 활동 중인 일반 보유 상품 매칭 및 직전 월 누적값 연동
-                            final matchedHoldingProducts = accountProducts
-                                .where((ap) => ap.accountId == _selectedAccountId && ap.isActive)
-                                .toList();
-
-                            for (var ap in matchedHoldingProducts) {
-                              final prodId = ap.productId;
-                              final prevData = prevBalanceMap['${ap.accountId}_$prodId'];
-                              final basePrincipal = prevData?.principal ?? 0.0;
-                              final basePayout = prevData?.totalPayout ?? 0.0;
-                              final baseWithdrawal = prevData?.totalWithdrawal ?? 0.0;
-
-                              groupedMap[prodId] = _GroupedPensionItem(
-                                accountId: ap.accountId,
-                                productId: prodId,
-                                principal: basePrincipal,
-                                totalPayout: basePayout,
-                                totalWithdrawal: baseWithdrawal,
-                                purchaseDate: ap.initialPurchaseDate,
-                              );
-                            }
-
-                            final groupedItems = groupedMap.values.toList();
-                            final currentBalanceMap = {
-                              for (var b in currentBalances)
-                                '${b.accountId}_${b.productId}': b
-                            };
-
-                            return ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: groupedItems.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                final groupItem = groupedItems[index];
-                                final prodId = groupItem.productId;
-                                
-                                final productName = groupItem.isCashAsset
-                                    ? '💵 계좌 공통 현금성 자산 (예수금)'
-                                    : (productMap[prodId] ?? '연금 상품');
-                                
-                                final key = '${_selectedAccountId}_$prodId';
-                                final currentData = currentBalanceMap[key];
-
-                                if (!_balanceControllers.containsKey(key)) {
-                                  _balanceControllers[key] =
-                                      TextEditingController(
-                                    text: (currentData != null && currentData.balance > 0)
-                                        ? currentData.balance.toCommaString()
-                                        : '',
-                                  );
-                                  _addPrincipalControllers[key] = TextEditingController();
-                                  _addPayoutControllers[key] = TextEditingController();
-                                  _addWithdrawalControllers[key] = TextEditingController();
-                                }
-
-                                return Card(
-                                  elevation: groupItem.isCashAsset ? 1.5 : 0.5,
-                                  color: groupItem.isCashAsset ? Colors.amber.shade50 : Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    side: BorderSide(
-                                      color: groupItem.isCashAsset
-                                          ? Colors.amber.shade300
-                                          : Colors.grey.shade300,
-                                    ),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          productName,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                            color: groupItem.isCashAsset
-                                                ? Colors.amber.shade900
-                                                : Colors.black87,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          groupItem.isCashAsset
-                                              ? '계좌 내 대기 자금 및 예수금 잔액'
-                                              : '누적원금: ${groupItem.principal.toWon()} | 수령액: ${groupItem.totalPayout.toWon()} | 인출금: ${groupItem.totalWithdrawal.toWon()}',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey.shade600,
-                                          ),
-                                        ),
-                                        const Divider(height: 16),
-                                        
-                                        TextFormField(
-                                          controller: _balanceControllers[key],
-                                          keyboardType: TextInputType.number,
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter.digitsOnly,
-                                            ThousandsSeparatorInputFormatter(),
-                                          ],
-                                          decoration: InputDecoration(
-                                            labelText: groupItem.isCashAsset ? '당월 말 현금성 자산 잔액' : '당월 말 평가액',
-                                            suffixText: '원',
-                                            border: const OutlineInputBorder(),
-                                            isDense: true,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-
-                                        if (!groupItem.isCashAsset) ...[
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: TextFormField(
-                                                  controller: _addPrincipalControllers[key],
-                                                  keyboardType: TextInputType.number,
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter.digitsOnly,
-                                                    ThousandsSeparatorInputFormatter(),
-                                                  ],
-                                                  decoration: const InputDecoration(
-                                                    labelText: '금월 추가 매수액',
-                                                    hintText: '0',
-                                                    suffixText: '원',
-                                                    border: OutlineInputBorder(),
-                                                    isDense: true,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Expanded(
-                                                child: TextFormField(
-                                                  controller: _addPayoutControllers[key],
-                                                  keyboardType: TextInputType.number,
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter.digitsOnly,
-                                                    ThousandsSeparatorInputFormatter(),
-                                                  ],
-                                                  decoration: const InputDecoration(
-                                                    labelText: '금월 연금지급액',
-                                                    hintText: '0',
-                                                    suffixText: '원',
-                                                    border: OutlineInputBorder(),
-                                                    isDense: true,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Expanded(
-                                                child: TextFormField(
-                                                  controller: _addWithdrawalControllers[key],
-                                                  keyboardType: TextInputType.number,
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter.digitsOnly,
-                                                    ThousandsSeparatorInputFormatter(),
-                                                  ],
-                                                  decoration: const InputDecoration(
-                                                    labelText: '금월 매도/인출',
-                                                    hintText: '0',
-                                                    suffixText: '원',
-                                                    border: OutlineInputBorder(),
-                                                    isDense: true,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
+                  if (pensionAccounts.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Text('등록된 연금 계좌가 없습니다.'),
                     );
-                  },
+                  }
+
+                  if (_selectedAccountId == null ||
+                      !pensionAccounts
+                          .any((a) => a.id == _selectedAccountId)) {
+                    _selectedAccountId = pensionAccounts.first.id;
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        value: _selectedAccountId,
+                        decoration: const InputDecoration(
+                          labelText: '계좌 선택',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 14,
+                          ),
+                        ),
+                        items: pensionAccounts.map((acc) {
+                          final institution = acc.financialInstitution;
+                          final nameObj = accountNameMap[acc.accountNameId];
+                          final nameDisplay = nameObj?.accountName ?? '계좌';
+                          return DropdownMenuItem(
+                            value: acc.id,
+                            child: Text('$institution - $nameDisplay'),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedAccountId = val;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      accountProductsAsync.when(
+                        loading: () => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                        error: (err, _) => Text('보유 상품 로딩 실패: $err'),
+                        data: (accountProducts) {
+                          final products = productsAsync.value ?? [];
+                          final productMap = {
+                            for (var p in products) p.id!: p.productName
+                          };
+
+                          final Map<String, _GroupedPensionItem> groupedMap =
+                              {};
+
+                          final currentBalances =
+                              existingCurrentBalancesAsync.value ?? [];
+                          final prevBalances =
+                              existingPrevBalancesAsync.value ?? [];
+
+                          final prevBalanceMap = {
+                            for (var b in prevBalances)
+                              '${b.accountId}_${b.productId}': b
+                          };
+
+                          final cashPrevData = prevBalanceMap[
+                              '${_selectedAccountId}_$kCashAssetProductId'];
+                          groupedMap[kCashAssetProductId] = _GroupedPensionItem(
+                            accountId: _selectedAccountId!,
+                            productId: kCashAssetProductId,
+                            principal: cashPrevData?.principal ?? 0.0,
+                            totalPayout: 0.0,
+                            totalWithdrawal: 0.0,
+                            isCashAsset: true,
+                          );
+
+                          final matchedHoldingProducts = accountProducts
+                              .where((ap) =>
+                                  ap.accountId == _selectedAccountId &&
+                                  ap.isActive)
+                              .toList();
+
+                          for (var ap in matchedHoldingProducts) {
+                            final prodId = ap.productId;
+                            final prevData =
+                                prevBalanceMap['${ap.accountId}_$prodId'];
+                            final basePrincipal = prevData?.principal ?? 0.0;
+                            final basePayout = prevData?.totalPayout ?? 0.0;
+                            final baseWithdrawal =
+                                prevData?.totalWithdrawal ?? 0.0;
+
+                            groupedMap[prodId] = _GroupedPensionItem(
+                              accountId: ap.accountId,
+                              productId: prodId,
+                              principal: basePrincipal,
+                              totalPayout: basePayout,
+                              totalWithdrawal: baseWithdrawal,
+                              purchaseDate: ap.initialPurchaseDate,
+                            );
+                          }
+
+                          final groupedItems = groupedMap.values.toList();
+                          final currentBalanceMap = {
+                            for (var b in currentBalances)
+                              '${b.accountId}_${b.productId}': b
+                          };
+
+                          return ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: groupedItems.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final groupItem = groupedItems[index];
+                              final prodId = groupItem.productId;
+
+                              final productName = groupItem.isCashAsset
+                                  ? '💵 계좌 공통 현금성 자산 (예수금)'
+                                  : (productMap[prodId] ?? '연금 상품');
+
+                              final key = '${_selectedAccountId}_$prodId';
+                              final currentData = currentBalanceMap[key];
+
+                              if (!_balanceControllers.containsKey(key)) {
+                                _balanceControllers[key] =
+                                    TextEditingController(
+                                  text: (currentData != null &&
+                                          currentData.balance > 0)
+                                      ? currentData.balance.toCommaString()
+                                      : '',
+                                );
+                                _addPrincipalControllers[key] =
+                                    TextEditingController();
+                                _addPayoutControllers[key] =
+                                    TextEditingController();
+                                _addWithdrawalControllers[key] =
+                                    TextEditingController();
+                              }
+
+                              return Card(
+                                elevation: groupItem.isCashAsset ? 1.5 : 0.5,
+                                color: groupItem.isCashAsset
+                                    ? Colors.amber.shade50
+                                    : Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: BorderSide(
+                                    color: groupItem.isCashAsset
+                                        ? Colors.amber.shade300
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        productName,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                          color: groupItem.isCashAsset
+                                              ? Colors.amber.shade900
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        groupItem.isCashAsset
+                                            ? '계좌 내 대기 자금 및 예수금 잔액'
+                                            : '누적원금: ${groupItem.principal.toWon()} | 수령액: ${groupItem.totalPayout.toWon()} | 인출금: ${groupItem.totalWithdrawal.toWon()}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      const Divider(height: 16),
+                                      TextFormField(
+                                        controller: _balanceControllers[key],
+                                        keyboardType: TextInputType.number,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.digitsOnly,
+                                          ThousandsSeparatorInputFormatter(),
+                                        ],
+                                        decoration: InputDecoration(
+                                          labelText: groupItem.isCashAsset
+                                              ? '당월 말 현금성 자산 잔액'
+                                              : '당월 말 평가액',
+                                          suffixText: '원',
+                                          border: const OutlineInputBorder(),
+                                          isDense: true,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      if (!groupItem.isCashAsset) ...[
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: TextFormField(
+                                                controller:
+                                                    _addPrincipalControllers[
+                                                        key],
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter
+                                                      .digitsOnly,
+                                                  ThousandsSeparatorInputFormatter(),
+                                                ],
+                                                decoration:
+                                                    const InputDecoration(
+                                                  labelText: '금월 추가 매수액',
+                                                  hintText: '0',
+                                                  suffixText: '원',
+                                                  border: OutlineInputBorder(),
+                                                  isDense: true,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: TextFormField(
+                                                controller:
+                                                    _addPayoutControllers[key],
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter
+                                                      .digitsOnly,
+                                                  ThousandsSeparatorInputFormatter(),
+                                                ],
+                                                decoration:
+                                                    const InputDecoration(
+                                                  labelText: '금월 연금지급액',
+                                                  hintText: '0',
+                                                  suffixText: '원',
+                                                  border: OutlineInputBorder(),
+                                                  isDense: true,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: TextFormField(
+                                                controller:
+                                                    _addWithdrawalControllers[
+                                                        key],
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter
+                                                      .digitsOnly,
+                                                  ThousandsSeparatorInputFormatter(),
+                                                ],
+                                                decoration:
+                                                    const InputDecoration(
+                                                  labelText: '금월 매도/인출',
+                                                  hintText: '0',
+                                                  suffixText: '원',
+                                                  border: OutlineInputBorder(),
+                                                  isDense: true,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _saveBalances,
+                    style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('저장하기', style: TextStyle(fontSize: 16)),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: _saveBalances,
-          child: const Text('저장'),
-        ),
-      ],
     );
   }
 
@@ -433,18 +492,22 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
 
     final accountProducts =
         ref.read(pensionHoldingProductNotifierProvider).value ?? [];
-    
+
     final Map<String, _GroupedPensionItem> groupedMap = {};
-    
+
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
-    final prevBalances = ref.read(
-          monthlyPensionBalanceNotifierProvider(prevYearMonth),
-        ).value ?? [];
+    final prevBalances = ref
+            .read(
+              monthlyPensionBalanceNotifierProvider(prevYearMonth),
+            )
+            .value ??
+        [];
     final prevBalanceMap = {
       for (var b in prevBalances) '${b.accountId}_${b.productId}': b
     };
 
-    final cashPrevData = prevBalanceMap['${_selectedAccountId}_$kCashAssetProductId'];
+    final cashPrevData =
+        prevBalanceMap['${_selectedAccountId}_$kCashAssetProductId'];
     groupedMap[kCashAssetProductId] = _GroupedPensionItem(
       accountId: _selectedAccountId!,
       productId: kCashAssetProductId,
@@ -481,23 +544,33 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
       final prodId = entry.key;
       final groupItem = entry.value;
       final key = '${_selectedAccountId}_$prodId';
-      
+
       final balCtrl = _balanceControllers[key];
       final addPrinCtrl = _addPrincipalControllers[key];
       final addPayoutCtrl = _addPayoutControllers[key];
       final addWithdrawalCtrl = _addWithdrawalControllers[key];
 
       if (balCtrl != null && balCtrl.text.isNotEmpty) {
-        final balVal = double.tryParse(balCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
-        
+        final balVal =
+            double.tryParse(balCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
+                0.0;
+
         double finalPrincipal = groupItem.principal;
         double finalPayout = groupItem.totalPayout;
         double finalWithdrawal = groupItem.totalWithdrawal;
 
         if (!groupItem.isCashAsset) {
-          final addPrinVal = double.tryParse(addPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
-          final addPayoutVal = double.tryParse(addPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
-          final addWithdrawalVal = double.tryParse(addWithdrawalCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0.0;
+          final addPrinVal = double.tryParse(
+                  addPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ??
+              0.0;
+          final addPayoutVal = double.tryParse(
+                  addPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ??
+                      '') ??
+              0.0;
+          final addWithdrawalVal = double.tryParse(
+                  addWithdrawalCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ??
+                      '') ??
+              0.0;
 
           finalPrincipal += addPrinVal;
           finalPayout += addPayoutVal;

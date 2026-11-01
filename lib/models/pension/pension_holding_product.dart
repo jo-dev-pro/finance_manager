@@ -9,11 +9,13 @@ class PensionHoldingProduct with _$PensionHoldingProduct {
 
   const factory PensionHoldingProduct({
     String? id,
-    @JsonKey(name: 'account_id') required String accountId, // 연금 계좌 ID[cite: 6]
-    @JsonKey(name: 'product_id') required String productId, // 공용 상품 ID[cite: 6]
-    @JsonKey(name: 'is_active') @Default(true) bool isActive, // 활동 / 비활동 여부[cite: 6]
+    @JsonKey(name: 'account_id') required String accountId, // 연금 계좌 ID
+    @JsonKey(name: 'product_id') required String productId, // 공용 상품 ID
+    @JsonKey(name: 'account_name') String? accountName,    // 콘솔 확인용 계좌명
+    @JsonKey(name: 'product_name') String? productName,    // 콘솔 확인용 상품명
+    @JsonKey(name: 'is_active') @Default(true) bool isActive, // 활동 / 비활동 여부
     @JsonKey(name: 'initial_purchase_date')
-    String? initialPurchaseDate, // 최초 매수일 (고정)[cite: 6]
+    String? initialPurchaseDate, // 최초 매수일 (고정)
   }) = _PensionHoldingProduct;
 
   factory PensionHoldingProduct.fromJson(Map<String, dynamic> json) =>

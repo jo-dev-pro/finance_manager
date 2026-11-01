@@ -7,7 +7,7 @@ part of 'monthly_pension_balance_provider.dart';
 // **************************************************************************
 
 String _$monthlyPensionBalanceNotifierHash() =>
-    r'9dae0ff21bdf3b9d4688acd0bac37ab2aef2b540';
+    r'ca018a345bc28652b203ab53d66136e7fa444d63';
 
 /// Copied from Dart SDK
 class _SystemHash {

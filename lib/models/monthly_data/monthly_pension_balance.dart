@@ -13,6 +13,8 @@ class MonthlyPensionBalance with _$MonthlyPensionBalance {
     @JsonKey(name: 'year_month') required String yearMonth,
     @JsonKey(name: 'account_id') required String accountId,
     @JsonKey(name: 'product_id') required String productId,
+    @JsonKey(name: 'account_name') String? accountName, // 💡 콘솔 확인용 계좌명
+    @JsonKey(name: 'product_name') String? productName, // 💡 콘솔 확인용 상품명
     @Default(0.0) double balance,               // 당월 말 평가액
     @Default(0.0) double principal,             // 누적 투자 원금
     @JsonKey(name: 'total_payout') @Default(0.0) double totalPayout, // 누적 연금 수령액

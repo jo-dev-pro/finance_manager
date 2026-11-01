@@ -85,13 +85,35 @@ class MonthlyBankBalanceNotifier extends _$MonthlyBankBalanceNotifier {
 
   Future<void> saveBalance(MonthlyBankBalance balance) async {
     final firestore = ref.read(firestoreProvider);
-    final data = balance.toJson()..remove('id');
+    // 💡 1. 계좌명과 계좌이름 정보를 가져와서 account_name 문자열 조합
+    String? resolvedAccountName = balance.accountName;
+    if (resolvedAccountName == null || resolvedAccountName.isEmpty) {
+      try {
+        final accounts = await ref.read(accountNotifierProvider.future);
+        final accountNames = await ref.read(accountNameNotifierProvider.future);
 
-    if (balance.id == null) {
+        final matchedAccount = accounts.firstWhereOrNull((a) => a.id == balance.accountId);
+        final matchedNameObj = accountNames.firstWhereOrNull((an) => an.id == matchedAccount?.accountNameId);
+
+        if (matchedNameObj != null) {
+          final institution = matchedAccount?.financialInstitution ?? '';
+          resolvedAccountName = '[$institution] ${matchedNameObj.accountName}';
+        }
+      } catch (_) {
+        // 실패 시 기존 값 유지
+      }
+    }
+
+    // 💡 2. account_name이 포함된 최신 모델 생성
+    final targetBalance = balance.copyWith(accountName: resolvedAccountName);
+    final data = targetBalance.toJson()..remove('id');
+
+    if (targetBalance.id == null) {
       await firestore.collection(monthlyBankBalanceDBName).add(data);
     } else {
-      await firestore.collection(monthlyBankBalanceDBName).doc(balance.id).update(data);
+      await firestore.collection(monthlyBankBalanceDBName).doc(targetBalance.id).update(data);
     }
+    
     ref.invalidateSelf();
     ref.invalidate(allMonthlyBankBalancesProvider);
   }

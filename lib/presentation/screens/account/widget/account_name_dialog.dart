@@ -16,7 +16,6 @@ class AccountNameDialog extends ConsumerStatefulWidget {
 class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  bool _isSubmitting = false;
 
   bool get _isEditing => widget.accountName != null;
 
@@ -45,8 +44,6 @@ class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() => _isSubmitting = true);
-
     final accountName = _nameController.text.trim();
     final newAccountName = AccountName(
       id: widget.accountName?.id,
@@ -65,8 +62,6 @@ class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
           context,
         ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
       }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -125,26 +120,19 @@ class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
+               child: ElevatedButton(
+                  onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Colors.indigo.shade600,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child:
-                      _isSubmitting
-                          ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                          : Text(
-                            _isEditing ? '수정하기' : '등록하기',
-                            style: const TextStyle(fontSize: 16),
-                          ),
+                  child: Text(
+                    _isEditing ? '수정하기' : '등록하기',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers/firestore_provider.dart';
@@ -65,6 +66,41 @@ class PensionProductNotifier extends _$PensionProductNotifier {
     final data = product.toJson()..remove('id');
 
     await firestore.collection(pensionProductDBName).doc(product.id).update(data);
+
+    // 💡 연금 상품명 변경 시 연관된 하위 컬렉션 동기화 전파
+    try {
+      final newProductName = product.productName;
+      final collections = [
+        monthlyPensionBalanceDBName,
+        pensionHoldingProductDBName,
+      ];
+
+      for (final colName in collections) {
+        final snapshot = await firestore
+            .collection(colName)
+            .where('product_id', isEqualTo: product.id)
+            .get();
+
+        if (snapshot.docs.isEmpty) continue;
+
+        WriteBatch batch = firestore.batch();
+        int count = 0;
+
+        for (final doc in snapshot.docs) {
+          batch.update(doc.reference, {'product_name': newProductName});
+          count++;
+
+          if (count % 400 == 0) {
+            await batch.commit();
+            batch = firestore.batch();
+          }
+        }
+        await batch.commit();
+      }
+    } catch (e) {
+      print('하위 연금 상품명 동기화 중 오류 발생: $e');
+    }
+    
     ref.invalidateSelf();
   }
 

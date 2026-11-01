@@ -1,14 +1,13 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spreadsheet_decoder/spreadsheet_decoder.dart';
 
-import '../../models/monthly_data/monthly_bank_balance.dart';
-import '../../providers/dashboard/dashboard_provider.dart';
-import '../../providers/monthly_data/monthly_bank_balance_provider.dart';
+import '../../providers/account/account_name_provider.dart';
+import '../../providers/account/account_provider.dart';
+import '../../providers/pension/pension_product_provider.dart';
+import '../../providers/stock/stock_item_provider.dart';
+import '../utils/collection_name.dart';
+import '../../core/providers/firestore_provider.dart';
 
 class FirestoreDBMigrateScreen extends ConsumerStatefulWidget {
   const FirestoreDBMigrateScreen({super.key});
@@ -34,7 +33,7 @@ class _FirestoreDBMigrateScreenState
 
       // 1. 기존 pension_holding_products 컬렉션의 모든 문서 가져오기
       final snapshot =
-          await firestore.collection('pension_holding_products').get();
+          await firestore.collection(pensionHoldingProductDBName).get();
 
       WriteBatch batch = firestore.batch();
       int count = 0;
@@ -95,76 +94,417 @@ class _FirestoreDBMigrateScreenState
   Future<void> _migratePensionPurchaseDates(WidgetRef ref) async {
     final firestore = FirebaseFirestore.instance;
 
+    // 💡 필드 값이 String이든 DocumentReference이든 상관없이 순수 ID만 추출하는 헬퍼 함수
+    String extractId(dynamic value) {
+      if (value == null) return '';
+      try {
+        // DocumentReference인 경우 .id를 안전하게 추출
+        if (value.runtimeType.toString().contains('DocumentReference')) {
+          return (value as dynamic).id.toString().trim();
+        }
+      } catch (_) {}
+
+      final str = value.toString().trim();
+      // 만약 문자열 내부에 파이어베이스 경로('/')가 포함되어 있다면 마지막 조각(ID)만 추출
+      if (str.contains('/')) {
+        final parts = str.split('/');
+        return parts.isNotEmpty ? parts.last.trim() : str;
+      }
+      return str;
+    }
+
     try {
-      setState(() {
-        _isLoading = true;
-        _statusText = '마이그레이션 진행 중...';
-      });
-
-      // 1. 연금 마스터(보유 상품) 목록 가져오기 (각 상품의 initialPurchaseDate가 들어있음)
+      // 1. 연금 마스터 데이터 읽기
       final productSnapshot =
-          await firestore.collection('pension_holding_products').get();
+          await firestore.collection('pension_holding_product').get();
 
-      // '계좌ID_상품ID' 또는 '상품ID'를 키로 매수일 맵 생성
-      // (구조에 따라 키 조합은 조정이 필요할 수 있습니다. 보통 accountId + productId 조합)
       final Map<String, String> masterDateMap = {};
       for (var doc in productSnapshot.docs) {
         final data = doc.data();
-        final accountId = data['account_id'] ?? '';
-        final productId =
-            data['stock_item_id'] ?? data['product_id'] ?? ''; // 구조에 맞게 수정
-        final purchaseDate = data['initial_purchase_date'];
+        final accountId = extractId(data['account_id'] ?? data['accountId']);
+        final productId = extractId(
+          data['product_id'] ?? data['productId'] ?? data['stock_item_id'],
+        );
+        final initialDate =
+            (data['initial_purchase_date'] ?? data['purchase_date'] ?? '')
+                .toString()
+                .trim();
 
-        if (purchaseDate != null && purchaseDate.toString().isNotEmpty) {
-          masterDateMap['${accountId}_$productId'] = purchaseDate;
-          // 혹은 상품ID 단독으로 관리되는 경우를 대비해 productId만으로도 맵핑 가능
-          masterDateMap[productId] = purchaseDate;
+        if (accountId.isNotEmpty &&
+            productId.isNotEmpty &&
+            initialDate.isNotEmpty) {
+          masterDateMap['${accountId}_$productId'] = initialDate;
         }
       }
 
-      // 2. 월말 연금 데이터 전체 가져오기
+      print('🔍 [방어 진단] 마스터 매핑 맵 생성 완료: ${masterDateMap.length}개');
+
+      // 2. 월말 연금 데이터 읽고 정밀 대조
       final balanceSnapshot =
           await firestore.collection('monthly_pension_balance').get();
 
       WriteBatch batch = firestore.batch();
       int updateCount = 0;
+      int failCount = 0;
 
       for (var doc in balanceSnapshot.docs) {
         final data = doc.data();
-        final currentPurchaseDate = data['purchase_date'];
+        final accountId = extractId(data['account_id'] ?? data['accountId']);
+        final productId = extractId(data['product_id'] ?? data['productId']);
 
-        // purchase_date가 비어있는 경우에만 마스터에서 찾아 채움
-        if (currentPurchaseDate == null ||
-            currentPurchaseDate.toString().isEmpty) {
-          final accountId = data['account_id'] ?? '';
-          final productId = data['product_id'] ?? '';
+        final lookupKey = '${accountId}_$productId';
+        final matchedDate = masterDateMap[lookupKey];
 
-          // 매칭되는 최초 매수일 찾기 (계좌ID_상품ID 우선, 없으면 상품ID 단독 검색)
-          final matchedDate =
-              masterDateMap['${accountId}_$productId'] ??
-              masterDateMap[productId];
+        if (matchedDate != null && matchedDate.isNotEmpty) {
+          batch.update(doc.reference, {'purchase_date': matchedDate});
+          updateCount++;
 
-          if (matchedDate != null) {
-            batch.update(doc.reference, {'purchase_date': matchedDate});
-            updateCount++;
+          if (updateCount % 400 == 0) {
+            await batch.commit();
+            batch = firestore.batch();
           }
-        }
-
-        // Firestore Batch는 한 번에 최대 500개까지만 처리 가능하므로 분기 처리
-        if (updateCount > 0 && updateCount % 400 == 0) {
-          await batch.commit();
-          batch = firestore.batch();
+        } else {
+          failCount++;
+          print(
+            '❌ 최종 매칭 실패: lookupKey=[$lookupKey] (accountId: $accountId, productId: $productId)',
+          );
         }
       }
 
       if (updateCount > 0) {
         await batch.commit();
       }
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText = '월말연금 매수일 업데이트! 총 $updateCount 문서 변환됨';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText = '오류 발생: $e';
+        });
+      }
+    }
+  }
+
+  /// 💡 기존 monthly_bank_balance DB의 모든 문서에 account_name 필드를 마이그레이션하는 함수
+  Future<void> _migrateMonthlyBankBalanceAccountNames(WidgetRef ref) async {
+    final firestore = ref.read(firestoreProvider);
+
+    try {
+      print('🚀 [마이그레이션 시작] 월말 은행 잔액 계좌명 마이그레이션을 시작합니다...');
+
+      // 1. 필요한 계좌 마스터 데이터 및 연동 이름 정보 로드
+      final accounts = await ref.read(accountNotifierProvider.future);
+      final accountNames = await ref.read(accountNameNotifierProvider.future);
+
+      final accountMap = {for (var a in accounts) a.id!: a};
+      final accountNameMap = {for (var an in accountNames) an.id: an};
+
+      // 2. monthly_bank_balance 컬렉션의 모든 문서 조회
+      final snapshot =
+          await firestore.collection(monthlyBankBalanceDBName).get();
+      print('📦 총 ${snapshot.docs.length}개의 월말 은행 잔액 문서를 확인했습니다.');
+
+      WriteBatch batch = firestore.batch();
+      int updatedCount = 0;
+      int skippedCount = 0;
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final accountId = data['account_id'] as String?;
+        final existingAccountName = data['account_name'] as String?;
+
+        // 이미 account_name이 존재하는 문서라면 패스
+        if (existingAccountName != null && existingAccountName.isNotEmpty) {
+          skippedCount++;
+          continue;
+        }
+
+        if (accountId == null || accountId.isEmpty) {
+          skippedCount++;
+          continue;
+        }
+
+        // 3. account_id로 계좌명 및 기관명 추출
+        final matchedAccount = accountMap[accountId];
+        final matchedNameObj =
+            matchedAccount != null
+                ? accountNameMap[matchedAccount.accountNameId]
+                : null;
+
+        if (matchedNameObj != null) {
+          final institution = matchedAccount?.financialInstitution ?? '';
+          final fullAccountName =
+              '[$institution] ${matchedNameObj.accountName}';
+
+          // 4. batch에 update 작업 추가
+          batch.update(doc.reference, {'account_name': fullAccountName});
+          updatedCount++;
+
+          // Firestore Batch 처리 제한(500건) 고려하여 400건마다 커밋
+          if (updatedCount % 400 == 0) {
+            await batch.commit();
+            batch = firestore.batch();
+            print('🔄 400건 커밋 완료...');
+          }
+        } else {
+          skippedCount++;
+        }
+      }
+
+      // 남은 배치 커밋
+      if (updatedCount % 400 != 0) {
+        await batch.commit();
+      }
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText = '월말은행 account_name 마이그레이션 완료! 총 $updatedCount 문서 변환됨';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText = '오류 발생: $e';
+        });
+      }
+    }
+  }
+
+  /// 💡 기존 monthly_pension_balance DB의 모든 문서에 account_name, product_name 필드를 마이그레이션하는 함수
+  Future<void> migrateMonthlyPensionBalanceNames(WidgetRef ref) async {
+    final firestore = ref.read(firestoreProvider);
+
+    try {
+      print('🚀 [마이그레이션 시작] 월말 연금 데이터(계좌명/상품명) 마이그레이션을 시작합니다...');
+
+      final accounts = await ref.read(accountNotifierProvider.future);
+      final accountNames = await ref.read(accountNameNotifierProvider.future);
+      final products = await ref.read(pensionProductNotifierProvider.future);
+
+      final accountMap = {for (var a in accounts) a.id!: a};
+      final accountNameMap = {for (var an in accountNames) an.id: an};
+      final productMap = {for (var p in products) p.id!: p};
+
+      final snapshot =
+          await firestore.collection(monthlyPensionBalanceDBName).get();
+      print('📦 총 ${snapshot.docs.length}개의 월말 연금 문서를 확인했습니다.');
+
+      WriteBatch batch = firestore.batch();
+      int updatedCount = 0;
+      int skippedCount = 0;
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final accountId = data['account_id'] as String?;
+        final productId = data['product_id'] as String?;
+
+        final existingAccountName = data['account_name'] as String?;
+        final existingProductName = data['product_name'] as String?;
+
+        // 둘 다 이미 채워져 있다면 스킵
+        if (existingAccountName != null &&
+            existingAccountName.isNotEmpty &&
+            existingProductName != null &&
+            existingProductName.isNotEmpty) {
+          skippedCount++;
+          continue;
+        }
+
+        final Map<String, dynamic> updateData = {};
+
+        // 계좌명 조합
+        if (accountId != null && accountId.isNotEmpty) {
+          final matchedAccount = accountMap[accountId];
+          final matchedNameObj =
+              matchedAccount != null
+                  ? accountNameMap[matchedAccount.accountNameId]
+                  : null;
+
+          if (matchedNameObj != null) {
+            final inst = matchedAccount?.financialInstitution ?? '';
+            updateData['account_name'] =
+                '[$inst] ${matchedNameObj.accountName}';
+          }
+        }
+
+        // 상품명 조합
+        if (productId != null && productId.isNotEmpty) {
+          if (productId == '_CASH_ASSET_PRODUCT_ID_') {
+            updateData['product_name'] = '💵 계좌 공통 현금성 자산 (예수금)';
+          } else {
+            final matchedProd = productMap[productId];
+            if (matchedProd != null) {
+              updateData['product_name'] = matchedProd.productName;
+            }
+          }
+        }
+
+        if (updateData.isNotEmpty) {
+          batch.update(doc.reference, updateData);
+          updatedCount++;
+
+          if (updatedCount % 400 == 0) {
+            await batch.commit();
+            batch = firestore.batch();
+            print('🔄 400건 커밋 완료...');
+          }
+        } else {
+          skippedCount++;
+        }
+      }
+
+      if (updatedCount % 400 != 0) {
+        await batch.commit();
+      }
 
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _statusText = '연금 월말 데이터 매수일 마이그레이션 완료! 총 $updateCount개 문서 업데이트됨';
+          _statusText =
+              '월말연금 account_name, product_name 마이그레이션 완료! 총 $updatedCount 문서 변환됨';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText = '오류 발생: $e';
+        });
+      }
+    }
+  }
+
+  /// 💡 주식 및 연금 보유 항목의 계좌명/종목명/상품명 마이그레이션 함수
+  Future<void> migrateHoldingNames(WidgetRef ref) async {
+    final firestore = ref.read(firestoreProvider);
+
+    try {
+      print('🚀 [마이그레이션 시작] 보유 항목 명칭 데이터 동기화를 시작합니다...');
+
+      final accounts = await ref.read(accountNotifierProvider.future);
+      final accountNames = await ref.read(accountNameNotifierProvider.future);
+      final stockItems = await ref.read(stockItemNotifierProvider.future);
+      final pensionProducts = await ref.read(
+        pensionProductNotifierProvider.future,
+      );
+
+      final accountMap = {for (var a in accounts) a.id!: a};
+      final accountNameMap = {for (var an in accountNames) an.id: an};
+      final stockMap = {for (var s in stockItems) s.id!: s};
+      final pensionProductMap = {for (var p in pensionProducts) p.id!: p};
+
+      // 1. Stock Holding Items 마이그레이션
+      final stockSnapshot =
+          await firestore.collection(stockHoldingItemDBName).get();
+      print('📦 총 ${stockSnapshot.docs.length}개의 주식 보유종목 문서를 확인했습니다.');
+
+      WriteBatch stockBatch = firestore.batch();
+      int stockUpdated = 0;
+
+      for (final doc in stockSnapshot.docs) {
+        final data = doc.data();
+        final accountId = data['account_id'] as String?;
+        final stockItemId = data['stock_item_id'] as String?;
+
+        final Map<String, dynamic> updateData = {};
+
+        if (accountId != null && accountId.isNotEmpty) {
+          final matchedAcc = accountMap[accountId];
+          final matchedNameObj =
+              matchedAcc != null
+                  ? accountNameMap[matchedAcc.accountNameId]
+                  : null;
+          if (matchedNameObj != null) {
+            final inst = matchedAcc?.financialInstitution ?? '';
+            updateData['account_name'] =
+                '[$inst] ${matchedNameObj.accountName}';
+          }
+        }
+
+        if (stockItemId != null && stockItemId.isNotEmpty) {
+          final matchedStock = stockMap[stockItemId];
+          if (matchedStock != null) {
+            updateData['stock_item_name'] =
+                '${matchedStock.itemName} (${matchedStock.stockCode})';
+          }
+        }
+
+        if (updateData.isNotEmpty) {
+          stockBatch.update(doc.reference, updateData);
+          stockUpdated++;
+          if (stockUpdated % 400 == 0) {
+            await stockBatch.commit();
+            stockBatch = firestore.batch();
+          }
+        }
+      }
+      if (stockUpdated % 400 != 0) {
+        await stockBatch.commit();
+      }
+
+      // 2. Pension Holding Products 마이그레이션
+      final pensionSnapshot =
+          await firestore.collection(pensionHoldingProductDBName).get();
+      print('📦 총 ${pensionSnapshot.docs.length}개의 연금 보유상품 문서를 확인했습니다.');
+
+      WriteBatch pensionBatch = firestore.batch();
+      int pensionUpdated = 0;
+
+      for (final doc in pensionSnapshot.docs) {
+        final data = doc.data();
+        final accountId = data['account_id'] as String?;
+        final productId = data['product_id'] as String?;
+
+        final Map<String, dynamic> updateData = {};
+
+        if (accountId != null && accountId.isNotEmpty) {
+          final matchedAcc = accountMap[accountId];
+          final matchedNameObj =
+              matchedAcc != null
+                  ? accountNameMap[matchedAcc.accountNameId]
+                  : null;
+          if (matchedNameObj != null) {
+            final inst = matchedAcc?.financialInstitution ?? '';
+            updateData['account_name'] =
+                '[$inst] ${matchedNameObj.accountName}';
+          }
+        }
+
+        if (productId != null && productId.isNotEmpty) {
+          if (productId == '_CASH_ASSET_PRODUCT_ID_') {
+            updateData['product_name'] = '💵 계좌 공통 현금성 자산 (예수금)';
+          } else {
+            final matchedProd = pensionProductMap[productId];
+            if (matchedProd != null) {
+              updateData['product_name'] = matchedProd.productName;
+            }
+          }
+        }
+
+        if (updateData.isNotEmpty) {
+          pensionBatch.update(doc.reference, updateData);
+          pensionUpdated++;
+          if (pensionUpdated % 400 == 0) {
+            await pensionBatch.commit();
+            pensionBatch = firestore.batch();
+          }
+        }
+      }
+      if (pensionUpdated % 400 != 0) {
+        await pensionBatch.commit();
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText =
+              '주식 계좌명/종목명 총 $pensionUpdated 문서 변환됨. 연금 보유 항목의 계좌명/상품명 총 $stockUpdated건 마이그레이션 완료';
         });
       }
     } catch (e) {
@@ -195,7 +535,10 @@ class _FirestoreDBMigrateScreenState
               const SizedBox(height: 24),
 
               ElevatedButton.icon(
-                onPressed: _isLoading ? null : _migratePensionHoldingProductsToMasterSchema,
+                onPressed:
+                    _isLoading
+                        ? null
+                        : _migratePensionHoldingProductsToMasterSchema,
                 icon:
                     _isLoading
                         ? const SizedBox(
@@ -212,11 +555,12 @@ class _FirestoreDBMigrateScreenState
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
 
               ElevatedButton.icon(
-                onPressed: _isLoading ? null : () => _migratePensionPurchaseDates(ref),
+                onPressed:
+                    _isLoading ? null : () => _migratePensionPurchaseDates(ref),
                 icon:
                     _isLoading
                         ? const SizedBox(
@@ -226,6 +570,76 @@ class _FirestoreDBMigrateScreenState
                         )
                         : const Icon(Icons.upload_file),
                 label: Text(_isLoading ? '처리 중...' : '연금 매수일 마이그레이션'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton.icon(
+                onPressed:
+                    _isLoading
+                        ? null
+                        : () => _migrateMonthlyBankBalanceAccountNames(ref),
+                icon:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.upload_file),
+                label: Text(_isLoading ? '처리 중...' : '월말 은행(계좌명) db 마이그레이션'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton.icon(
+                onPressed:
+                    _isLoading
+                        ? null
+                        : () => migrateMonthlyPensionBalanceNames(ref),
+                icon:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.upload_file),
+                label: Text(
+                  _isLoading ? '처리 중...' : '월말 연금(계좌,상품명 추가) db 마이그레이션',
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : () => migrateHoldingNames(ref),
+                icon:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.upload_file),
+                label: Text(
+                  _isLoading ? '처리 중...' : '보유상품, 보유종목 계좌명, 상품명, 종목명 db 마이그레이션',
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
