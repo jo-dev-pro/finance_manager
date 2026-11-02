@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
-import '../../../../core/utils/yahoo_service.dart';
+import '../../../../core/utils/toss_direct_api_service.dart';
 import '../../../../models/monthly_data/monthly_stock_balance.dart';
 import '../../../../models/stock/stock_item.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -94,35 +94,35 @@ class _MonthlyStockBalanceDialogState
     }
   }
 
-  Future<void> _fetchYahooPriceForStock(
+  Future<void> _fetchTossPriceStock(
     String key,
     String stockItemId,
     List<StockItem> stockItems,
   ) async {
-    print('🚀 _fetchYahooPriceForStock 함수 진입! stockItemId: $stockItemId, yearMonth: $_selectedYearMonth');
+    print(
+      '🚀 토스 시세 조회 함수 진입! stockItemId: $stockItemId, yearMonth: $_selectedYearMonth',
+    );
     final selectedStock = stockItems.firstWhere(
       (s) => s.id == stockItemId,
       orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
     );
 
-print('📌 찾은 종목명: ${selectedStock.itemName}, stockCode: ${selectedStock.stockCode}, yahooName: ${selectedStock.yahooName}');
-    String ticker = selectedStock.stockCode;
-    if (selectedStock.yahooName == 'KS') {
-      ticker += '.KS';
-    } else if (selectedStock.yahooName == 'KQ') {
-      ticker += '.KQ';
-    }
+    print(
+      '📌 찾은 종목명: ${selectedStock.itemName}, stockCode: ${selectedStock.stockCode}',
+    );
 
-print('🎯 최종 티커(Ticker): $ticker');
+    // 토스증권 API는 고유 종목 코드(예: '005930' 또는 해외 티커)를 그대로 사용합니다.
+    String symbol = selectedStock.stockCode.trim();
+    print('🎯 최종 조회 심볼: $symbol');
 
     setState(() => _isLoadingPriceMap[key] = true);
 
     try {
-          print('$ticker $_selectedYearMonth');
-      final price = await YahooFinanceService.getMonthlyClosePrice(
-        ticker,
+      final price = await TossDirectApiService.getMonthlyClosePrice(
+        symbol,
         _selectedYearMonth,
       );
+
       if (price != null && _priceControllers.containsKey(key)) {
         setState(() {
           _priceControllers[key]!.text = price.toCommaString();
@@ -131,16 +131,16 @@ print('🎯 최종 티커(Ticker): $ticker');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${selectedStock.itemName}의 $_selectedYearMonth 종가(${price.toCommaString()}원)를 불러왔습니다!',
+                '${selectedStock.itemName}의 시세(${price.toCommaString()}원)를 불러왔습니다!',
               ),
             ),
           );
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('해당 월의 시세 데이터를 찾지 못했습니다.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('시세 데이터를 찾지 못했습니다.')));
         }
       }
     } catch (e) {
@@ -151,6 +151,61 @@ print('🎯 최종 티커(Ticker): $ticker');
       }
     } finally {
       if (mounted) setState(() => _isLoadingPriceMap[key] = false);
+    }
+  }
+
+  // 전체 종목 일괄 시세 조회 메서드
+  Future<void> _fetchAllPrices(
+    List<_GroupedStockItem> groupedItems,
+    List<StockItem> stockItems,
+  ) async {
+    if (groupedItems.isEmpty) return;
+
+    // 전체 로딩 상태 시작
+    setState(() {
+      for (var group in groupedItems) {
+        final key = '${group.accountId}_${group.stockItemId}';
+        _isLoadingPriceMap[key] = true;
+      }
+    });
+
+    // 각 종목별로 순차적으로 (또는 동시에) 시세 조회
+    for (var group in groupedItems) {
+      final key = '${group.accountId}_${group.stockItemId}';
+      final stockId = group.stockItemId;
+
+      try {
+        final selectedStock = stockItems.firstWhere(
+          (s) => s.id == stockId,
+          orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
+        );
+
+        String symbol = selectedStock.stockCode.trim();
+
+        // 토스 API 호출 (앞서 만든 캔들 조회 메서드 활용)
+        final price = await TossDirectApiService.getMonthlyClosePrice(
+          symbol,
+          _selectedYearMonth,
+        );
+
+        if (price != null && _priceControllers.containsKey(key)) {
+          setState(() {
+            _priceControllers[key]!.text = price.toCommaString();
+          });
+        }
+      } catch (e) {
+        print('종목($stockId) 시세 조회 실패: $e');
+      } finally {
+        setState(() {
+          _isLoadingPriceMap[key] = false;
+        });
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('모든 종목의 시세 조회가 완료되었습니다!')));
     }
   }
 
@@ -439,10 +494,19 @@ print('🎯 최종 티커(Ticker): $ticker');
                                             ),
                                           ),
                                           OutlinedButton.icon(
-                                            onPressed: isLoading ? null : () {
-    print('👉 시세조회 버튼 클릭됨! key: $key, stockId: $stockId');
-    _fetchYahooPriceForStock(key, stockId, stockItems);
-  },
+                                            onPressed:
+                                                isLoading
+                                                    ? null
+                                                    : () {
+                                                      print(
+                                                        '👉 시세조회 버튼 클릭됨! key: $key, stockId: $stockId',
+                                                      );
+                                                      _fetchTossPriceStock(
+                                                        key,
+                                                        stockId,
+                                                        stockItems,
+                                                      );
+                                                    },
                                             icon:
                                                 isLoading
                                                     ? const SizedBox(
@@ -613,6 +677,26 @@ print('🎯 최종 티커(Ticker): $ticker');
                 },
               ),
               const SizedBox(height: 24),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // 현재 화면에 로드된 groupedItems와 stockItems를 전달
+                      // _fetchAllPrices(groupedItems, stockItems);
+                    },
+                    icon: const Icon(Icons.flash_on, size: 16),
+                    label: const Text('전체 종목 시세 일괄 조회'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo.shade50,
+                      foregroundColor: Colors.indigo.shade700,
+                      elevation: 0,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
               SizedBox(
                 width: double.infinity,
