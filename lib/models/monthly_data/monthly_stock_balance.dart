@@ -20,7 +20,7 @@ class MonthlyStockBalance with _$MonthlyStockBalance {
     @Default(0.0) double balance,                         // 당월 말 평가액 (quantity * currentPrice)
     @Default(0.0) double principal,                       // 누적 투자 원금
     @JsonKey(name: 'total_payout') @Default(0.0) double totalPayout, // 누적 배당금 등 수령액
-    @JsonKey(name: 'total_withdrawal') @Default(0.0) double totalWithdrawal, // 누적 인출액
+    @JsonKey(name: 'total_withdrawal') @Default(0.0) double totalWithdrawal, // 누적 인출액(계좌인출)
     @JsonKey(name: 'purchase_date') String? purchaseDate, // 최초 매수일 (마스터 연동)
   }) = _MonthlyStockBalance;
   
