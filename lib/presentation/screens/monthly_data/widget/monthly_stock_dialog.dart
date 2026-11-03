@@ -53,6 +53,7 @@ class _MonthlyStockBalanceDialogState
   final Map<String, TextEditingController> _addWithdrawalControllers = {};
 
   final Map<String, bool> _isLoadingPriceMap = {};
+  bool _isAllLoading = false; // 전체 일괄 로딩 상태
 
   final _formKey = GlobalKey<FormState>();
 
@@ -94,26 +95,19 @@ class _MonthlyStockBalanceDialogState
     }
   }
 
+  // 개별종목 시세 조회
   Future<void> _fetchTossPriceStock(
     String key,
     String stockItemId,
     List<StockItem> stockItems,
   ) async {
-    print(
-      '🚀 토스 시세 조회 함수 진입! stockItemId: $stockItemId, yearMonth: $_selectedYearMonth',
-    );
     final selectedStock = stockItems.firstWhere(
       (s) => s.id == stockItemId,
       orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
     );
 
-    print(
-      '📌 찾은 종목명: ${selectedStock.itemName}, stockCode: ${selectedStock.stockCode}',
-    );
-
     // 토스증권 API는 고유 종목 코드(예: '005930' 또는 해외 티커)를 그대로 사용합니다.
     String symbol = selectedStock.stockCode.trim();
-    print('🎯 최종 조회 심볼: $symbol');
 
     setState(() => _isLoadingPriceMap[key] = true);
 
@@ -127,21 +121,6 @@ class _MonthlyStockBalanceDialogState
         setState(() {
           _priceControllers[key]!.text = price.toCommaString();
         });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${selectedStock.itemName}의 시세(${price.toCommaString()}원)를 불러왔습니다!',
-              ),
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('시세 데이터를 찾지 못했습니다.')));
-        }
       }
     } catch (e) {
       if (mounted) {
@@ -161,48 +140,39 @@ class _MonthlyStockBalanceDialogState
   ) async {
     if (groupedItems.isEmpty) return;
 
-    // 전체 로딩 상태 시작
-    setState(() {
-      for (var group in groupedItems) {
+    setState(() => _isAllLoading = true);
+
+    // 병렬(Future.wait)로 동시에 빠르게 시세 조회
+    await Future.wait(
+      groupedItems.map((group) async {
         final key = '${group.accountId}_${group.stockItemId}';
-        _isLoadingPriceMap[key] = true;
-      }
-    });
+        final stockId = group.stockItemId;
 
-    // 각 종목별로 순차적으로 (또는 동시에) 시세 조회
-    for (var group in groupedItems) {
-      final key = '${group.accountId}_${group.stockItemId}';
-      final stockId = group.stockItemId;
+        try {
+          final selectedStock = stockItems.firstWhere(
+            (s) => s.id == stockId,
+            orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
+          );
 
-      try {
-        final selectedStock = stockItems.firstWhere(
-          (s) => s.id == stockId,
-          orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
-        );
+          String symbol = selectedStock.stockCode.trim();
+          final price = await TossDirectApiService.getMonthlyClosePrice(
+            symbol,
+            _selectedYearMonth,
+          );
 
-        String symbol = selectedStock.stockCode.trim();
-
-        // 토스 API 호출 (앞서 만든 캔들 조회 메서드 활용)
-        final price = await TossDirectApiService.getMonthlyClosePrice(
-          symbol,
-          _selectedYearMonth,
-        );
-
-        if (price != null && _priceControllers.containsKey(key)) {
-          setState(() {
-            _priceControllers[key]!.text = price.toCommaString();
-          });
+          if (price != null && _priceControllers.containsKey(key)) {
+            setState(() {
+              _priceControllers[key]!.text = price.toCommaString();
+            });
+          }
+        } catch (e) {
+          print('종목($stockId) 일괄 조회 실패: $e');
         }
-      } catch (e) {
-        print('종목($stockId) 시세 조회 실패: $e');
-      } finally {
-        setState(() {
-          _isLoadingPriceMap[key] = false;
-        });
-      }
-    }
+      }),
+    );
 
     if (mounted) {
+      setState(() => _isAllLoading = false);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('모든 종목의 시세 조회가 완료되었습니다!')));
@@ -406,269 +376,342 @@ class _MonthlyStockBalanceDialogState
                             );
                           }
 
-                          return ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: groupedItems.length,
-                            separatorBuilder:
-                                (_, __) => const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final groupItem = groupedItems[index];
-                              final stockId = groupItem.stockItemId;
-                              final stockName =
-                                  stockMap[stockId] ?? '알 수 없는 종목';
-
-                              final key = '${_selectedAccountId}_$stockId';
-                              final currentData = currentBalanceMap[key];
-
-                              if (!_quantityControllers.containsKey(key)) {
-                                _quantityControllers[key] =
-                                    TextEditingController(
-                                      text:
-                                          (currentData != null &&
-                                                  currentData.quantity > 0)
-                                              ? currentData.quantity.toString()
-                                              : '',
-                                    );
-                                _priceControllers[key] = TextEditingController(
-                                  text:
-                                      (currentData != null &&
-                                              currentData.currentPrice > 0)
-                                          ? currentData.currentPrice
-                                              .toCommaString()
-                                          : '',
-                                );
-                                _addPrincipalControllers[key] =
-                                    TextEditingController();
-                                _addPayoutControllers[key] =
-                                    TextEditingController();
-                                _addWithdrawalControllers[key] =
-                                    TextEditingController();
-                              }
-
-                              final isLoading =
-                                  _isLoadingPriceMap[key] ?? false;
-
-                              // 실시간 산출 평가액 계산
-                              final qty =
-                                  double.tryParse(
-                                    _quantityControllers[key]!.text
-                                        .replaceAll(',', '')
-                                        .trim(),
-                                  ) ??
-                                  0.0;
-                              final price =
-                                  double.tryParse(
-                                    _priceControllers[key]!.text
-                                        .replaceAll(',', '')
-                                        .trim(),
-                                  ) ??
-                                  0.0;
-                              final calcBalance = qty * price;
-
-                              return Card(
-                                elevation: 1.0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  side: BorderSide(color: Colors.grey.shade300),
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // 전체 일괄 조회 버튼 추가
+                              ElevatedButton.icon(
+                                onPressed:
+                                    _isAllLoading
+                                        ? null
+                                        : () => _fetchAllPrices(
+                                          groupedItems,
+                                          stockItems,
+                                        ),
+                                icon:
+                                    _isAllLoading
+                                        ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                        : const Icon(Icons.flash_on, size: 16),
+                                label: Text(
+                                  _isAllLoading
+                                      ? '전체 시세 조회 중...'
+                                      : '전체 종목 시세 일괄 조회',
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              stockName,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 15,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          OutlinedButton.icon(
-                                            onPressed:
-                                                isLoading
-                                                    ? null
-                                                    : () {
-                                                      print(
-                                                        '👉 시세조회 버튼 클릭됨! key: $key, stockId: $stockId',
-                                                      );
-                                                      _fetchTossPriceStock(
-                                                        key,
-                                                        stockId,
-                                                        stockItems,
-                                                      );
-                                                    },
-                                            icon:
-                                                isLoading
-                                                    ? const SizedBox(
-                                                      width: 12,
-                                                      height: 12,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                            strokeWidth: 2,
-                                                          ),
-                                                    )
-                                                    : const Icon(
-                                                      Icons.cloud_download,
-                                                      size: 14,
-                                                    ),
-                                            label: const Text(
-                                              '시세조회',
-                                              style: TextStyle(fontSize: 11),
-                                            ),
-                                            style: OutlinedButton.styleFrom(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 2,
-                                                  ),
-                                              minimumSize: Size.zero,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '누적원금: ${groupItem.principal.toWon()} | 수령액: ${groupItem.totalPayout.toWon()} | 인출금: ${groupItem.totalWithdrawal.toWon()}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      const Divider(height: 16),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller:
-                                                  _quantityControllers[key],
-                                              keyboardType:
-                                                  const TextInputType.numberWithOptions(
-                                                    decimal: true,
-                                                  ),
-                                              decoration: const InputDecoration(
-                                                labelText: '보유 수량',
-                                                suffixText: '주',
-                                                border: OutlineInputBorder(),
-                                                isDense: true,
-                                              ),
-                                              onChanged: (_) => setState(() {}),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            flex: 2,
-                                            child: TextFormField(
-                                              controller:
-                                                  _priceControllers[key],
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly,
-                                                ThousandsSeparatorInputFormatter(),
-                                              ],
-                                              decoration: const InputDecoration(
-                                                labelText: '주당 현재가',
-                                                suffixText: '원',
-                                                border: OutlineInputBorder(),
-                                                isDense: true,
-                                              ),
-                                              onChanged: (_) => setState(() {}),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        '산출 평가액: ${calcBalance.toWon()}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.indigo.shade700,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller:
-                                                  _addPrincipalControllers[key],
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly,
-                                                ThousandsSeparatorInputFormatter(),
-                                              ],
-                                              decoration: const InputDecoration(
-                                                labelText: '추가 매수액',
-                                                hintText: '0',
-                                                suffixText: '원',
-                                                border: OutlineInputBorder(),
-                                                isDense: true,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller:
-                                                  _addPayoutControllers[key],
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly,
-                                                ThousandsSeparatorInputFormatter(),
-                                              ],
-                                              decoration: const InputDecoration(
-                                                labelText: '배당금',
-                                                hintText: '0',
-                                                suffixText: '원',
-                                                border: OutlineInputBorder(),
-                                                isDense: true,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller:
-                                                  _addWithdrawalControllers[key],
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly,
-                                                ThousandsSeparatorInputFormatter(),
-                                              ],
-                                              decoration: const InputDecoration(
-                                                labelText: '인출액',
-                                                hintText: '0',
-                                                suffixText: '원',
-                                                border: OutlineInputBorder(),
-                                                isDense: true,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.indigo.shade600,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
                                   ),
                                 ),
-                              );
-                            },
+                              ),
+                              const SizedBox(height: 12),
+
+                              ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: groupedItems.length,
+                                separatorBuilder:
+                                    (_, __) => const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  final groupItem = groupedItems[index];
+                                  final stockId = groupItem.stockItemId;
+                                  final stockName =
+                                      stockMap[stockId] ?? '알 수 없는 종목';
+
+                                  // 📌 key 정의를 itemBuilder 최상단으로 이동하여 에러 방지
+                                  final key = '${_selectedAccountId}_$stockId';
+                                  final currentData = currentBalanceMap[key];
+
+                                  // 📌 컨트롤러 초기화 시 현재값 없으면 지난달 수량/가격 기본 세팅
+                                  if (!_quantityControllers.containsKey(key)) {
+                                    final currentQty =
+                                        (currentData != null &&
+                                                currentData.quantity > 0)
+                                            ? currentData.quantity
+                                            : (prevBalanceMap[key]?.quantity ??
+                                                0.0);
+
+                                    final currentPriceVal =
+                                        (currentData != null &&
+                                                currentData.currentPrice > 0)
+                                            ? currentData.currentPrice
+                                            : (prevBalanceMap[key]
+                                                    ?.currentPrice ??
+                                                0.0);
+
+                                    _quantityControllers[key] =
+                                        TextEditingController(
+                                          text:
+                                              currentQty > 0
+                                                  ? currentQty.toString()
+                                                  : '',
+                                        );
+                                    _priceControllers[key] =
+                                        TextEditingController(
+                                          text:
+                                              currentPriceVal > 0
+                                                  ? currentPriceVal
+                                                      .toCommaString()
+                                                  : '',
+                                        );
+                                    _addPrincipalControllers[key] =
+                                        TextEditingController();
+                                    _addPayoutControllers[key] =
+                                        TextEditingController();
+                                    _addWithdrawalControllers[key] =
+                                        TextEditingController();
+                                  }
+
+                                  final isLoading =
+                                      _isLoadingPriceMap[key] ?? false;
+
+                                  // 실시간 산출 평가액 계산
+                                  final qty =
+                                      double.tryParse(
+                                        _quantityControllers[key]!.text
+                                            .replaceAll(',', '')
+                                            .trim(),
+                                      ) ??
+                                      0.0;
+                                  final price =
+                                      double.tryParse(
+                                        _priceControllers[key]!.text
+                                            .replaceAll(',', '')
+                                            .trim(),
+                                      ) ??
+                                      0.0;
+                                  final calcBalance = qty * price;
+
+                                  return Card(
+                                    elevation: 1.0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      side: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  stockName,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              OutlinedButton.icon(
+                                                onPressed:
+                                                    isLoading
+                                                        ? null
+                                                        : () =>
+                                                            _fetchTossPriceStock(
+                                                              key,
+                                                              stockId,
+                                                              stockItems,
+                                                            ),
+                                                icon:
+                                                    isLoading
+                                                        ? const SizedBox(
+                                                          width: 12,
+                                                          height: 12,
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                              ),
+                                                        )
+                                                        : const Icon(
+                                                          Icons.cloud_download,
+                                                          size: 14,
+                                                        ),
+                                                label: const Text(
+                                                  '시세조회',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                  ),
+                                                ),
+                                                style: OutlinedButton.styleFrom(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 2,
+                                                      ),
+                                                  minimumSize: Size.zero,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+
+                                          Text(
+                                            '누적원금: ${groupItem.principal.toWon()} | 수령액: ${groupItem.totalPayout.toWon()} | 인출금: ${groupItem.totalWithdrawal.toWon()}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                          const Divider(height: 16),
+
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: TextFormField(
+                                                  controller:
+                                                      _quantityControllers[key],
+                                                  keyboardType:
+                                                      const TextInputType.numberWithOptions(
+                                                        decimal: true,
+                                                      ),
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '보유 수량',
+                                                        suffixText: '주',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
+                                                  onChanged:
+                                                      (_) => setState(() {}),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+
+                                              Expanded(
+                                                flex: 2,
+                                                child: TextFormField(
+                                                  controller:
+                                                      _priceControllers[key],
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
+                                                    ThousandsSeparatorInputFormatter(),
+                                                  ],
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '주당 현재가',
+                                                        suffixText: '원',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
+                                                  onChanged:
+                                                      (_) => setState(() {}),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+
+                                          Text(
+                                            '산출 평가액: ${calcBalance.toWon()}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.indigo.shade700,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: TextFormField(
+                                                  controller:
+                                                      _addPrincipalControllers[key],
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
+                                                    ThousandsSeparatorInputFormatter(),
+                                                  ],
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '추가 매수액',
+                                                        hintText: '0',
+                                                        suffixText: '원',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: TextFormField(
+                                                  controller:
+                                                      _addPayoutControllers[key],
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
+                                                    ThousandsSeparatorInputFormatter(),
+                                                  ],
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '배당금',
+                                                        hintText: '0',
+                                                        suffixText: '원',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: TextFormField(
+                                                  controller:
+                                                      _addWithdrawalControllers[key],
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
+                                                    ThousandsSeparatorInputFormatter(),
+                                                  ],
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '인출액',
+                                                        hintText: '0',
+                                                        suffixText: '원',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           );
                         },
                       ),
@@ -677,26 +720,6 @@ class _MonthlyStockBalanceDialogState
                 },
               ),
               const SizedBox(height: 24),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      // 현재 화면에 로드된 groupedItems와 stockItems를 전달
-                      // _fetchAllPrices(groupedItems, stockItems);
-                    },
-                    icon: const Icon(Icons.flash_on, size: 16),
-                    label: const Text('전체 종목 시세 일괄 조회'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo.shade50,
-                      foregroundColor: Colors.indigo.shade700,
-                      elevation: 0,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
 
               SizedBox(
                 width: double.infinity,

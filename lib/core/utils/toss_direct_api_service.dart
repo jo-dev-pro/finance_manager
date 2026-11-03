@@ -43,8 +43,7 @@ class TossDirectApiService {
     }
   }
 
-  /// 특정 종목 코드와 연월('yyyy-MM')을 받아 해당 월의 말일 종가를 가져옵니다.
- /// 특정 종목 코드와 연월('yyyy-MM')을 받아 해당 월의 말일 종가를 가져옵니다.
+  /// 특정 종목 코드와 연월('yyyy-MM')을 받아 해당 월의 말일 종가를 가져옵니다. 
   static Future<double?> getMonthlyClosePrice(String stockCode, String yearMonth) async {
     try {
       final token = await _getAccessToken();

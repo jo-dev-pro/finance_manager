@@ -284,7 +284,7 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                           };
 
                           return ListView.separated(
-                            shrinkWrap: true,
+                           shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: groupedItems.length,
                             separatorBuilder: (_, __) =>
@@ -300,12 +300,16 @@ class _MonthlyPensionDialogState extends ConsumerState<MonthlyPensionDialog> {
                               final key = '${_selectedAccountId}_$prodId';
                               final currentData = currentBalanceMap[key];
 
+                              // 📌 컨트롤러 초기화 구간: 현재 데이터가 없으면 이전 달 잔액을 기본값으로 세팅
                               if (!_balanceControllers.containsKey(key)) {
+                                final defaultBal = (currentData != null && currentData.balance > 0)
+                                    ? currentData.balance
+                                    : (prevBalanceMap[key]?.balance ?? 0.0);
+
                                 _balanceControllers[key] =
                                     TextEditingController(
-                                  text: (currentData != null &&
-                                          currentData.balance > 0)
-                                      ? currentData.balance.toCommaString()
+                                  text: defaultBal > 0
+                                      ? defaultBal.toCommaString()
                                       : '',
                                 );
                                 _addPrincipalControllers[key] =

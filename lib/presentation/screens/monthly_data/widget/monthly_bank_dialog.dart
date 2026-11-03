@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart'; // 👈 intl 추가
 
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../models/monthly_data/monthly_bank_balance.dart';
@@ -39,10 +40,33 @@ class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
     super.dispose();
   }
 
+  // 📌 이전 달 연월 구하기 메서드 추가
+  String _getPreviousYearMonth(String ym) {
+    try {
+      final parts = ym.split('-');
+      int year = int.parse(parts[0]);
+      int month = int.parse(parts[1]);
+      DateTime lastMonthDate = DateTime(year, month - 1, 1);
+      return DateFormat('yyyy-MM').format(lastMonthDate);
+    } catch (_) {
+      return ym;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    
+    // 📌 현재 및 이전 달 잔액 프로바이더 감시
+    final existingCurrentBalancesAsync = ref.watch(
+      monthlyBankBalanceNotifierProvider(_selectedYearMonth),
+    );
+    final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
+    final existingPrevBalancesAsync = ref.watch(
+      monthlyBankBalanceNotifierProvider(prevYearMonth),
+    );
+
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
@@ -83,7 +107,9 @@ class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
                   isDense: true,
                 ),
                 onChanged: (val) {
-                  _selectedYearMonth = val.trim();
+                  setState(() {
+                    _selectedYearMonth = val.trim();
+                  });
                 },
                 validator: (val) {
                   if (val == null || val.isEmpty) {
@@ -123,6 +149,16 @@ class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
                   }
 
                   final accountNames = accountNamesAsync.value ?? [];
+                  final currentBalances = existingCurrentBalancesAsync.value ?? [];
+                  final prevBalances = existingPrevBalancesAsync.value ?? [];
+
+                  // 📌 계좌별 잔액 맵 생성
+                  final currentBalanceMap = {
+                    for (var b in currentBalances) b.accountId: b.balance,
+                  };
+                  final prevBalanceMap = {
+                    for (var b in prevBalances) b.accountId: b.balance,
+                  };
 
                   return ListView.separated(
                     shrinkWrap: true,
@@ -140,8 +176,12 @@ class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
 
                       final displayName = matchedName?.accountName ?? '계좌';
 
+                      // 📌 컨트롤러 초기화 시 현재값 또는 지난달값 기본 세팅
                       if (!_controllers.containsKey(accId)) {
-                        _controllers[accId] = TextEditingController();
+                        final valToSet = currentBalanceMap[accId] ?? prevBalanceMap[accId] ?? 0.0;
+                        _controllers[accId] = TextEditingController(
+                          text: valToSet > 0 ? valToSet.toCommaString() : '',
+                        );
                       }
 
                       final accNumberDisplay = (acc.accountNumber != null &&

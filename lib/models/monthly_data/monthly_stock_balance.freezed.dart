@@ -41,7 +41,7 @@ mixin _$MonthlyStockBalance {
   @JsonKey(name: 'total_payout')
   double get totalPayout => throw _privateConstructorUsedError; // 누적 배당금 등 수령액
   @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal => throw _privateConstructorUsedError; // 누적 인출액
+  double get totalWithdrawal => throw _privateConstructorUsedError; // 누적 인출액(계좌인출)
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate => throw _privateConstructorUsedError;
 
@@ -371,7 +371,7 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
   @override
   @JsonKey(name: 'total_withdrawal')
   final double totalWithdrawal;
-  // 누적 인출액
+  // 누적 인출액(계좌인출)
   @override
   @JsonKey(name: 'purchase_date')
   final String? purchaseDate;
@@ -500,7 +500,7 @@ abstract class _MonthlyStockBalance extends MonthlyStockBalance {
   double get totalPayout; // 누적 배당금 등 수령액
   @override
   @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal; // 누적 인출액
+  double get totalWithdrawal; // 누적 인출액(계좌인출)
   @override
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate;

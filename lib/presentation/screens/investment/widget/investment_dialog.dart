@@ -23,7 +23,8 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
   late TextEditingController _amountController;
   late TextEditingController _dateController;
 
-  DateTime _selectedDate = DateTime.now();
+  // 날짜를 String('yyyy-MM-dd') 형태로 관리
+  late String _selectedDateStr;
 
   bool get _isEditing => widget.initialData != null;
 
@@ -42,12 +43,14 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
 
     _amountController = TextEditingController(text: initialAmountText);
 
-    if (widget.initialData?.createdAt != null) {
-      _selectedDate = widget.initialData!.createdAt!;
+    // 초기 날짜 설정 (데이터가 있으면 해당 값, 없으면 오늘 날짜 'yyyy-MM-dd')
+    if (widget.initialData?.createdAt != null && widget.initialData!.createdAt!.isNotEmpty) {
+      _selectedDateStr = widget.initialData!.createdAt!;
+    } else {
+      _selectedDateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
     }
-    _dateController = TextEditingController(
-      text: DateHelper.formatToDate(_selectedDate),
-    );
+
+    _dateController = TextEditingController(text: _selectedDateStr);
   }
 
   @override
@@ -59,14 +62,17 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
   }
 
   Future<void> _pickDate() async {
+    // 기존 선택된 String을 DateTime으로 변환하여 피커에 전달
+    DateTime initialDateTime = DateTime.tryParse(_selectedDateStr) ?? DateTime.now();
+
     final picked = await DateHelper.pickDate(
       context,
-      initialDate: _selectedDate,
+      initialDate: initialDateTime,
     );
     if (picked != null) {
       setState(() {
-        _selectedDate = picked;
-        _dateController.text = DateHelper.formatToDate(picked);
+        _selectedDateStr = DateFormat('yyyy-MM-dd').format(picked);
+        _dateController.text = _selectedDateStr;
       });
     }
   }
@@ -83,7 +89,7 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
         id: widget.initialData?.id,
         description: description,
         amount: amount,
-        createdAt: widget.initialData?.createdAt,
+        createdAt: _selectedDateStr, // 수정된 String 날짜 전달
       );
 
       final notifier = ref.read(investmentNotifierProvider.notifier);
@@ -105,7 +111,6 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // 키보드가 올라올 때 화면이 밀리거나 가려지는 것을 방지하기 위해 viewInsets 활용
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
@@ -118,7 +123,6 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 상단 타이틀 및 닫기 버튼
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -198,7 +202,6 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
               ),
               const SizedBox(height: 24),
 
-              // 하단 버튼 영역 (좌우 꽉 찬 버튼)
               SizedBox(
                 width: double.infinity,
                 height: 50,

@@ -25,8 +25,7 @@ mixin _$Investment {
   String get description => throw _privateConstructorUsedError;
   double get amount => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt => throw _privateConstructorUsedError;
+  String? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this Investment to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -49,7 +48,7 @@ abstract class $InvestmentCopyWith<$Res> {
     String? id,
     String description,
     double amount,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
+    @JsonKey(name: 'created_at') String? createdAt,
   });
 }
 
@@ -94,7 +93,7 @@ class _$InvestmentCopyWithImpl<$Res, $Val extends Investment>
                 freezed == createdAt
                     ? _value.createdAt
                     : createdAt // ignore: cast_nullable_to_non_nullable
-                        as DateTime?,
+                        as String?,
           )
           as $Val,
     );
@@ -114,7 +113,7 @@ abstract class _$$InvestmentImplCopyWith<$Res>
     String? id,
     String description,
     double amount,
-    @JsonKey(name: 'created_at') @TimestampConverter() DateTime? createdAt,
+    @JsonKey(name: 'created_at') String? createdAt,
   });
 }
 
@@ -158,7 +157,7 @@ class __$$InvestmentImplCopyWithImpl<$Res>
             freezed == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
-                    as DateTime?,
+                    as String?,
       ),
     );
   }
@@ -171,7 +170,7 @@ class _$InvestmentImpl implements _Investment {
     this.id,
     required this.description,
     this.amount = 0,
-    @JsonKey(name: 'created_at') @TimestampConverter() this.createdAt,
+    @JsonKey(name: 'created_at') this.createdAt,
   });
 
   factory _$InvestmentImpl.fromJson(Map<String, dynamic> json) =>
@@ -186,8 +185,7 @@ class _$InvestmentImpl implements _Investment {
   final double amount;
   @override
   @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  final DateTime? createdAt;
+  final String? createdAt;
 
   @override
   String toString() {
@@ -231,9 +229,7 @@ abstract class _Investment implements Investment {
     final String? id,
     required final String description,
     final double amount,
-    @JsonKey(name: 'created_at')
-    @TimestampConverter()
-    final DateTime? createdAt,
+    @JsonKey(name: 'created_at') final String? createdAt,
   }) = _$InvestmentImpl;
 
   factory _Investment.fromJson(Map<String, dynamic> json) =
@@ -247,8 +243,7 @@ abstract class _Investment implements Investment {
   double get amount;
   @override
   @JsonKey(name: 'created_at')
-  @TimestampConverter()
-  DateTime? get createdAt;
+  String? get createdAt;
 
   /// Create a copy of Investment
   /// with the given fields replaced by the non-null parameter values.
