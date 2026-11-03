@@ -300,22 +300,6 @@ class BankScreen extends ConsumerWidget {
                                                   items[index],
                                                 ),
                                       ),
-                                    // else
-                                    //   ListView.builder(
-                                    //     shrinkWrap: true,
-                                    //     physics:
-                                    //         const NeverScrollableScrollPhysics(),
-                                    //     itemCount: items.length,
-                                    //     itemBuilder:
-                                    //         (context, index) => Padding(
-                                    //           padding: const EdgeInsets.only(
-                                    //             bottom: 10,
-                                    //           ),
-                                    //           child: _buildBankTile(
-                                    //             items[index],
-                                    //           ),
-                                    //         ),
-                                    //   ),
                                   ],
                                 ),
                               ),
@@ -431,7 +415,7 @@ class BankScreen extends ConsumerWidget {
                     item.productName,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                        fontSize: 15,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

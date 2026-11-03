@@ -407,7 +407,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 26,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.bold, 
               height: 1.2,
             ),
           ),
