@@ -2,24 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:collection/collection.dart';
 
 import '../../../core/utils/number_formatter.dart';
 import '../../../models/monthly_data/monthly_stock_balance.dart';
+import '../../../models/monthly_data/monthly_stock_account_balance.dart';
 import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_stock_balance_provider.dart';
+import '../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
 import '../../../providers/stock/stock_item_provider.dart';
-import 'widget/monthly_stock_dialog.dart';
+import 'widget/monthly_stock_balance_dialog.dart';
 
 class MonthlyStockBalanceScreen extends ConsumerWidget {
   final String? initialYearMonth;
 
   const MonthlyStockBalanceScreen({super.key, this.initialYearMonth});
 
+  String _getPreviousYearMonth(String ym) {
+    try {
+      final parts = ym.split('-');
+      int year = int.parse(parts[0]);
+      int month = int.parse(parts[1]);
+      DateTime lastMonthDate = DateTime(year, month - 1, 1);
+      return DateFormat('yyyy-MM').format(lastMonthDate);
+    } catch (_) {
+      return ym;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 💡 연금 화면과 동일하게 전역 selectedYearMonthProvider 연동
     final selectedMonth = ref.watch(selectedYearMonthProvider);
     final targetMonth =
         selectedMonth ??
@@ -28,6 +42,9 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
 
     final balancesAsync = ref.watch(
       monthlyStockBalanceNotifierProvider(targetMonth),
+    );
+    final accountBalancesAsync = ref.watch(
+      monthlyStockAccountBalanceNotifierProvider(targetMonth),
     );
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
@@ -39,32 +56,41 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('데이터를 불러오지 못했습니다: $err')),
         data: (items) {
-          if (items.isEmpty) {
-            return Center(child: Text('$targetMonth에 등록된 주식 월말 데이터가 없습니다.'));
-          }
-
           final accounts = accountsAsync.value ?? [];
           final accountNames = accountNamesAsync.value ?? [];
           final stockItems = stockItemsAsync.value ?? [];
+          final accountBalances = accountBalancesAsync.value ?? [];
 
           final accountMap = {for (var a in accounts) a.id!: a};
           final accountNameMap = {for (var an in accountNames) an.id: an};
           final stockItemMap = {for (var s in stockItems) s.id!: s};
+          final accountBalanceMap = {for (var ab in accountBalances) ab.accountId: ab};
 
-          // 총 합계 계산
-          double totalBalance = 0;
+          // 총 합계 계산 (종목 평가액, 원금 + 계좌 현금성 잔액 포함 가능)
+          double totalStockBalance = 0;
           double totalPrincipal = 0;
+          double totalCashBalance = 0;
+
           for (var b in items) {
-            totalBalance += b.balance;
+            totalStockBalance += b.balance;
             totalPrincipal += b.principal;
           }
-          final totalProfit = totalBalance - totalPrincipal;
+          for (var ab in accountBalances) {
+            totalCashBalance += ab.cashBalance;
+          }
+
+          final grandTotalBalance = totalStockBalance + totalCashBalance;
+          final totalProfit = grandTotalBalance - totalPrincipal;
+
+          // 활성화된 증권 계좌 목록 추출
+          final stockAccounts = accounts
+              .where((a) => a.accountType.trim() == '증권' && a.status == '활동')
+              .toList();
 
           return RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(
-                monthlyStockBalanceNotifierProvider(targetMonth),
-              );
+              ref.invalidate(monthlyStockBalanceNotifierProvider(targetMonth));
+              ref.invalidate(monthlyStockAccountBalanceNotifierProvider(targetMonth));
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -72,7 +98,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 💡 상단 요약 바 카드
+                  // 💡 상단 전체 요약 카드
                   Card(
                     elevation: 0,
                     color: Colors.indigo.shade50,
@@ -85,10 +111,8 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildSummaryItem(
-                              '총 평가액', totalBalance.toWon()),
-                          _buildSummaryItem(
-                              '투자 원금', totalPrincipal.toWon()),
+                          _buildSummaryItem('총 자산 (주식+현금)', grandTotalBalance.toWon()),
+                          _buildSummaryItem('투자 원금', totalPrincipal.toWon()),
                           _buildSummaryItem(
                             '평가 손익',
                             '${totalProfit >= 0 ? '+' : ''}${totalProfit.toWon()}',
@@ -98,151 +122,193 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
-                  // 💡 월말 내역 리스트 (카드 형태 구조 통일)
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      final account = accountMap[item.accountId];
-                      final accountName = account != null
-                          ? accountNameMap[account.accountNameId]
-                          : null;
-                      final stock = stockItemMap[item.stockItemId];
+                  // 💡 [계좌별 요약 섹션] 월말 주식 계좌 DB 내용 표시
+                  const Text(
+                    '계좌별 현금 및 자금 요약',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  if (stockAccounts.isEmpty)
+                    const Text('등록된 증권 계좌가 없습니다.', style: TextStyle(color: Colors.grey))
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: stockAccounts.length,
+                      itemBuilder: (context, index) {
+                        final acc = stockAccounts[index];
+                        final accId = acc.id ?? '';
+                        final nameObj = accountNameMap[acc.accountNameId];
+                        final accName = nameObj?.accountName ?? '계좌';
+                        final institution = acc.financialInstitution;
 
-                      final institution = account?.financialInstitution ?? '기타 증권사';
-                      final accName = accountName?.accountName ?? '주식계좌';
-                      
-                      final stockName = stock?.itemName ?? '알 수 없는 종목';
-                      final stockCode = stock?.stockCode ?? '';
+                        final accBalanceData = accountBalanceMap[accId];
+                        final cash = accBalanceData?.cashBalance ?? 0.0;
+                        final monthlyWith = accBalanceData?.monthlyWithdrawal ?? 0.0;
+                        final totalWith = accBalanceData?.totalWithdrawal ?? 0.0;
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Card(
-                          elevation: 1.5,
+                        return Card(
+                          elevation: 1.0,
+                          margin: const EdgeInsets.only(bottom: 10),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(color: Colors.grey.shade300),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(12),
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                // 1. 좌측 정보 영역 (종목명 1줄 고정 + 오버플로우 방지)
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        stockName,
+                                        '$institution - $accName',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '현금성 잔액: ${cash.toWon()} | 당월 인출: ${monthlyWith.toWon()} (누적: ${totalWith.toWon()})',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit, size: 18, color: Colors.indigo),
+                                  onPressed: () => _showAccountEditBottomSheet(
+                                    context,
+                                    ref,
+                                    accId,
+                                    '$institution $accName',
+                                    targetMonth,
+                                    accBalanceData,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                  const SizedBox(height: 20),
+                  const Text(
+                    '보유 종목별 월말 내역',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // 💡 [종목별 내역 리스트] 월말 주식 종목 DB 내용 표시
+                  if (items.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(child: Text('$targetMonth에 등록된 주식 종목 월말 데이터가 없습니다.')),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        final account = accountMap[item.accountId];
+                        final accountName = account != null
+                            ? accountNameMap[account.accountNameId]
+                            : null;
+                        final stock = stockItemMap[item.stockItemId];
+
+                        final institution = account?.financialInstitution ?? '기타 증권사';
+                        final accName = accountName?.accountName ?? '주식계좌';
+                        final stockName = stock?.itemName ?? '알 수 없는 종목';
+                        final stockCode = stock?.stockCode ?? '';
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Card(
+                            elevation: 1.5,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          stockName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                '[$institution] $accName${stockCode.isNotEmpty ? ' • $stockCode' : ''}',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        item.balance.toWon(),
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 14,
+                                          fontSize: 15,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 6),
-                                      
+                                      const SizedBox(height: 4),
                                       Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Expanded(
-                                            child: Text(
-                                              '[$institution] $accName${stockCode.isNotEmpty ? ' • $stockCode' : ''}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey.shade600,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                                          IconButton(
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            icon: const Icon(Icons.edit, size: 19, color: Colors.grey),
+                                            onPressed: () => _showEditBottomSheet(context, ref, item, stockName),
                                           ),
                                           const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey.shade200,
-                                              borderRadius: BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              item.yearMonth,
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                color: Colors.grey.shade800,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
+                                          IconButton(
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            icon: const Icon(Icons.delete, size: 19, color: Colors.redAccent),
+                                            onPressed: () => _confirmDelete(context, ref, item, stockName),
                                           ),
                                         ],
                                       ),
                                     ],
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-
-                                // 2. 우측 금액 및 수정/삭제 아이콘 영역
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      item.balance.toWon(),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          icon: const Icon(
-                                            Icons.edit,
-                                            size: 19,
-                                            color: Colors.grey,
-                                          ),
-                                          onPressed: () => _showEditBottomSheet(
-                                            context,
-                                            ref,
-                                            item,
-                                            stockName,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        IconButton(
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            size: 19,
-                                            color: Colors.redAccent,
-                                          ),
-                                          onPressed: () => _confirmDelete(
-                                            context,
-                                            ref,
-                                            item,
-                                            stockName,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -262,7 +328,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
             ),
             icon: const Icon(Icons.add),
             label: const Text(
-              '주식 월말 평가액 추가 입력',
+              '주식 월말 평가액 일괄 입력',
               style: TextStyle(fontSize: 16),
             ),
             onPressed: () => _showAddBottomSheet(context, targetMonth),
@@ -289,7 +355,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
     );
   }
 
-  // 💡 바텀시트 호출 함수로 변경
   void _showAddBottomSheet(BuildContext context, String currentMonth) {
     showModalBottomSheet(
       context: context,
@@ -301,7 +366,139 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
     );
   }
 
-  // 💡 개별 주식 항목 단건 수정 바텀시트
+  // 💡 계좌 요약 정보 수정 바텀시트
+  void _showAccountEditBottomSheet(
+    BuildContext context,
+    WidgetRef ref,
+    String accountId,
+    String accountDisplayName,
+    String yearMonth,
+    MonthlyStockAccountBalance? currentAccountBalance,
+  ) {
+    final cashController = TextEditingController(
+      text: (currentAccountBalance != null && currentAccountBalance.cashBalance > 0)
+          ? currentAccountBalance.cashBalance.toCommaString()
+          : '',
+    );
+    final monthlyWithdrawalController = TextEditingController(
+      text: (currentAccountBalance != null && currentAccountBalance.monthlyWithdrawal > 0)
+          ? currentAccountBalance.monthlyWithdrawal.toCommaString()
+          : '',
+    );
+
+    final formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.of(sheetContext).viewInsets.bottom;
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '[$accountDisplayName] ($yearMonth) 계좌 자금 수정',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: cashController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      ThousandsSeparatorInputFormatter(),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: '계좌 현금성 잔액 (예수금)',
+                      suffixText: '원',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: monthlyWithdrawalController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      ThousandsSeparatorInputFormatter(),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: '당월 인출액',
+                      suffixText: '원',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final cashVal = double.tryParse(cashController.text.replaceAll(',', '').trim()) ?? 0.0;
+                        final monthlyWithVal = double.tryParse(monthlyWithdrawalController.text.replaceAll(',', '').trim()) ?? 0.0;
+
+                        final prevYearMonth = _getPreviousYearMonth(yearMonth);
+                        final prevAccountBalances = ref.read(
+                              monthlyStockAccountBalanceNotifierProvider(prevYearMonth),
+                            ).value ?? [];
+                        final prevData = prevAccountBalances.firstWhereOrNull(
+                          (b) => b.accountId == accountId,
+                        );
+                        final prevTotalWith = prevData?.totalWithdrawal ?? 0.0;
+                        final finalTotalWith = prevTotalWith + monthlyWithVal;
+
+                        final updatedAccountBalance = MonthlyStockAccountBalance(
+                          yearMonth: yearMonth,
+                          accountId: accountId,
+                          cashBalance: cashVal,
+                          monthlyWithdrawal: monthlyWithVal,
+                          totalWithdrawal: finalTotalWith,
+                          accountName: currentAccountBalance?.accountName,
+                        );
+
+                        await ref
+                            .read(monthlyStockAccountBalanceNotifierProvider(yearMonth).notifier)
+                            .saveBalance(updatedAccountBalance);
+
+                        if (sheetContext.mounted) Navigator.pop(sheetContext);
+                      },
+                      child: const Text('계좌 정보 저장', style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 💡 개별 주식 종목 수정 바텀시트
   void _showEditBottomSheet(
     BuildContext context,
     WidgetRef ref,
@@ -319,9 +516,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
     );
     final payoutController = TextEditingController(
       text: item.totalPayout > 0 ? item.totalPayout.toCommaString() : '',
-    );
-    final withdrawalController = TextEditingController(
-      text: item.totalWithdrawal > 0 ? item.totalWithdrawal.toCommaString() : '',
     );
 
     final formKey = GlobalKey<FormState>();
@@ -350,10 +544,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           '$stockName (${item.yearMonth}) 수정',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -366,8 +557,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                   ),
                   const Divider(),
                   const SizedBox(height: 12),
-
-                  // 수량 & 현재가
                   Row(
                     children: [
                       Expanded(
@@ -403,8 +592,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // 투자 원금
                   TextFormField(
                     controller: principalController,
                     keyboardType: TextInputType.number,
@@ -420,45 +607,20 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                     validator: (val) => val == null || val.trim().isEmpty ? '원금 입력' : null,
                   ),
                   const SizedBox(height: 16),
-
-                  // 배당금 & 인출액
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: payoutController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            ThousandsSeparatorInputFormatter(),
-                          ],
-                          decoration: const InputDecoration(
-                            labelText: '누적 배당금',
-                            suffixText: '원',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextFormField(
-                          controller: withdrawalController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            ThousandsSeparatorInputFormatter(),
-                          ],
-                          decoration: const InputDecoration(
-                            labelText: '누적 인출액',
-                            suffixText: '원',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
+                  TextFormField(
+                    controller: payoutController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      ThousandsSeparatorInputFormatter(),
                     ],
+                    decoration: const InputDecoration(
+                      labelText: '당월 배당금',
+                      suffixText: '원',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                   const SizedBox(height: 24),
-
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -470,7 +632,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                         final price = double.tryParse(priceController.text.replaceAll(RegExp(r'[^0-9.]'), '').trim()) ?? 0.0;
                         final principal = double.tryParse(principalController.text.replaceAll(RegExp(r'[^0-9]'), '').trim()) ?? 0.0;
                         final payout = double.tryParse(payoutController.text.replaceAll(RegExp(r'[^0-9]'), '').trim()) ?? 0.0;
-                        final withdrawal = double.tryParse(withdrawalController.text.replaceAll(RegExp(r'[^0-9]'), '').trim()) ?? 0.0;
 
                         final updatedItem = item.copyWith(
                           quantity: qty,
@@ -478,20 +639,15 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                           balance: qty * price,
                           principal: principal,
                           totalPayout: payout,
-                          totalWithdrawal: withdrawal,
                         );
 
                         await ref
-                            .read(
-                              monthlyStockBalanceNotifierProvider(
-                                item.yearMonth,
-                              ).notifier,
-                            )
+                            .read(monthlyStockBalanceNotifierProvider(item.yearMonth).notifier)
                             .saveBalance(updatedItem);
 
                         if (sheetContext.mounted) Navigator.pop(sheetContext);
                       },
-                      child: const Text('저장하기', style: TextStyle(fontSize: 16)),
+                      child: const Text('종목 정보 저장', style: TextStyle(fontSize: 16)),
                     ),
                   ),
                 ],
@@ -524,11 +680,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
             onPressed: () async {
               if (item.id != null) {
                 await ref
-                    .read(
-                      monthlyStockBalanceNotifierProvider(
-                        item.yearMonth,
-                      ).notifier,
-                    )
+                    .read(monthlyStockBalanceNotifierProvider(item.yearMonth).notifier)
                     .deleteBalance(item.id!);
               }
               if (dialogContext.mounted) Navigator.pop(dialogContext);

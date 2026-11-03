@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router_path.dart';
+import '../../../core/utils/screen_size.dart';
 import '../../../providers/bank/bank_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../core/utils/number_formatter.dart';
@@ -41,7 +42,7 @@ class BankScreen extends ConsumerWidget {
                 AppRoutePath.monthlyBankBalance,
                 extra: selectedMonth,
               );
-            }, 
+            },
             icon: const Icon(Icons.calendar_month, size: 18),
             label: const Text('월말은행'),
           ),
@@ -96,80 +97,84 @@ class BankScreen extends ConsumerWidget {
             ),
           );
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildMonthSelectorHeader(
-                context,
-                ref,
-                months,
-                activeCurrentMonth,
-              ),
-
-              Expanded(
-                child: bankDataAsync.when(
-                  loading:
-                      () => const Center(child: CircularProgressIndicator()),
-                  error:
-                      (err, stack) => Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '계좌 정보를 불러오지 못했습니다:\n$err',
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              onPressed:
-                                  () => ref.invalidate(bankScreenDataProvider),
-                              child: const Text('다시 시도'),
-                            ),
-                          ],
-                        ),
-                      ),
-                  data: (rawItems) {
-                    final items =
-                        rawItems.where((item) {
-                          final type = item.account.accountType.toUpperCase();
-                          return type == '은행';
-                        }).toList();
-
-                    final double totalCurrentBalance = items.fold(
-                      0,
-                      (sum, i) => sum + i.currentBalance,
-                    );
-                    final double totalDiffFromLastMonth = items.fold(
-                      0,
-                      (sum, i) => sum + i.diffFromLastMonth,
-                    );
-
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isDesktop = constraints.maxWidth >= 900;
-
-                        return RefreshIndicator(
-                          onRefresh: () async {
-                            ref.invalidate(availableYearMonthsProvider);
-                            ref.invalidate(bankScreenDataProvider);
-                          },
-                          child: SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.all(16),
-                            child: Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 1200,
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: desktopWidthSize),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildMonthSelectorHeader(
+                    context,
+                    ref,
+                    months,
+                    activeCurrentMonth,
+                  ),
+          
+                  Expanded(
+                    child: bankDataAsync.when(
+                      loading:
+                          () => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                      error:
+                          (err, stack) => Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '계좌 정보를 불러오지 못했습니다:\n$err',
+                                  textAlign: TextAlign.center,
                                 ),
+                                const SizedBox(height: 12),
+                                ElevatedButton(
+                                  onPressed:
+                                      () => ref.invalidate(
+                                        bankScreenDataProvider,
+                                      ),
+                                  child: const Text('다시 시도'),
+                                ),
+                              ],
+                            ),
+                          ),
+                      data: (rawItems) {
+                        final items =
+                            rawItems.where((item) {
+                              final type =
+                                  item.account.accountType.toUpperCase();
+                              return type == '은행';
+                            }).toList();
+          
+                        final double totalCurrentBalance = items.fold(
+                          0,
+                          (sum, i) => sum + i.currentBalance,
+                        );
+                        final double totalDiffFromLastMonth = items.fold(
+                          0,
+                          (sum, i) => sum + i.diffFromLastMonth,
+                        );
+          
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            return RefreshIndicator(
+                              onRefresh: () async {
+                                ref.invalidate(availableYearMonthsProvider);
+                                ref.invalidate(bankScreenDataProvider);
+                              },
+                              child: SingleChildScrollView(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.all(16),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     Container(
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(20),
                                       decoration: BoxDecoration(
                                         color: Colors.indigo.shade600,
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius:
+                                            BorderRadius.circular(16),
                                         boxShadow: const [
                                           BoxShadow(
                                             color: Colors.black12,
@@ -210,34 +215,44 @@ class BankScreen extends ConsumerWidget {
                                                     ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withValues(alpha: 0.18),
+                                                      .withValues(
+                                                        alpha: 0.18,
+                                                      ),
                                                   borderRadius:
-                                                      BorderRadius.circular(6),
+                                                      BorderRadius.circular(
+                                                        6,
+                                                      ),
                                                 ),
                                                 child: const Text(
                                                   '전월 대비',
                                                   style: TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 12,
-                                                    fontWeight: FontWeight.w500,
+                                                    fontWeight:
+                                                        FontWeight.w500,
                                                   ),
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
                                               totalDiffFromLastMonth
                                                   .toSignedPriceText(
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                    positiveColor: const Color(
-                                                      0xFFFF8A80,
-                                                    ),
-                                                    negativeColor: const Color(
-                                                      0xFF82B1FF,
-                                                    ),
-                                                    zeroColor: Colors.white,
+                                                    style:
+                                                        const TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight
+                                                                  .bold,
+                                                        ),
+                                                    positiveColor:
+                                                        const Color(
+                                                          0xFFFF8A80,
+                                                        ),
+                                                    negativeColor:
+                                                        const Color(
+                                                          0xFF82B1FF,
+                                                        ),
+                                                    zeroColor:
+                                                        Colors.white,
                                                   ),
                                             ],
                                           ),
@@ -245,7 +260,7 @@ class BankScreen extends ConsumerWidget {
                                       ),
                                     ),
                                     const SizedBox(height: 24),
-
+                                          
                                     const Text(
                                       '계좌별 잔액',
                                       style: TextStyle(
@@ -254,17 +269,19 @@ class BankScreen extends ConsumerWidget {
                                       ),
                                     ),
                                     const SizedBox(height: 12),
-
+                                          
                                     if (items.isEmpty)
                                       const Padding(
                                         padding: EdgeInsets.symmetric(
                                           vertical: 32,
                                         ),
                                         child: Center(
-                                          child: Text('등록된 은행 계좌/자산 내역이 없습니다.'),
+                                          child: Text(
+                                            '등록된 은행 계좌/자산 내역이 없습니다.',
+                                          ),
                                         ),
                                       )
-                                    else if (isDesktop)
+                                    else
                                       GridView.builder(
                                         shrinkWrap: true,
                                         physics:
@@ -279,36 +296,38 @@ class BankScreen extends ConsumerWidget {
                                         itemCount: items.length,
                                         itemBuilder:
                                             (context, index) =>
-                                                _buildBankTile(items[index]),
-                                      )
-                                    else
-                                      ListView.builder(
-                                        shrinkWrap: true,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        itemCount: items.length,
-                                        itemBuilder:
-                                            (context, index) => Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 10,
-                                              ),
-                                              child: _buildBankTile(
-                                                items[index],
-                                              ),
-                                            ),
+                                                _buildBankTile(
+                                                  items[index],
+                                                ),
                                       ),
+                                    // else
+                                    //   ListView.builder(
+                                    //     shrinkWrap: true,
+                                    //     physics:
+                                    //         const NeverScrollableScrollPhysics(),
+                                    //     itemCount: items.length,
+                                    //     itemBuilder:
+                                    //         (context, index) => Padding(
+                                    //           padding: const EdgeInsets.only(
+                                    //             bottom: 10,
+                                    //           ),
+                                    //           child: _buildBankTile(
+                                    //             items[index],
+                                    //           ),
+                                    //         ),
+                                    //   ),
                                   ],
                                 ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           );
         },
       ),
@@ -350,7 +369,7 @@ class BankScreen extends ConsumerWidget {
                   months.map((String month) {
                     return DropdownMenuItem<String>(
                       value: month,
-                      child: Text(month), 
+                      child: Text(month),
                     );
                   }).toList(),
               onChanged: (String? newMonth) {
@@ -391,10 +410,13 @@ class BankScreen extends ConsumerWidget {
             CircleAvatar(
               backgroundColor: Colors.white,
               backgroundImage:
-                  account.logoUrl != null ? NetworkImage(account.logoUrl!) : null,
-              child: account.logoUrl == null
-                  ? Icon(Icons.account_balance, color: Colors.blue.shade700)
-                  : null,
+                  account.logoUrl != null
+                      ? NetworkImage(account.logoUrl!)
+                      : null,
+              child:
+                  account.logoUrl == null
+                      ? Icon(Icons.account_balance, color: Colors.blue.shade700)
+                      : null,
             ),
             const SizedBox(width: 12),
 

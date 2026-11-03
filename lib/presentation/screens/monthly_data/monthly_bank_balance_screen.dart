@@ -9,7 +9,7 @@ import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_bank_balance_provider.dart';
-import 'widget/monthly_bank_dialog.dart';
+import 'widget/monthly_bank_balance_dialog.dart';
 
 class MonthlyBankBalanceScreen extends ConsumerWidget {
   final String? initialYearMonth;
@@ -155,8 +155,8 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                                 child: Text(
                                                   balanceItem.yearMonth,
                                                   style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: Colors.grey.shade800,
+                                                    fontSize: 14,
+                                                    color: Colors.grey.shade600,
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
@@ -331,7 +331,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder:
-          (context) => MonthlyBankDialog(yearMonth: currentMonth),
+          (context) => MonthlyBankBalanceDialog(yearMonth: currentMonth),
     );
   }
   

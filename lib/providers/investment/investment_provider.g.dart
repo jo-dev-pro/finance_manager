@@ -7,7 +7,7 @@ part of 'investment_provider.dart';
 // **************************************************************************
 
 String _$investmentNotifierHash() =>
-    r'150e472c8da3784c47c19f94a933e78ec7c461b8';
+    r'e23a174356245b5f14ef53475f57e793b359606a';
 
 /// See also [InvestmentNotifier].
 @ProviderFor(InvestmentNotifier)

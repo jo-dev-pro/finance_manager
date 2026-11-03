@@ -12,16 +12,16 @@ import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../providers/monthly_data/monthly_bank_balance_provider.dart';
 
-class MonthlyBankDialog extends ConsumerStatefulWidget {
+class MonthlyBankBalanceDialog extends ConsumerStatefulWidget {
   final String yearMonth;
 
-  const MonthlyBankDialog({super.key, required this.yearMonth});
+  const MonthlyBankBalanceDialog({super.key, required this.yearMonth});
 
   @override
-  ConsumerState<MonthlyBankDialog> createState() => _MonthlyBankDialogState();
+  ConsumerState<MonthlyBankBalanceDialog> createState() => _MonthlyBankBalanceDialogState();
 }
 
-class _MonthlyBankDialogState extends ConsumerState<MonthlyBankDialog> {
+class _MonthlyBankBalanceDialogState extends ConsumerState<MonthlyBankBalanceDialog> {
   late String _selectedYearMonth;
   final Map<String, TextEditingController> _controllers = {};
   final _formKey = GlobalKey<FormState>();

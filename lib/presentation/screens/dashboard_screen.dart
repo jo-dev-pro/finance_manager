@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/utils/screen_size.dart';
 import '../../providers/dashboard/dashboard_provider.dart';
 import '../../core/utils/number_formatter.dart';
 
@@ -63,7 +64,7 @@ class DashboardScreen extends ConsumerWidget {
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
+                      constraints: BoxConstraints(maxWidth: desktopWidthSize),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

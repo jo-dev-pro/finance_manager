@@ -1,0 +1,1 @@
+final double desktopWidthSize = 1200;

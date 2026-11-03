@@ -517,6 +517,72 @@ class _FirestoreDBMigrateScreenState
     }
   }
 
+  // 월말 연금 -> 월말연금, 월말연금계좌 db 분할에 따른 "현금성자산" 마이그레이션
+  Future<void> _migratePensionCashAssetsToAccountTable(WidgetRef ref) async {
+    final firestore = ref.read(firestoreProvider);
+
+    try {
+      // 1. 기존 종목 테이블에서 '현금성자산' 이나 특정 키워드가 포함된 문서 조회
+      final snapshot =
+          await firestore.collection(monthlyPensionBalanceDBName).get();
+
+      final batch = firestore.batch();
+      int migratedCount = 0;
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final productName = data['product_name']?.toString() ?? '';
+
+        // 기존에 현금성자산으로 처리하던 데이터인 경우
+        if (productName.contains('현금성자산') || productName.contains('예수금')) {
+          final yearMonth = data['year_month'];
+          final accountId = data['account_id'];
+          final balance = (data['balance'] as num?)?.toDouble() ?? 0.0;
+          final totalWithdrawal =
+              (data['total_withdrawal'] as num?)?.toDouble() ?? 0.0;
+          final accountName = data['account_name'];
+
+          // 새로운 계좌 요약 문서 ID 생성 ({yearMonth}_{accountId})
+          final newDocId = '${yearMonth}_$accountId';
+          final newDocRef = firestore
+              .collection(monthlyPensionAccountBalanceDBName)
+              .doc(newDocId);
+
+          // 계좌 요약 테이블에 현금 잔액과 인출액 이관
+          batch.set(newDocRef, {
+            'year_month': yearMonth,
+            'account_id': accountId,
+            'account_name': accountName,
+            'cash_balance': balance,
+            'monthly_withdrawal': 0.0,
+            'total_withdrawal': totalWithdrawal,
+          }, SetOptions(merge: true));
+
+          // 기존 종목 테이블의 해당 가짜 현금성자산 문서는 삭제
+          batch.delete(doc.reference);
+          migratedCount++;
+        }
+      }
+
+      await batch.commit();
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText =
+              '총 $migratedCount개의 연금 현금성 자산 데이터가 계좌 요약 테이블로 마이그레이션 완료';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText = '오류 발생: $e';
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -639,6 +705,28 @@ class _FirestoreDBMigrateScreenState
                         : const Icon(Icons.upload_file),
                 label: Text(
                   _isLoading ? '처리 중...' : '보유상품, 보유종목 계좌명, 상품명, 종목명 db 마이그레이션',
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : () => _migratePensionCashAssetsToAccountTable(ref),
+                icon:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.upload_file),
+                label: Text(
+                  _isLoading ? '처리 중...' : '월말연금 보유상품중 현금성 자산 db 마이그레이션',
                 ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
