@@ -42,7 +42,7 @@ class MonthlyPensionAccountBalanceNotifier
 
     final snapshot =
         await firestore
-            .collection(monthlyPensionAccountBalanceDBName) // collection_name에 추가 필요
+            .collection(monthlyPensionAccountBalanceDBName)
             .where('year_month', isEqualTo: yearMonth)
             .get();
 

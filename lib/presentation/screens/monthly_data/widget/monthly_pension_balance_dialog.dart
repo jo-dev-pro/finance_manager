@@ -7,7 +7,6 @@ import 'package:collection/collection.dart';
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../models/monthly_data/monthly_pension_account_balance.dart';
-import '../../../../models/pension/pension_product.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
@@ -30,19 +29,20 @@ class _MonthlyPensionBalanceDialogState
   late String _selectedYearMonth;
   String? _selectedAccountId;
 
-  // 상품별 직접 평가액 입력 컨트롤러
+  // 상품별 평가액 입력 컨트롤러
   final Map<String, TextEditingController> _balanceControllers = {};
-  // 상품별 좌수 / 기준가 입력 컨트롤러
   final Map<String, TextEditingController> _quantityControllers = {};
   final Map<String, TextEditingController> _basePriceControllers = {};
 
-  // 💡 당월분 입력 컨트롤러들
+  // 상품별 당월분 입력 컨트롤러들
   final Map<String, TextEditingController> _monthlyPrincipalControllers = {};
   final Map<String, TextEditingController> _monthlyPayoutControllers = {};
   final Map<String, TextEditingController> _monthlyWithdrawalControllers = {};
 
-  // 계좌 공통 입력 컨트롤러 (현금성 잔액, 당월 중도 인출금)
+  // 계좌 공통 입력 컨트롤러 (예수금, 당월 납입액, 당월 인출액)
   final TextEditingController _accountCashBalanceController =
+      TextEditingController();
+  final TextEditingController _accountMonthlyPrincipalController =
       TextEditingController();
   final TextEditingController _accountMonthlyWithdrawalController =
       TextEditingController();
@@ -64,6 +64,7 @@ class _MonthlyPensionBalanceDialogState
     for (var c in _monthlyPayoutControllers.values) { c.dispose(); }
     for (var c in _monthlyWithdrawalControllers.values) { c.dispose(); }
     _accountCashBalanceController.dispose();
+    _accountMonthlyPrincipalController.dispose();
     _accountMonthlyWithdrawalController.dispose();
     super.dispose();
   }
@@ -213,6 +214,13 @@ class _MonthlyPensionBalanceDialogState
                     }
                   }
 
+                  if (_accountMonthlyPrincipalController.text.isEmpty &&
+                      currentAccData != null &&
+                      currentAccData.monthlyPrincipal > 0) {
+                    _accountMonthlyPrincipalController.text =
+                        currentAccData.monthlyPrincipal.toCommaString();
+                  }
+
                   if (_accountMonthlyWithdrawalController.text.isEmpty &&
                       currentAccData != null &&
                       currentAccData.monthlyWithdrawal > 0) {
@@ -248,13 +256,14 @@ class _MonthlyPensionBalanceDialogState
                           setState(() {
                             _selectedAccountId = val;
                             _accountCashBalanceController.clear();
+                            _accountMonthlyPrincipalController.clear();
                             _accountMonthlyWithdrawalController.clear();
                           });
                         },
                       ),
                       const SizedBox(height: 16),
 
-                      // 계좌 공통 현금성 자산 카드
+                      // 상단 계좌 공통 정보 카드 (예수금, 당월 납입액, 당월 인출액)
                       Card(
                         color: Colors.teal.shade50,
                         shape: RoundedRectangleBorder(
@@ -275,7 +284,7 @@ class _MonthlyPensionBalanceDialogState
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    '계좌 공통 현금성 자산 및 인출 관리',
+                                    '계좌 공통 현금성 자산 및 납입/인출 관리',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
@@ -310,6 +319,31 @@ class _MonthlyPensionBalanceDialogState
                                   Expanded(
                                     child: TextFormField(
                                       controller:
+                                          _accountMonthlyPrincipalController,
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                        ThousandsSeparatorInputFormatter(),
+                                      ],
+                                      decoration: const InputDecoration(
+                                        labelText: '계좌 당월 납입액',
+                                        hintText: '0',
+                                        suffixText: '원',
+                                        border: OutlineInputBorder(),
+                                        isDense: true,
+                                        fillColor: Colors.white,
+                                        filled: true,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller:
                                           _accountMonthlyWithdrawalController,
                                       keyboardType: TextInputType.number,
                                       inputFormatters: [
@@ -335,6 +369,15 @@ class _MonthlyPensionBalanceDialogState
                       ),
                       const SizedBox(height: 16),
 
+                      const Text(
+                        '보유 상품별 상세 입력',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
                       holdingProductsAsync.when(
                         loading:
                             () => const Center(
@@ -353,7 +396,6 @@ class _MonthlyPensionBalanceDialogState
                           final prevBalances =
                               existingPrevBalancesAsync.value ?? [];
 
-                          // 💡 currentBalanceMap 정의 추가
                           final currentBalanceMap = {
                             for (var b in currentBalances)
                               '${b.accountId}_${b.productId}': b,
@@ -474,7 +516,6 @@ class _MonthlyPensionBalanceDialogState
                                           0) >
                                       0;
 
-                              // 좌수 * 기준가 / 1000 계산
                               final qty =
                                   double.tryParse(
                                     _quantityControllers[key]?.text
@@ -494,7 +535,6 @@ class _MonthlyPensionBalanceDialogState
                               final calculatedBalance =
                                   (qty * basePrice) / 1000.0;
 
-                              // 참고용 이전 누적 원금 표시
                               final prevPrincipal = prevData?.principal ?? 0.0;
 
                               return Card(
@@ -535,8 +575,6 @@ class _MonthlyPensionBalanceDialogState
                                         ],
                                       ),
                                       const Divider(height: 16),
-
-                                      // 평가액 입력 (직접입력 or 좌수*기준가)
                                       Row(
                                         children: [
                                           Expanded(
@@ -582,7 +620,6 @@ class _MonthlyPensionBalanceDialogState
                                           ),
                                         ],
                                       ),
-
                                       if (calculatedBalance > 0) ...[
                                         const SizedBox(height: 4),
                                         Align(
@@ -598,7 +635,6 @@ class _MonthlyPensionBalanceDialogState
                                         ),
                                       ],
                                       const SizedBox(height: 10),
-
                                       Row(
                                         children: [
                                           Expanded(
@@ -653,8 +689,6 @@ class _MonthlyPensionBalanceDialogState
                                         ],
                                       ),
                                       const SizedBox(height: 10),
-
-                                      // 💡 당월 납입액 & 당월 연금 수령액 입력 필드
                                       Row(
                                         children: [
                                           Expanded(
@@ -747,7 +781,7 @@ class _MonthlyPensionBalanceDialogState
       monthlyPensionAccountBalanceNotifierProvider(_selectedYearMonth).notifier,
     );
 
-    // 1. 계좌 요약 테이블 저장
+    // 1. 계좌 요약 테이블 저장 (전월 누적원금 + 당월 납입액 연동)
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
     final prevAccountBalances =
         ref
@@ -758,11 +792,20 @@ class _MonthlyPensionBalanceDialogState
     final prevAccountBalance = prevAccountBalances.firstWhereOrNull(
       (b) => b.accountId == _selectedAccountId,
     );
+    final prevAccountPrincipal = prevAccountBalance?.principal ?? 0.0;
     final prevTotalWithdrawal = prevAccountBalance?.totalWithdrawal ?? 0.0;
 
     final accountCashBalance =
         double.tryParse(
           _accountCashBalanceController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+        ) ??
+        0.0;
+    final currentMonthlyPrincipal =
+        double.tryParse(
+          _accountMonthlyPrincipalController.text.replaceAll(
+            RegExp(r'[^0-9]'),
+            '',
+          ),
         ) ??
         0.0;
     final currentMonthlyWithdrawal =
@@ -773,12 +816,16 @@ class _MonthlyPensionBalanceDialogState
           ),
         ) ??
         0.0;
+
+    final finalAccountPrincipal = prevAccountPrincipal + currentMonthlyPrincipal;
     final finalTotalWithdrawal = prevTotalWithdrawal + currentMonthlyWithdrawal;
 
     final accountBalanceItem = MonthlyPensionAccountBalance(
       yearMonth: _selectedYearMonth,
       accountId: _selectedAccountId!,
       cashBalance: accountCashBalance,
+      principal: finalAccountPrincipal,
+      monthlyPrincipal: currentMonthlyPrincipal,
       monthlyWithdrawal: currentMonthlyWithdrawal,
       totalWithdrawal: finalTotalWithdrawal,
     );
@@ -832,7 +879,6 @@ class _MonthlyPensionBalanceDialogState
             (prevData?.balance ?? 0.0);
       }
 
-      // 당월분 값 파싱
       final monthlyPrinVal =
           double.tryParse(
             monthlyPrinCtrl?.text.replaceAll(',', '').trim() ?? '',
@@ -849,7 +895,6 @@ class _MonthlyPensionBalanceDialogState
           ) ??
           0.0;
 
-      // 💡 누적 값 자동 계산 (전월 누적 + 당월분)
       final prevPrincipal = prevData?.principal ?? 0.0;
       final prevTotalPayout = prevData?.totalPayout ?? 0.0;
       final prevTotalWithdrawalProd = prevData?.totalWithdrawal ?? 0.0;
@@ -869,12 +914,12 @@ class _MonthlyPensionBalanceDialogState
             accountId: _selectedAccountId!,
             productId: prodId,
             balance: finalBalance,
-            principal: finalPrincipal, // 누적 원금 저장
-            monthlyPrincipal: monthlyPrinVal, // 당월 납입액 저장
-            totalPayout: finalTotalPayout, // 누적 수령액 저장
-            monthlyPayout: monthlyPayoutVal, // 당월 수령액 저장
-            totalWithdrawal: finalTotalWithdrawalProd, // 누적 환매액 저장
-            monthlyWithdrawal: monthlyWithdrawalVal, // 당월 환매액 저장
+            principal: finalPrincipal,
+            monthlyPrincipal: monthlyPrinVal,
+            totalPayout: finalTotalPayout,
+            monthlyPayout: monthlyPayoutVal,
+            totalWithdrawal: finalTotalWithdrawalProd,
+            monthlyWithdrawal: monthlyWithdrawalVal,
           ),
         );
       }

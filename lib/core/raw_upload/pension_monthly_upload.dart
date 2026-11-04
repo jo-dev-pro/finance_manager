@@ -7,8 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spreadsheet_decoder/spreadsheet_decoder.dart';
 
 import '../../../../models/monthly_data/monthly_pension_balance.dart';
+import '../../../../models/monthly_data/monthly_pension_account_balance.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
+import '../utils/collection_name.dart';
 
 class PensionMonthlyUploadScreen extends ConsumerStatefulWidget {
   const PensionMonthlyUploadScreen({super.key});
@@ -39,9 +41,101 @@ class _PensionMonthlyUploadScreenState
     return str;
   }
 
-  Future<void> _pickAndUploadExcel() async {
+  // 1. 월말연금잔액 엑셀 업로드 처리
+  Future<void> _pickAndUploadPensionBalance() async {
+    await _processExcelFile(
+      title: '월말연금잔액',
+      targetCollection: monthlyPensionBalanceDBName,
+      rowParser: (row) {
+        // A(0):기준월, B(1):계좌ID, C(2):상품ID, D(3):평가액, E(4):당월납입액, F(5):누적원금, G(6):당월수령액, H(7):누적수령액, I(8):당월인출금, J(9):누적인출금, K(10):매수일
+        if (row.length < 4 || row[0] == null || row[1] == null || row[2] == null) return null;
+
+        final rawYM = row[0]?.toString() ?? '';
+        final accountId = row[1]?.toString().trim() ?? '';
+        final productId = row[2]?.toString().trim() ?? '';
+        if (rawYM.isEmpty || accountId.isEmpty || productId.isEmpty) return null;
+
+        final yearMonth = _formatYearMonth(rawYM);
+        final balance = double.tryParse(row[3]?.toString() ?? '0') ?? 0.0;
+        final monthlyPrincipal = row.length > 4 ? double.tryParse(row[4]?.toString() ?? '0') ?? 0.0 : 0.0;
+        final principal = row.length > 5 ? double.tryParse(row[5]?.toString() ?? '0') ?? 0.0 : 0.0;
+        final monthlyPayout = row.length > 6 ? double.tryParse(row[6]?.toString() ?? '0') ?? 0.0 : 0.0;
+        final totalPayout = row.length > 7 ? double.tryParse(row[7]?.toString() ?? '0') ?? 0.0 : 0.0;
+        final monthlyWithdrawal = row.length > 8 ? double.tryParse(row[8]?.toString() ?? '0') ?? 0.0 : 0.0;
+        final totalWithdrawal = row.length > 9 ? double.tryParse(row[9]?.toString() ?? '0') ?? 0.0 : 0.0;
+        final rawPurchaseDate = row.length > 10 ? row[10]?.toString()?.trim() : null;
+
+        final model = MonthlyPensionBalance(
+          yearMonth: yearMonth,
+          accountId: accountId,
+          productId: productId,
+          balance: balance,
+          monthlyPrincipal: monthlyPrincipal,
+          principal: principal,
+          monthlyPayout: monthlyPayout,
+          totalPayout: totalPayout,
+          monthlyWithdrawal: monthlyWithdrawal,
+          totalWithdrawal: totalWithdrawal,
+          purchaseDate: (rawPurchaseDate != null && rawPurchaseDate.isNotEmpty) ? rawPurchaseDate : null,
+        );
+
+        final docId = '${yearMonth}_${accountId}_${productId}';
+        return MapEntry(docId, model.toJson()..remove('id'));
+      },
+      onSuccessInvalidate: () {
+        ref.invalidate(availableYearMonthsProvider);
+        ref.invalidate(allMonthlyPensionBalancesProvider);
+      },
+    );
+  }
+
+  // 2. 월말연금계좌 엑셀 업로드 처리
+  Future<void> _pickAndUploadAccountBalance() async {
+    await _processExcelFile(
+      title: '월말연금계좌',
+      targetCollection: monthlyPensionAccountBalanceDBName,
+      rowParser: (row) {
+        // A(0):기준월, B(1):계좌ID, C(2):예수금, D(3):당월납입액, E(4):누적원금, F(5):당월인출금, G(6):누적인출금
+        if (row.length < 3 || row[0] == null || row[1] == null) return null;
+
+        final rawYM = row[0]?.toString() ?? '';
+        final accountId = row[1]?.toString().trim() ?? '';
+        if (rawYM.isEmpty || accountId.isEmpty) return null;
+
+        final yearMonth = _formatYearMonth(rawYM);
+        final cashBalance = double.tryParse(row[2]?.toString() ?? '0') ?? 0.0;
+        final monthlyPrincipal = row.length > 3 ? double.tryParse(row[3]?.toString() ?? '0') ?? 0.0 : 0.0;
+        final principal = row.length > 4 ? double.tryParse(row[4]?.toString() ?? '0') ?? 0.0 : 0.0;
+        final monthlyWithdrawal = row.length > 5 ? double.tryParse(row[5]?.toString() ?? '0') ?? 0.0 : 0.0;
+        final totalWithdrawal = row.length > 6 ? double.tryParse(row[6]?.toString() ?? '0') ?? 0.0 : 0.0;
+
+        final model = MonthlyPensionAccountBalance(
+          yearMonth: yearMonth,
+          accountId: accountId,
+          cashBalance: cashBalance,
+          monthlyPrincipal: monthlyPrincipal,
+          principal: principal,
+          monthlyWithdrawal: monthlyWithdrawal,
+          totalWithdrawal: totalWithdrawal,
+        );
+
+        final docId = '${yearMonth}_$accountId';
+        return MapEntry(docId, model.toJson()..remove('id'));
+      },
+      onSuccessInvalidate: () {
+        // 필요한 경우 계좌 관련 Provider 무효화 추가 가능
+      },
+    );
+  }
+
+  // 공통 엑셀 파일 피커 및 파이어스토어 일괄 업로드 로직
+  Future<void> _processExcelFile({
+    required String title,
+    required String targetCollection,
+    required MapEntry<String, Map<String, dynamic>>? Function(List<dynamic> row) rowParser,
+    required VoidCallback onSuccessInvalidate,
+  }) async {
     try {
-      // 1. .xlsx 파일 선택
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx', 'xls'],
@@ -52,7 +146,7 @@ class _PensionMonthlyUploadScreenState
 
       setState(() {
         _isLoading = true;
-        _statusText = '엑셀 파일 읽는 중...';
+        _statusText = '$title 엑셀 파일 읽는 중...';
       });
 
       List<int>? bytes;
@@ -66,8 +160,9 @@ class _PensionMonthlyUploadScreenState
 
       if (bytes == null) throw Exception('파일 데이터를 읽지 못했습니다.');
 
-      // 2. SpreadsheetDecoder로 엑셀 파싱
       final decoder = SpreadsheetDecoder.decodeBytes(bytes, update: false);
+      if (decoder.tables.keys.isEmpty) throw Exception('엑셀 시트가 존재하지 않습니다.');
+
       final sheetName = decoder.tables.keys.first;
       final table = decoder.tables[sheetName];
 
@@ -76,55 +171,24 @@ class _PensionMonthlyUploadScreenState
       }
 
       setState(() {
-        _statusText = '파이어베이스 저장 중...';
+        _statusText = '파이어베이스에 $title 저장 중...';
       });
 
       final firestore = FirebaseFirestore.instance;
-      final collectionRef = firestore.collection('monthly_pension_balance');
+      final collectionRef = firestore.collection(targetCollection);
 
       WriteBatch batch = firestore.batch();
       int count = 0;
 
       for (int i = 1; i < table.maxRows; i++) {
         final row = table.rows[i];
-        // 💡 엑셀 열 구성: 0(기준월), 1(계좌ID), 2(상품ID), 3(평가액), 4(원금), 5(수령액), 6(인출금), [선택: 7(최초매수일)]
-        if (row.length < 4 || row[0] == null || row[1] == null || row[2] == null) continue;
+        if (row.isEmpty) continue;
 
-        final rawYM = row[0]?.toString() ?? '';
-        final accountId = row[1]?.toString().trim() ?? '';
-        final productId = row[2]?.toString().trim() ?? '';
-        
-        final rawBalance = row.length > 3 ? row[3]?.toString() ?? '0' : '0';
-        final rawPrincipal = row.length > 4 ? row[4]?.toString() ?? '0' : '0';
-        final rawPayout = row.length > 5 ? row[5]?.toString() ?? '0' : '0';
-        final rawWithdrawal = row.length > 6 ? row[6]?.toString() ?? '0' : '0';
-        final rawPurchaseDate = row.length > 7 ? row[7]?.toString()?.trim() : null;
+        final parsed = rowParser(row);
+        if (parsed == null) continue;
 
-        if (rawYM.isEmpty || accountId.isEmpty || productId.isEmpty) continue;
-
-        final yearMonth = _formatYearMonth(rawYM);
-        final balance = double.tryParse(rawBalance) ?? 0.0;
-        final principal = double.tryParse(rawPrincipal) ?? 0.0;
-        final totalPayout = double.tryParse(rawPayout) ?? 0.0;
-        final totalWithdrawal = double.tryParse(rawWithdrawal) ?? 0.0;
-
-        final model = MonthlyPensionBalance(
-          yearMonth: yearMonth,
-          accountId: accountId,
-          productId: productId,
-          balance: balance,
-          principal: principal,
-          totalPayout: totalPayout,
-          totalWithdrawal: totalWithdrawal,
-          purchaseDate: (rawPurchaseDate != null && rawPurchaseDate.isNotEmpty) ? rawPurchaseDate : null,
-        );
-
-        // 💡 기준월_계좌ID_상품ID 조합으로 문서 ID를 고정하여 덮어쓰기 (중복 방지)
-        final docId = '${yearMonth}_${accountId}_${productId}';
-        final docRef = collectionRef.doc(docId);
-
-        final docData = model.toJson()..remove('id');
-        batch.set(docRef, docData, SetOptions(merge: true));
+        final docRef = collectionRef.doc(parsed.key);
+        batch.set(docRef, parsed.value, SetOptions(merge: true));
         count++;
 
         if (count % 400 == 0) {
@@ -134,22 +198,19 @@ class _PensionMonthlyUploadScreenState
       }
 
       await batch.commit();
-
-      // 3. 저장 완료 후 Riverpod 캐시 무효화 (UI 즉시 반영)
-      ref.invalidate(availableYearMonthsProvider);
-      ref.invalidate(allMonthlyPensionBalancesProvider);
+      onSuccessInvalidate();
 
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _statusText = '성공! 총 $count건 업로드되었습니다.';
+          _statusText = '성공! [$title] 총 $count건 업로드되었습니다.';
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _statusText = '오류 발생: $e';
+          _statusText = '오류 발생 ($title): $e';
         });
       }
     }
@@ -159,7 +220,7 @@ class _PensionMonthlyUploadScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('연금 월말자료 업로드'),
+        title: const Text('연금 월말 자료 일괄 업로드'),
       ),
       body: Center(
         child: Padding(
@@ -170,42 +231,58 @@ class _PensionMonthlyUploadScreenState
               const Icon(
                 Icons.table_chart_outlined,
                 size: 64,
-                color: Colors.indigo,
+                color: Colors.teal,
               ),
               const SizedBox(height: 24),
               const Text(
-                '엑셀 파일 양식 안내\n[A열: 기준월, B열: 계좌ID, C열: 상품ID(또는 현금성키),\nD열: 평가액, E열: 누적원금, F열: 누적수령액, G열: 인출금, H열: 매수일(선택)]',
+                '연금 월말 엑셀 파일 업로드 안내\n'
+                '• 문서 ID 규칙: YYYY-MM_계좌ID (또는 _상품ID)\n'
+                '• 덮어쓰기(Merge) 방식으로 안전하게 반영됩니다.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.4),
+                style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.5),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _isLoading ? null : _pickAndUploadExcel,
-                icon: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.upload_file),
-                label: Text(_isLoading ? '처리 중...' : '연금 월말 엑셀(.xlsx) 파일 선택'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
+              const SizedBox(height: 32),
+              SizedBox(
+                width: 280,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _pickAndUploadAccountBalance,
+                  icon: const Icon(Icons.account_balance_wallet),
+                  label: const Text('1. 월말연금계좌 엑셀 업로드'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.teal.shade700,
+                    foregroundColor: Colors.white,
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: 280,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _pickAndUploadPensionBalance,
+                  icon: const Icon(Icons.savings),
+                  label: const Text('2. 월말연금잔액 엑셀 업로드'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.indigo.shade600,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              if (_isLoading) ...[
+                const SizedBox(height: 24),
+                const CircularProgressIndicator(),
+              ],
               if (_statusText != null) ...[
                 const SizedBox(height: 20),
                 Text(
                   _statusText!,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.bold,
                     color: _statusText!.startsWith('오류')
                         ? Colors.red
-                        : Colors.indigo,
+                        : Colors.teal.shade800,
                   ),
                   textAlign: TextAlign.center,
                 ),

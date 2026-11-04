@@ -32,6 +32,11 @@ mixin _$MonthlyPensionAccountBalance {
   String? get accountName => throw _privateConstructorUsedError; // 콘솔 확인용 계좌명
   @JsonKey(name: 'cash_balance')
   double get cashBalance => throw _privateConstructorUsedError; // 연금 계좌 현금성 잔액 (예수금)
+  // 💡 1. 원금 관련 필드 추가 (당월 납입액 및 누적 원금)
+  @JsonKey(name: 'principal')
+  double get principal => throw _privateConstructorUsedError; // 계좌 누적 원금
+  @JsonKey(name: 'monthly_principal')
+  double get monthlyPrincipal => throw _privateConstructorUsedError; // 계좌 당월 납입액 (추가 납입액)
   @JsonKey(name: 'monthly_withdrawal')
   double get monthlyWithdrawal => throw _privateConstructorUsedError; // 당월 중도 인출금
   @JsonKey(name: 'total_withdrawal')
@@ -64,6 +69,8 @@ abstract class $MonthlyPensionAccountBalanceCopyWith<$Res> {
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'account_name') String? accountName,
     @JsonKey(name: 'cash_balance') double cashBalance,
+    @JsonKey(name: 'principal') double principal,
+    @JsonKey(name: 'monthly_principal') double monthlyPrincipal,
     @JsonKey(name: 'monthly_withdrawal') double monthlyWithdrawal,
     @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
   });
@@ -92,6 +99,8 @@ class _$MonthlyPensionAccountBalanceCopyWithImpl<
     Object? accountId = null,
     Object? accountName = freezed,
     Object? cashBalance = null,
+    Object? principal = null,
+    Object? monthlyPrincipal = null,
     Object? monthlyWithdrawal = null,
     Object? totalWithdrawal = null,
   }) {
@@ -121,6 +130,16 @@ class _$MonthlyPensionAccountBalanceCopyWithImpl<
                 null == cashBalance
                     ? _value.cashBalance
                     : cashBalance // ignore: cast_nullable_to_non_nullable
+                        as double,
+            principal:
+                null == principal
+                    ? _value.principal
+                    : principal // ignore: cast_nullable_to_non_nullable
+                        as double,
+            monthlyPrincipal:
+                null == monthlyPrincipal
+                    ? _value.monthlyPrincipal
+                    : monthlyPrincipal // ignore: cast_nullable_to_non_nullable
                         as double,
             monthlyWithdrawal:
                 null == monthlyWithdrawal
@@ -153,6 +172,8 @@ abstract class _$$MonthlyPensionAccountBalanceImplCopyWith<$Res>
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'account_name') String? accountName,
     @JsonKey(name: 'cash_balance') double cashBalance,
+    @JsonKey(name: 'principal') double principal,
+    @JsonKey(name: 'monthly_principal') double monthlyPrincipal,
     @JsonKey(name: 'monthly_withdrawal') double monthlyWithdrawal,
     @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
   });
@@ -181,6 +202,8 @@ class __$$MonthlyPensionAccountBalanceImplCopyWithImpl<$Res>
     Object? accountId = null,
     Object? accountName = freezed,
     Object? cashBalance = null,
+    Object? principal = null,
+    Object? monthlyPrincipal = null,
     Object? monthlyWithdrawal = null,
     Object? totalWithdrawal = null,
   }) {
@@ -211,6 +234,16 @@ class __$$MonthlyPensionAccountBalanceImplCopyWithImpl<$Res>
                 ? _value.cashBalance
                 : cashBalance // ignore: cast_nullable_to_non_nullable
                     as double,
+        principal:
+            null == principal
+                ? _value.principal
+                : principal // ignore: cast_nullable_to_non_nullable
+                    as double,
+        monthlyPrincipal:
+            null == monthlyPrincipal
+                ? _value.monthlyPrincipal
+                : monthlyPrincipal // ignore: cast_nullable_to_non_nullable
+                    as double,
         monthlyWithdrawal:
             null == monthlyWithdrawal
                 ? _value.monthlyWithdrawal
@@ -235,6 +268,8 @@ class _$MonthlyPensionAccountBalanceImpl extends _MonthlyPensionAccountBalance {
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'account_name') this.accountName,
     @JsonKey(name: 'cash_balance') this.cashBalance = 0.0,
+    @JsonKey(name: 'principal') this.principal = 0.0,
+    @JsonKey(name: 'monthly_principal') this.monthlyPrincipal = 0.0,
     @JsonKey(name: 'monthly_withdrawal') this.monthlyWithdrawal = 0.0,
     @JsonKey(name: 'total_withdrawal') this.totalWithdrawal = 0.0,
   }) : super._();
@@ -259,6 +294,15 @@ class _$MonthlyPensionAccountBalanceImpl extends _MonthlyPensionAccountBalance {
   @JsonKey(name: 'cash_balance')
   final double cashBalance;
   // 연금 계좌 현금성 잔액 (예수금)
+  // 💡 1. 원금 관련 필드 추가 (당월 납입액 및 누적 원금)
+  @override
+  @JsonKey(name: 'principal')
+  final double principal;
+  // 계좌 누적 원금
+  @override
+  @JsonKey(name: 'monthly_principal')
+  final double monthlyPrincipal;
+  // 계좌 당월 납입액 (추가 납입액)
   @override
   @JsonKey(name: 'monthly_withdrawal')
   final double monthlyWithdrawal;
@@ -269,7 +313,7 @@ class _$MonthlyPensionAccountBalanceImpl extends _MonthlyPensionAccountBalance {
 
   @override
   String toString() {
-    return 'MonthlyPensionAccountBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, accountName: $accountName, cashBalance: $cashBalance, monthlyWithdrawal: $monthlyWithdrawal, totalWithdrawal: $totalWithdrawal)';
+    return 'MonthlyPensionAccountBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, accountName: $accountName, cashBalance: $cashBalance, principal: $principal, monthlyPrincipal: $monthlyPrincipal, monthlyWithdrawal: $monthlyWithdrawal, totalWithdrawal: $totalWithdrawal)';
   }
 
   @override
@@ -286,6 +330,10 @@ class _$MonthlyPensionAccountBalanceImpl extends _MonthlyPensionAccountBalance {
                 other.accountName == accountName) &&
             (identical(other.cashBalance, cashBalance) ||
                 other.cashBalance == cashBalance) &&
+            (identical(other.principal, principal) ||
+                other.principal == principal) &&
+            (identical(other.monthlyPrincipal, monthlyPrincipal) ||
+                other.monthlyPrincipal == monthlyPrincipal) &&
             (identical(other.monthlyWithdrawal, monthlyWithdrawal) ||
                 other.monthlyWithdrawal == monthlyWithdrawal) &&
             (identical(other.totalWithdrawal, totalWithdrawal) ||
@@ -301,6 +349,8 @@ class _$MonthlyPensionAccountBalanceImpl extends _MonthlyPensionAccountBalance {
     accountId,
     accountName,
     cashBalance,
+    principal,
+    monthlyPrincipal,
     monthlyWithdrawal,
     totalWithdrawal,
   );
@@ -331,6 +381,8 @@ abstract class _MonthlyPensionAccountBalance
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'account_name') final String? accountName,
     @JsonKey(name: 'cash_balance') final double cashBalance,
+    @JsonKey(name: 'principal') final double principal,
+    @JsonKey(name: 'monthly_principal') final double monthlyPrincipal,
     @JsonKey(name: 'monthly_withdrawal') final double monthlyWithdrawal,
     @JsonKey(name: 'total_withdrawal') final double totalWithdrawal,
   }) = _$MonthlyPensionAccountBalanceImpl;
@@ -353,6 +405,13 @@ abstract class _MonthlyPensionAccountBalance
   @override
   @JsonKey(name: 'cash_balance')
   double get cashBalance; // 연금 계좌 현금성 잔액 (예수금)
+  // 💡 1. 원금 관련 필드 추가 (당월 납입액 및 누적 원금)
+  @override
+  @JsonKey(name: 'principal')
+  double get principal; // 계좌 누적 원금
+  @override
+  @JsonKey(name: 'monthly_principal')
+  double get monthlyPrincipal; // 계좌 당월 납입액 (추가 납입액)
   @override
   @JsonKey(name: 'monthly_withdrawal')
   double get monthlyWithdrawal; // 당월 중도 인출금
