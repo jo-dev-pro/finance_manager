@@ -173,7 +173,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                           const Text(
                             '주식 계좌 목록',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

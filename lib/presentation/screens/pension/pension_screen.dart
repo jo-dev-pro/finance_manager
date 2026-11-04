@@ -105,7 +105,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
             monthlyPensionBalanceNotifierProvider(lastMonth),
           );
 
-          // 당월 및 전월 계좌별 현금성 자산 데이터 (신규 반영)
+          // 당월 및 전월 계좌별 현금성 자산 데이터
           final accountBalancesAsync = ref.watch(
             monthlyPensionAccountBalanceNotifierProvider(activeCurrentMonth),
           );
@@ -144,7 +144,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                               final lastAccountBalances =
                                   lastAccountBalancesAsync.value ?? [];
 
-                              // 1. 순수 상품 평가액 및 원금 합산
                               final productBalanceSum = balances.fold<double>(
                                 0.0,
                                 (sum, item) => sum + item.balance,
@@ -154,19 +153,16 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                 (sum, item) => sum + item.principal,
                               );
 
-                              // 2. 계좌 현금성 자산 합산
                               final accountCashSum = accountBalances
                                   .fold<double>(
                                     0.0,
                                     (sum, item) => sum + item.cashBalance,
                                   );
 
-                              // 총 자산 = 상품 평가액 합계 + 계좌 현금성 잔액 합계
                               final totalBalance =
                                   productBalanceSum + accountCashSum;
                               final totalPrincipal =
-                                  productPrincipalSum +
-                                  accountCashSum; // 현금성 자산은 원금 동일 간주
+                                  productPrincipalSum + accountCashSum;
 
                               final totalProfitOrLoss = balances.fold<double>(
                                 0.0,
@@ -178,7 +174,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                           100
                                       : 0.0;
 
-                              // 전월 총 자산 합산
                               final lastProductSum = lastBalances.fold<double>(
                                 0.0,
                                 (sum, item) => sum + item.balance,
@@ -205,7 +200,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                           const Text(
                             '계좌 목록',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -230,7 +225,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                     .add(item);
                               }
 
-                              // 계좌 요약 데이터가 있는 계좌들도 그룹에 포함
                               for (var accBal in accountBalances) {
                                 accountGroups.putIfAbsent(
                                   accBal.accountId,
@@ -276,7 +270,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                   const Text(
                                     '계좌별 평가 비중',
                                     style: TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -293,7 +287,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                   const Text(
                                     '계좌별 월말 수익률 추이 (%)',
                                     style: TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -407,7 +401,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 26,
-              fontWeight: FontWeight.bold, 
+              fontWeight: FontWeight.bold,
               height: 1.2,
             ),
           ),
@@ -516,7 +510,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         crossAxisCount: MediaQuery.of(context).size.width > 900 ? 2 : 1,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        mainAxisExtent: 140, // 💡 중요: 카드 세로 높이를 140px로 고정하여 세로 공간 축소
+        mainAxisExtent: 120,
       ),
       itemCount: accountIds.length,
       itemBuilder: (context, index) {
@@ -540,7 +534,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         final accountName = matchedAccountName?.accountName ?? accountId;
 
         return _AccountCard(
-          institution: institution,
+          account: matchedAcc,
           accountName: accountName,
           totalBalance: totalAccountBalance,
           itemCount: items.length,
@@ -548,7 +542,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
           onTap: () {
             _showProductDetailBottomSheet(
               context,
-              institution: institution,
+              account: matchedAcc,
               accountName: accountName,
               products: items,
               cashBalance: cashBalance,
@@ -600,8 +594,8 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                     matchedAcc != null
                         ? accountNameMap[matchedAcc.accountNameId]
                         : null;
-                final labelText =
-                    '${matchedAcc?.financialInstitution ?? "기타"} - ${matchedAccountName?.accountName ?? accId}';
+                final accountName = matchedAccountName?.accountName ?? accId;
+                final logoUrl = matchedAcc?.logoUrl;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6.0),
@@ -616,13 +610,43 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
+                      // 💡 평가 비중 목록에도 Row(로고, 계좌명) 적용
                       Expanded(
-                        child: Text(
-                          labelText,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        child: Row(
+                          children: [
+                            if (logoUrl != null && logoUrl.isNotEmpty)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: Image.network(
+                                  logoUrl,
+                                  width: 18,
+                                  height: 18,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (_, __, ___) => const Icon(
+                                        Icons.account_balance,
+                                        size: 16,
+                                        color: Colors.grey,
+                                      ),
+                                ),
+                              )
+                            else
+                              const Icon(
+                                Icons.account_balance,
+                                size: 16,
+                                color: Colors.indigo,
+                              ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                accountName,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       Text(
@@ -761,29 +785,78 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
 
   void _showProductDetailBottomSheet(
     BuildContext context, {
-    required String institution,
+    required Account? account,
     required String accountName,
     required List<MonthlyPensionBalance> products,
     required double cashBalance,
     required Map<String, String> productMap,
   }) {
+    final logoUrl = account?.logoUrl;
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Padding(
+        final screenHeight = MediaQuery.of(context).size.height;
+
+        return Container(
+          height: screenHeight * 0.85,
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '[$institution] $accountName 보유 자산 상세',
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
+              // 💡 바텀시트 상단 타이틀 영역에도 Row(로고, 계좌명) 적용
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        if (logoUrl != null && logoUrl.isNotEmpty)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.network(
+                              logoUrl,
+                              width: 24,
+                              height: 24,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => const Icon(
+                                    Icons.account_balance,
+                                    size: 22,
+                                    color: Colors.grey,
+                                  ),
+                            ),
+                          )
+                        else
+                          const Icon(
+                            Icons.account_balance,
+                            size: 22,
+                            color: Colors.indigo,
+                          ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '$accountName 보유 자산 상세',
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
               const Divider(height: 24),
               Expanded(
@@ -797,7 +870,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                           child: Icon(Icons.attach_money, color: Colors.teal),
                         ),
                         title: const Text(
-                          '💵 계좌 현금성 자산 (예수금)',
+                          '현금성 자산',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -814,11 +887,11 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                     ...products.map((item) {
                       final productName =
                           item.productId == kCashAssetProductId
-                              ? '💵 계좌 공통 현금성 자산 (예수금)'
+                              ? '계좌 공통 현금성 자산 (예수금)'
                               : (productMap[item.productId] ?? '연금 상품');
 
                       return ListTile(
-                        contentPadding: EdgeInsets.zero,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
                         title: Text(
                           productName,
                           style: const TextStyle(
@@ -827,7 +900,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          '평가액: ${item.balance.toWon()} | 원금: ${item.principal.toWon()}\n수익률: ${item.returnRate.toStringAsFixed(1)}% (연환산: ${item.annualizedReturnRate.toStringAsFixed(1)}%)',
+                          '평가액: ${item.balance.toWon()}   |   원금: ${item.principal.toWon()}\n수익률: ${item.returnRate.toStringAsFixed(1)}%   (연환산: ${item.annualizedReturnRate.toStringAsFixed(1)}%)',
                           style: const TextStyle(fontSize: 13, height: 1.4),
                         ),
                       );
@@ -843,9 +916,9 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
   }
 }
 
-// 💡 컴팩트하고 폰트가 시원한 계좌 카드 위젯
+// 💡 로고와 계좌명이 Row(로고, 계좌명) 형태로 표현되는 계좌 카드 위젯
 class _AccountCard extends StatelessWidget {
-  final String institution;
+  final Account? account;
   final String accountName;
   final double totalBalance;
   final int itemCount;
@@ -853,7 +926,7 @@ class _AccountCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _AccountCard({
-    required this.institution,
+    required this.account,
     required this.accountName,
     required this.totalBalance,
     required this.itemCount,
@@ -863,6 +936,8 @@ class _AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final logoUrl = account?.logoUrl;
+
     return Card(
       elevation: 2,
       margin: EdgeInsets.zero,
@@ -879,27 +954,43 @@ class _AccountCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 상단: 금융사 & 계좌명
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // 상단: Row(로고, 계좌명)
+              Row(
                 children: [
-                  Text(
-                    institution,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                  if (logoUrl != null && logoUrl.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.network(
+                        logoUrl,
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (_, __, ___) => const Icon(
+                              Icons.account_balance,
+                              size: 22,
+                              color: Colors.grey,
+                            ),
+                      ),
+                    )
+                  else
+                    const Icon(
+                      Icons.account_balance,
+                      size: 22,
+                      color: Colors.indigo,
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    accountName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      accountName,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -912,9 +1003,10 @@ class _AccountCard extends StatelessWidget {
                     cashBalance > 0
                         ? '상품 $itemCount개 + 현금'
                         : '보유상품 $itemCount개',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade600,
                     ),
                   ),
                   Text(

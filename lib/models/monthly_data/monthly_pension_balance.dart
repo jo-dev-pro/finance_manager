@@ -15,17 +15,27 @@ class MonthlyPensionBalance with _$MonthlyPensionBalance {
     @JsonKey(name: 'product_id') required String productId,
     @JsonKey(name: 'account_name') String? accountName, // 💡 콘솔 확인용 계좌명
     @JsonKey(name: 'product_name') String? productName, // 💡 콘솔 확인용 상품명
-    @Default(0.0) double balance,               // 당월 말 평가액
+   @Default(0.0) double balance,               // 당월 말 평가액
+    
+    // 1. 투자 원금 (누적 및 당월분)
     @Default(0.0) double principal,             // 누적 투자 원금
+    @JsonKey(name: 'monthly_principal') @Default(0.0) double monthlyPrincipal, // 당월 투자 원금 (납입액)
+
+    // 2. 연금 수령액 (누적 및 당월분)
     @JsonKey(name: 'total_payout') @Default(0.0) double totalPayout, // 누적 연금 수령액
-    @JsonKey(name: 'total_withdrawal') @Default(0.0) double totalWithdrawal, // 누적 중도 인출금
+    @JsonKey(name: 'monthly_payout') @Default(0.0) double monthlyPayout, // 당월 연금 수령액
+
+    // 3. 중도 환매액 (누적 및 당월분)
+    @JsonKey(name: 'total_withdrawal') @Default(0.0) double totalWithdrawal, // 누적 중도 환매액
+    @JsonKey(name: 'monthly_withdrawal') @Default(0.0) double monthlyWithdrawal, // 당월 중도 환매액
+
     @JsonKey(name: 'purchase_date') String? purchaseDate, // 최초 매수일 (마스터에서 연동)
   }) = _MonthlyPensionBalance;
 
   factory MonthlyPensionBalance.fromJson(Map<String, dynamic> json) =>
       _$MonthlyPensionBalanceFromJson(json);
 
-  // [총 평가 손익] = (현재 평가액 + 누적 연금 수령액 + 누적 중도 인출금) - 누적 투자 원금
+ // [총 평가 손익] = (현재 평가액 + 누적 연금 수령액 + 누적 중도 환매액) - 누적 투자 원금
   double get profitOrLoss => (balance + totalPayout + totalWithdrawal) - principal;
 
   // [누적 수익률 (%)]

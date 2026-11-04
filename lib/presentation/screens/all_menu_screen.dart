@@ -22,6 +22,13 @@ class AllMenuScreen extends StatelessWidget {
 
             ListTile(
               leading: const Icon(Icons.help_outline, color: Colors.indigo),
+              title: const Text('자산 관리 가이드'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(AppRoutePath.assetsGuide),
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.help_outline, color: Colors.indigo),
               title: const Text('연금 자산 관리 가이드'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push(AppRoutePath.pensionGuide),

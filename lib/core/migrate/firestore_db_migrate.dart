@@ -583,6 +583,81 @@ class _FirestoreDBMigrateScreenState
     }
   }
 
+  // 월말 은행, 월말 연금 문서id를 기준년월_계정ID 형식으로 변경하는 마이그레이션
+  Future<void> migrateMonthlyBalances(WidgetRef ref) async {
+    final firestore = ref.read(firestoreProvider);
+    try {
+      // 1. 월말 은행 데이터 마이그레이션
+      final bankSnapshot =
+          await firestore.collection(monthlyBankBalanceDBName).get();
+
+      int bankMigratedCount = 0;
+      int pensionMigratedCount = 0;
+
+      for (var doc in bankSnapshot.docs) {
+        final data = doc.data();
+        final yearMonth = data['year_month'];
+        final accountId = data['account_id'];
+
+        if (yearMonth != null && accountId != null) {
+          final newDocId = '${yearMonth}_$accountId';
+          // 새 문서 ID로 데이터 복사
+          await firestore
+              .collection(monthlyBankBalanceDBName)
+              .doc(newDocId)
+              .set(data);
+          // 기존 랜덤 문서 ID 삭제 (새 ID와 다를 경우에만)
+          if (doc.id != newDocId) {
+            await firestore
+                .collection(monthlyBankBalanceDBName)
+                .doc(doc.id)
+                .delete();
+          }
+        }
+        bankMigratedCount++;
+      }
+
+      // 2. 월말 연금 계좌 데이터 마이그레이션
+      final pensionSnapshot =
+          await firestore.collection(monthlyPensionBalanceDBName).get();
+      for (var doc in pensionSnapshot.docs) {
+        final data = doc.data();
+        final yearMonth = data['year_month'];
+        final accountId = data['account_id'];
+
+        if (yearMonth != null && accountId != null) {
+          final newDocId = '${yearMonth}_${accountId}_${data['product_id']}';
+          await firestore
+              .collection(monthlyPensionBalanceDBName)
+              .doc(newDocId)
+              .set(data);
+          if (doc.id != newDocId) {
+            await firestore
+                .collection(monthlyPensionBalanceDBName)
+                .doc(doc.id)
+                .delete();
+          }
+        }
+        pensionMigratedCount++;
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText =
+              '총 $bankMigratedCount개의 은행 데이터와 $pensionMigratedCount개의 연금 데이터가 계좌 요약 테이블로 마이그레이션 완료';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _statusText = '오류 발생: $e';
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -716,7 +791,10 @@ class _FirestoreDBMigrateScreenState
               const SizedBox(height: 24),
 
               ElevatedButton.icon(
-                onPressed: _isLoading ? null : () => _migratePensionCashAssetsToAccountTable(ref),
+                onPressed:
+                    _isLoading
+                        ? null
+                        : () => _migratePensionCashAssetsToAccountTable(ref),
                 icon:
                     _isLoading
                         ? const SizedBox(
@@ -728,6 +806,27 @@ class _FirestoreDBMigrateScreenState
                 label: Text(
                   _isLoading ? '처리 중...' : '월말연금 보유상품중 현금성 자산 db 마이그레이션',
                 ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton.icon(
+                onPressed:
+                    _isLoading ? null : () => migrateMonthlyBalances(ref),
+                icon:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.upload_file),
+                label: Text(_isLoading ? '처리 중...' : '월말연금, 월말은행 문서ID 마이그레이션'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

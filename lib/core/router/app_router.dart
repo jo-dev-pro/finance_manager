@@ -8,6 +8,7 @@ import '../../presentation/screens/all_menu_screen.dart';
 import '../../presentation/screens/account/account_name_screen.dart';
 import '../../presentation/screens/bank/bank_screen.dart';
 import '../../presentation/screens/dashboard_screen.dart';
+import '../../presentation/screens/guide/asset_management_guide_screen.dart';
 import '../../presentation/screens/guide/pension_guide.dart';
 import '../../presentation/screens/guide/stock_guide.dart';
 import '../../presentation/screens/investment/investment_screen.dart';
@@ -118,6 +119,10 @@ GoRouter router(RouterRef ref) {
                 path: AppRoutePath.all,
                 builder: (context, state) => const AllMenuScreen(),
                 routes: [
+                  GoRoute(
+                    path: AppRoutePath.assetsGuideSub,
+                    builder: (context, state) => const AssetManagementGuideScreen(),
+                  ),
                   GoRoute(
                     path: AppRoutePath.pensionGuideSub,
                     builder: (context, state) => const PensionGuideScreen(),

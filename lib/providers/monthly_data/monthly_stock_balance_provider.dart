@@ -61,20 +61,22 @@ class AllMonthlyStockBalances extends _$AllMonthlyStockBalances {
       stockItems = await ref.watch(stockItemNotifierProvider.future);
     } catch (_) {}
 
-    final snapshot = await firestore.collection(monthlyStockBalanceDBName).get();
+    final snapshot =
+        await firestore.collection(monthlyStockBalanceDBName).get();
 
-    final balances = snapshot.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return MonthlyStockBalance.fromJson(data);
-    }).toList();
+    final balances =
+        snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return MonthlyStockBalance.fromJson(data);
+        }).toList();
 
     final accountMap = {for (var a in accounts) a.id!: a};
     final accountNameMap = {for (var an in accountNames) an.id: an};
-    
+
     final stockMap = {
-      for (var s in stockItems) 
-        if (s.id != null) s.id!.trim(): s
+      for (var s in stockItems)
+        if (s.id != null) s.id!.trim(): s,
     };
 
     // 정렬 로직 (기준월 최신순 -> 계좌명순)
@@ -84,17 +86,22 @@ class AllMonthlyStockBalances extends _$AllMonthlyStockBalances {
 
       final accA = accountMap[a.accountId];
       final accB = accountMap[b.accountId];
-      
-      final nameA = '${accA?.financialInstitution ?? ''}_${accountNameMap[accA?.accountNameId]?.accountName ?? ''}';
-      final nameB = '${accB?.financialInstitution ?? ''}_${accountNameMap[accB?.accountNameId]?.accountName ?? ''}';
+
+      final nameA =
+          '${accA?.financialInstitution ?? ''}_${accountNameMap[accA?.accountNameId]?.accountName ?? ''}';
+      final nameB =
+          '${accB?.financialInstitution ?? ''}_${accountNameMap[accB?.accountNameId]?.accountName ?? ''}';
 
       return nameA.compareTo(nameB);
     });
 
     return balances.map((b) {
       final matchedAccount = accountMap[b.accountId];
-      final matchedAccountName = matchedAccount != null ? accountNameMap[matchedAccount.accountNameId] : null;
-      
+      final matchedAccountName =
+          matchedAccount != null
+              ? accountNameMap[matchedAccount.accountNameId]
+              : null;
+
       final cleanStockItemId = b.stockItemId.trim();
       final matchedStockItem = stockMap[cleanStockItemId];
 
@@ -118,18 +125,20 @@ class MonthlyStockBalanceNotifier extends _$MonthlyStockBalanceNotifier {
 
   Future<List<MonthlyStockBalance>> fetchBalances(String yearMonth) async {
     final firestore = ref.read(firestoreProvider);
-    
-    // 1. 해당 월의 월말 주식 데이터 가져오기
-    final snapshot = await firestore
-        .collection(monthlyStockBalanceDBName)
-        .where('year_month', isEqualTo: yearMonth)
-        .get();
 
-    final balances = snapshot.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return MonthlyStockBalance.fromJson(data);
-    }).toList();
+    // 1. 해당 월의 월말 주식 데이터 가져오기
+    final snapshot =
+        await firestore
+            .collection(monthlyStockBalanceDBName)
+            .where('year_month', isEqualTo: yearMonth)
+            .get();
+
+    final balances =
+        snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return MonthlyStockBalance.fromJson(data);
+        }).toList();
 
     // 2. 계좌별 보유 종목(매수일 정보 포함) 목록 가져오기
     List<StockHoldingItem> holdingItems = [];
@@ -140,13 +149,14 @@ class MonthlyStockBalanceNotifier extends _$MonthlyStockBalanceNotifier {
     // 3. '계좌ID_종목ID'를 키로 하고 purchaseDate를 값으로 하는 맵 생성
     final purchaseDateMap = {
       for (var hi in holdingItems)
-        '${hi.accountId}_${hi.stockItemId}': hi.initialPurchaseDate
+        '${hi.accountId}_${hi.stockItemId}': hi.initialPurchaseDate,
     };
 
     // 4. 월말 데이터에 매수일이 비어있다면 보유 종목의 매수일을 찾아 채워넣기
     return balances.map((item) {
       if (item.purchaseDate == null || item.purchaseDate!.isEmpty) {
-        final matchedDate = purchaseDateMap['${item.accountId}_${item.stockItemId}'];
+        final matchedDate =
+            purchaseDateMap['${item.accountId}_${item.stockItemId}'];
         if (matchedDate != null && matchedDate.isNotEmpty) {
           return item.copyWith(purchaseDate: matchedDate);
         }
@@ -155,7 +165,9 @@ class MonthlyStockBalanceNotifier extends _$MonthlyStockBalanceNotifier {
     }).toList();
   }
 
-Future<MonthlyStockBalance> _enrichBalanceNames(MonthlyStockBalance balance) async {
+  Future<MonthlyStockBalance> _enrichBalanceNames(
+    MonthlyStockBalance balance,
+  ) async {
     String? resolvedAccountName = balance.accountName;
     String? resolvedStockName = balance.stockItemName;
 
@@ -165,8 +177,12 @@ Future<MonthlyStockBalance> _enrichBalanceNames(MonthlyStockBalance balance) asy
       final stockItems = await ref.read(stockItemNotifierProvider.future);
 
       if (resolvedAccountName == null || resolvedAccountName.isEmpty) {
-        final matchedAcc = accounts.firstWhereOrNull((a) => a.id == balance.accountId);
-        final matchedNameObj = accountNames.firstWhereOrNull((an) => an.id == matchedAcc?.accountNameId);
+        final matchedAcc = accounts.firstWhereOrNull(
+          (a) => a.id == balance.accountId,
+        );
+        final matchedNameObj = accountNames.firstWhereOrNull(
+          (an) => an.id == matchedAcc?.accountNameId,
+        );
         if (matchedNameObj != null) {
           final inst = matchedAcc?.financialInstitution ?? '';
           resolvedAccountName = '[$inst] ${matchedNameObj.accountName}';
@@ -174,9 +190,12 @@ Future<MonthlyStockBalance> _enrichBalanceNames(MonthlyStockBalance balance) asy
       }
 
       if (resolvedStockName == null || resolvedStockName.isEmpty) {
-        final matchedStock = stockItems.firstWhereOrNull((s) => s.id == balance.stockItemId);
+        final matchedStock = stockItems.firstWhereOrNull(
+          (s) => s.id == balance.stockItemId,
+        );
         if (matchedStock != null) {
-          resolvedStockName = '${matchedStock.itemName} (${matchedStock.stockCode})';
+          resolvedStockName =
+              '${matchedStock.itemName} (${matchedStock.stockCode})';
         }
       }
     } catch (_) {}
@@ -190,16 +209,16 @@ Future<MonthlyStockBalance> _enrichBalanceNames(MonthlyStockBalance balance) asy
   Future<void> saveBalance(MonthlyStockBalance balance) async {
     final firestore = ref.read(firestoreProvider);
     final targetItem = await _enrichBalanceNames(balance);
+    // 💡 기준년월_계정ID_종목ID 형식의 문서 ID 생성
+    final docId =
+        '${targetItem.yearMonth}_${targetItem.accountId}_${targetItem.stockItemId}';
     final data = targetItem.toJson()..remove('id');
 
-    if (targetItem.id == null) {
-      await firestore.collection(monthlyStockBalanceDBName).add(data);
-    } else {
-      await firestore
-          .collection(monthlyStockBalanceDBName)
-          .doc(targetItem.id)
-          .update(data);
-    }
+    await firestore
+        .collection(monthlyStockBalanceDBName)
+        .doc(docId)
+        .set(data, SetOptions(merge: true));
+
     ref.invalidateSelf();
     ref.invalidate(allMonthlyStockBalancesProvider);
   }
@@ -218,7 +237,10 @@ Future<MonthlyStockBalance> _enrichBalanceNames(MonthlyStockBalance balance) asy
 
     for (var item in items) {
       final targetItem = await _enrichBalanceNames(item);
-      final docId = '${targetItem.yearMonth}_${targetItem.accountId}_${targetItem.stockItemId}';
+      
+      // 💡 일괄 저장 시에도 동일하게 기준년월_계정ID_종목ID 적용
+      final docId =
+          '${targetItem.yearMonth}_${targetItem.accountId}_${targetItem.stockItemId}';
       final docRef = collectionRef.doc(docId);
       final data = targetItem.toJson()..remove('id');
       batch.set(docRef, data, SetOptions(merge: true));

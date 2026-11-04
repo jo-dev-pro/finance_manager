@@ -11,4 +11,4 @@ final String monthlyStockAccountBalanceDBName = 'monthly_stock_account_balance';
 final String stockItemDBName = 'stock_item_name';
 final String stockTransactionTypeDBName = 'stock_transaction_type';
 final String stockHoldingItemDBName = 'stock_holding_item';
- 
+  

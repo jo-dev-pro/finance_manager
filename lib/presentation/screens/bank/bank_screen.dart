@@ -109,13 +109,12 @@ class BankScreen extends ConsumerWidget {
                     months,
                     activeCurrentMonth,
                   ),
-          
+
                   Expanded(
                     child: bankDataAsync.when(
                       loading:
-                          () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          () =>
+                              const Center(child: CircularProgressIndicator()),
                       error:
                           (err, stack) => Center(
                             child: Column(
@@ -143,7 +142,7 @@ class BankScreen extends ConsumerWidget {
                                   item.account.accountType.toUpperCase();
                               return type == '은행';
                             }).toList();
-          
+
                         final double totalCurrentBalance = items.fold(
                           0,
                           (sum, i) => sum + i.currentBalance,
@@ -152,7 +151,7 @@ class BankScreen extends ConsumerWidget {
                           0,
                           (sum, i) => sum + i.diffFromLastMonth,
                         );
-          
+
                         return LayoutBuilder(
                           builder: (context, constraints) {
                             return RefreshIndicator(
@@ -161,20 +160,17 @@ class BankScreen extends ConsumerWidget {
                                 ref.invalidate(bankScreenDataProvider);
                               },
                               child: SingleChildScrollView(
-                                physics:
-                                    const AlwaysScrollableScrollPhysics(),
+                                physics: const AlwaysScrollableScrollPhysics(),
                                 padding: const EdgeInsets.all(16),
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Container(
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(20),
                                       decoration: BoxDecoration(
                                         color: Colors.indigo.shade600,
-                                        borderRadius:
-                                            BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(16),
                                         boxShadow: const [
                                           BoxShadow(
                                             color: Colors.black12,
@@ -215,44 +211,34 @@ class BankScreen extends ConsumerWidget {
                                                     ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withValues(
-                                                        alpha: 0.18,
-                                                      ),
+                                                      .withValues(alpha: 0.18),
                                                   borderRadius:
-                                                      BorderRadius.circular(
-                                                        6,
-                                                      ),
+                                                      BorderRadius.circular(6),
                                                 ),
                                                 child: const Text(
                                                   '전월 대비',
                                                   style: TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 12,
-                                                    fontWeight:
-                                                        FontWeight.w500,
+                                                    fontWeight: FontWeight.w500,
                                                   ),
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
                                               totalDiffFromLastMonth
                                                   .toSignedPriceText(
-                                                    style:
-                                                        const TextStyle(
-                                                          fontSize: 14,
-                                                          fontWeight:
-                                                              FontWeight
-                                                                  .bold,
-                                                        ),
-                                                    positiveColor:
-                                                        const Color(
-                                                          0xFFFF8A80,
-                                                        ),
-                                                    negativeColor:
-                                                        const Color(
-                                                          0xFF82B1FF,
-                                                        ),
-                                                    zeroColor:
-                                                        Colors.white,
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                    positiveColor: const Color(
+                                                      0xFFFF8A80,
+                                                    ),
+                                                    negativeColor: const Color(
+                                                      0xFF82B1FF,
+                                                    ),
+                                                    zeroColor: Colors.white,
                                                   ),
                                             ],
                                           ),
@@ -260,25 +246,23 @@ class BankScreen extends ConsumerWidget {
                                       ),
                                     ),
                                     const SizedBox(height: 24),
-                                          
+
                                     const Text(
                                       '계좌별 잔액',
                                       style: TextStyle(
-                                        fontSize: 18,
+                                        fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     const SizedBox(height: 12),
-                                          
+
                                     if (items.isEmpty)
                                       const Padding(
                                         padding: EdgeInsets.symmetric(
                                           vertical: 32,
                                         ),
                                         child: Center(
-                                          child: Text(
-                                            '등록된 은행 계좌/자산 내역이 없습니다.',
-                                          ),
+                                          child: Text('등록된 은행 계좌/자산 내역이 없습니다.'),
                                         ),
                                       )
                                     else
@@ -287,18 +271,23 @@ class BankScreen extends ConsumerWidget {
                                         physics:
                                             const NeverScrollableScrollPhysics(),
                                         gridDelegate:
-                                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 2,
-                                              childAspectRatio: 3.5,
-                                              crossAxisSpacing: 12,
-                                              mainAxisSpacing: 12,
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount:
+                                                  MediaQuery.of(
+                                                            context,
+                                                          ).size.width >
+                                                          900
+                                                      ? 2
+                                                      : 1,
+                                              crossAxisSpacing: 16,
+                                              mainAxisSpacing: 16,
+                                              mainAxisExtent:
+                                                  140, // 💡 중요: 카드 세로 높이를 140px로 고정하여 세로 공간 축소
                                             ),
                                         itemCount: items.length,
                                         itemBuilder:
                                             (context, index) =>
-                                                _buildBankTile(
-                                                  items[index],
-                                                ),
+                                                _buildBankTile(items[index]),
                                       ),
                                   ],
                                 ),
@@ -384,8 +373,9 @@ class BankScreen extends ConsumerWidget {
     final diff = item.diffFromLastMonth;
 
     return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -414,16 +404,17 @@ class BankScreen extends ConsumerWidget {
                   Text(
                     item.productName,
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
                     '${account.financialInstitution}${account.accountNumber != null && account.accountNumber!.isNotEmpty ? ' | ${account.accountNumber}' : ''}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -441,19 +432,19 @@ class BankScreen extends ConsumerWidget {
                   item.currentBalance.toWon(),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: 17,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
                       '전월대비 ',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
                     ),
                     diff.toSignedPriceText(
-                      style: const TextStyle(fontSize: 11),
+                      style: const TextStyle(fontSize: 13),
                     ),
                   ],
                 ),

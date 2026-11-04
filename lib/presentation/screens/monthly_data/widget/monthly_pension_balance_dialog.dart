@@ -48,9 +48,10 @@ class _MonthlyPensionBalanceDialogState
   final Map<String, TextEditingController> _quantityControllers = {};
   final Map<String, TextEditingController> _basePriceControllers = {};
 
-  final Map<String, TextEditingController> _principalControllers = {};
-  final Map<String, TextEditingController> _payoutControllers = {};
-  final Map<String, TextEditingController> _withdrawalControllers = {};
+  // 💡 당월분 입력 컨트롤러들
+  final Map<String, TextEditingController> _monthlyPrincipalControllers = {};
+  final Map<String, TextEditingController> _monthlyPayoutControllers = {};
+  final Map<String, TextEditingController> _monthlyWithdrawalControllers = {};
 
   // 계좌 공통 입력 컨트롤러 (현금성 잔액, 당월 중도 인출금)
   final TextEditingController _accountCashBalanceController =
@@ -68,24 +69,12 @@ class _MonthlyPensionBalanceDialogState
 
   @override
   void dispose() {
-    for (var c in _balanceControllers.values) {
-      c.dispose();
-    }
-    for (var c in _quantityControllers.values) {
-      c.dispose();
-    }
-    for (var c in _basePriceControllers.values) {
-      c.dispose();
-    }
-    for (var c in _principalControllers.values) {
-      c.dispose();
-    }
-    for (var c in _payoutControllers.values) {
-      c.dispose();
-    }
-    for (var c in _withdrawalControllers.values) {
-      c.dispose();
-    }
+    for (var c in _balanceControllers.values) c.dispose();
+    for (var c in _quantityControllers.values) c.dispose();
+    for (var c in _basePriceControllers.values) c.dispose();
+    for (var c in _monthlyPrincipalControllers.values) c.dispose();
+    for (var c in _monthlyPayoutControllers.values) c.dispose();
+    for (var c in _monthlyWithdrawalControllers.values) c.dispose();
     _accountCashBalanceController.dispose();
     _accountMonthlyWithdrawalController.dispose();
     super.dispose();
@@ -143,7 +132,7 @@ class _MonthlyPensionBalanceDialogState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    '연금 월말 평가액/원금 일괄 입력',
+                    '연금 월말 평가액/납입액 일괄 입력',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
@@ -371,8 +360,6 @@ class _MonthlyPensionBalanceDialogState
                             for (var p in pensionProducts) p.id!: p.productName,
                           };
 
-                          final Map<String, _GroupedPensionItem> groupedMap =
-                              {};
                           final currentBalances =
                               existingCurrentBalancesAsync.value ?? [];
                           final prevBalances =
@@ -392,24 +379,7 @@ class _MonthlyPensionBalanceDialogState
                                   )
                                   .toList();
 
-                          for (var hp in matchedHoldings) {
-                            final prodId = hp.productId;
-                            final prevData =
-                                prevBalanceMap['${hp.accountId}_$prodId'];
-                            groupedMap[prodId] = _GroupedPensionItem(
-                              accountId: hp.accountId,
-                              productId: prodId,
-                              principal: prevData?.principal ?? 0.0,
-                            );
-                          }
-
-                          final groupedItems = groupedMap.values.toList();
-                          final currentBalanceMap = {
-                            for (var b in currentBalances)
-                              '${b.accountId}_${b.productId}': b,
-                          };
-
-                          if (groupedItems.isEmpty) {
+                          if (matchedHoldings.isEmpty) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 20),
                               child: Text('해당 연금 계좌에 등록된 보유 상품이 없습니다.'),
@@ -419,36 +389,32 @@ class _MonthlyPensionBalanceDialogState
                           return ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: groupedItems.length,
+                            itemCount: matchedHoldings.length,
                             separatorBuilder:
                                 (_, __) => const SizedBox(height: 12),
                             itemBuilder: (context, index) {
-                              final groupItem = groupedItems[index];
-                              final prodId = groupItem.productId;
+                              final hp = matchedHoldings[index];
+                              final prodId = hp.productId;
                               final productName =
                                   productMap[prodId] ?? '알 수 없는 상품';
 
                               final key = '${_selectedAccountId}_$prodId';
                               final currentData = currentBalanceMap[key];
+                              final prevData = prevBalanceMap[key];
 
                               if (!_balanceControllers.containsKey(key)) {
                                 final currentBal =
                                     (currentData != null &&
                                             currentData.balance > 0)
                                         ? currentData.balance
-                                        : (prevBalanceMap[key]?.balance ?? 0.0);
+                                        : (prevData?.balance ?? 0.0);
 
-                                final currentPrin =
-                                    (currentData != null &&
-                                            currentData.principal > 0)
-                                        ? currentData.principal
-                                        : (prevBalanceMap[key]?.principal ??
-                                            groupItem.principal);
-
-                                final currentPayout =
-                                    currentData?.totalPayout ?? 0.0;
-                                final currentWithdrawal =
-                                    currentData?.totalWithdrawal ?? 0.0;
+                                final currentMonthlyPrin =
+                                    currentData?.monthlyPrincipal ?? 0.0;
+                                final currentMonthlyPayout =
+                                    currentData?.monthlyPayout ?? 0.0;
+                                final currentMonthlyWithdrawal =
+                                    currentData?.monthlyWithdrawal ?? 0.0;
 
                                 _balanceControllers[key] =
                                     TextEditingController(
@@ -462,24 +428,27 @@ class _MonthlyPensionBalanceDialogState
                                 _basePriceControllers[key] =
                                     TextEditingController();
 
-                                _principalControllers[key] =
+                                _monthlyPrincipalControllers[key] =
                                     TextEditingController(
                                       text:
-                                          currentPrin > 0
-                                              ? currentPrin.toCommaString()
+                                          currentMonthlyPrin > 0
+                                              ? currentMonthlyPrin
+                                                  .toCommaString()
                                               : '',
                                     );
-                                _payoutControllers[key] = TextEditingController(
-                                  text:
-                                      currentPayout > 0
-                                          ? currentPayout.toCommaString()
-                                          : '',
-                                );
-                                _withdrawalControllers[key] =
+                                _monthlyPayoutControllers[key] =
                                     TextEditingController(
                                       text:
-                                          currentWithdrawal > 0
-                                              ? currentWithdrawal
+                                          currentMonthlyPayout > 0
+                                              ? currentMonthlyPayout
+                                                  .toCommaString()
+                                              : '',
+                                    );
+                                _monthlyWithdrawalControllers[key] =
+                                    TextEditingController(
+                                      text:
+                                          currentMonthlyWithdrawal > 0
+                                              ? currentMonthlyWithdrawal
                                                   .toCommaString()
                                               : '',
                                     );
@@ -496,12 +465,13 @@ class _MonthlyPensionBalanceDialogState
                                       false);
 
                               final hasWithdrawal =
-                                  (_withdrawalControllers[key]?.text
+                                  (_monthlyWithdrawalControllers[key]?.text
                                           .trim()
                                           .isNotEmpty ??
                                       false) &&
                                   (double.tryParse(
-                                            _withdrawalControllers[key]!.text
+                                            _monthlyWithdrawalControllers[key]!
+                                                .text
                                                 .replaceAll(
                                                   RegExp(r'[^0-9]'),
                                                   '',
@@ -530,6 +500,9 @@ class _MonthlyPensionBalanceDialogState
                               final calculatedBalance =
                                   (qty * basePrice) / 1000.0;
 
+                              // 참고용 이전 누적 원금 표시
+                              final prevPrincipal = prevData?.principal ?? 0.0;
+
                               return Card(
                                 elevation: 1.0,
                                 shape: RoundedRectangleBorder(
@@ -542,26 +515,41 @@ class _MonthlyPensionBalanceDialogState
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        productName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              productName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (prevPrincipal > 0)
+                                            Text(
+                                              '전월 누적원금: ${prevPrincipal.toWon()}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                       const Divider(height: 16),
 
-                                      // 💡 1. 평가액 직접 입력 OR (좌수 * 기준가 계산)
+                                      // 평가액 입력 (직접입력 or 좌수*기준가)
                                       Row(
                                         children: [
                                           Expanded(
                                             child: TextFormField(
                                               controller:
                                                   _quantityControllers[key],
-                                              enabled:
-                                                  !hasWithdrawal, // 환매액 입력 시 계산불가 배제
+                                              enabled: !hasWithdrawal,
                                               keyboardType:
                                                   const TextInputType.numberWithOptions(
                                                     decimal: true,
@@ -643,13 +631,11 @@ class _MonthlyPensionBalanceDialogState
                                             ),
                                           ),
                                           const SizedBox(width: 8),
-                                          // 💡 2. 당월 환매액 필드 (좌수/기준가와 상호 배타)
                                           Expanded(
                                             child: TextFormField(
                                               controller:
-                                                  _withdrawalControllers[key],
-                                              enabled:
-                                                  !hasQuantityOrBasePrice, // 좌수/기준가 입력 시 환매액 입력 불가
+                                                  _monthlyWithdrawalControllers[key],
+                                              enabled: !hasQuantityOrBasePrice,
                                               keyboardType:
                                                   TextInputType.number,
                                               inputFormatters: [
@@ -672,25 +658,15 @@ class _MonthlyPensionBalanceDialogState
                                           ),
                                         ],
                                       ),
-                                      if (hasQuantityOrBasePrice &&
-                                          hasWithdrawal) ...[
-                                        const SizedBox(height: 4),
-                                        const Text(
-                                          '⚠️ 좌수/기준가와 당월 환매액은 동시에 입력할 수 없습니다.',
-                                          style: TextStyle(
-                                            color: Colors.red,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
                                       const SizedBox(height: 10),
 
+                                      // 💡 당월 납입액 & 당월 연금 수령액 입력 필드
                                       Row(
                                         children: [
                                           Expanded(
                                             child: TextFormField(
                                               controller:
-                                                  _principalControllers[key],
+                                                  _monthlyPrincipalControllers[key],
                                               keyboardType:
                                                   TextInputType.number,
                                               inputFormatters: [
@@ -699,7 +675,8 @@ class _MonthlyPensionBalanceDialogState
                                                 ThousandsSeparatorInputFormatter(),
                                               ],
                                               decoration: const InputDecoration(
-                                                labelText: '누적 원금',
+                                                labelText: '당월 납입액 (추가원금)',
+                                                hintText: '0',
                                                 suffixText: '원',
                                                 border: OutlineInputBorder(),
                                                 isDense: true,
@@ -710,7 +687,7 @@ class _MonthlyPensionBalanceDialogState
                                           Expanded(
                                             child: TextFormField(
                                               controller:
-                                                  _payoutControllers[key],
+                                                  _monthlyPayoutControllers[key],
                                               keyboardType:
                                                   TextInputType.number,
                                               inputFormatters: [
@@ -719,7 +696,7 @@ class _MonthlyPensionBalanceDialogState
                                                 ThousandsSeparatorInputFormatter(),
                                               ],
                                               decoration: const InputDecoration(
-                                                labelText: '누적 연금 수령액',
+                                                labelText: '당월 연금 수령액',
                                                 hintText: '0',
                                                 suffixText: '원',
                                                 border: OutlineInputBorder(),
@@ -813,10 +790,9 @@ class _MonthlyPensionBalanceDialogState
     );
     await accountBalanceNotifier.saveBalance(accountBalanceItem);
 
-    // 2. 상품별 월말 데이터 파싱 및 DB 저장
+    // 2. 상품별 월말 데이터 파싱 및 누적금액 계산 후 저장
     final holdingProducts =
         ref.read(pensionHoldingProductNotifierProvider).value ?? [];
-    final Map<String, _GroupedPensionItem> groupedMap = {};
 
     final prevBalances =
         ref.read(monthlyPensionBalanceNotifierProvider(prevYearMonth)).value ??
@@ -830,29 +806,19 @@ class _MonthlyPensionBalanceDialogState
             .where((hp) => hp.accountId == _selectedAccountId && hp.isActive)
             .toList();
 
-    for (var hp in matchedHoldings) {
-      final prodId = hp.productId;
-      final prevData = prevBalanceMap['${hp.accountId}_$prodId'];
-      groupedMap[prodId] = _GroupedPensionItem(
-        accountId: hp.accountId,
-        productId: prodId,
-        principal: prevData?.principal ?? 0.0,
-      );
-    }
-
     final List<MonthlyPensionBalance> itemsToSave = [];
 
-    for (var entry in groupedMap.entries) {
-      final prodId = entry.key;
-      final groupItem = entry.value;
+    for (var hp in matchedHoldings) {
+      final prodId = hp.productId;
       final key = '${_selectedAccountId}_$prodId';
+      final prevData = prevBalanceMap[key];
 
       final qtyCtrl = _quantityControllers[key];
       final basePriceCtrl = _basePriceControllers[key];
       final balCtrl = _balanceControllers[key];
-      final prinCtrl = _principalControllers[key];
-      final payoutCtrl = _payoutControllers[key];
-      final withdrawalCtrl = _withdrawalControllers[key];
+      final monthlyPrinCtrl = _monthlyPrincipalControllers[key];
+      final monthlyPayoutCtrl = _monthlyPayoutControllers[key];
+      final monthlyWithdrawalCtrl = _monthlyWithdrawalControllers[key];
 
       final qty =
           double.tryParse(qtyCtrl?.text.replaceAll(',', '').trim() ?? '') ??
@@ -865,37 +831,56 @@ class _MonthlyPensionBalanceDialogState
 
       double finalBalance = 0.0;
       if (qty > 0 && basePrice > 0) {
-        // 좌수 * 기준가 / 1000 계산 결과 적용
         finalBalance = (qty * basePrice) / 1000.0;
       } else {
-        // 직접 입력된 평가액 적용
         finalBalance =
             double.tryParse(balCtrl?.text.replaceAll(',', '').trim() ?? '') ??
-            0.0;
+            (prevData?.balance ?? 0.0);
       }
 
-      final prinVal =
-          double.tryParse(prinCtrl?.text.replaceAll(',', '').trim() ?? '') ??
-          groupItem.principal;
-      final payoutVal =
-          double.tryParse(payoutCtrl?.text.replaceAll(',', '').trim() ?? '') ??
-          0.0;
-      final withdrawalVal =
+      // 당월분 값 파싱
+      final monthlyPrinVal =
           double.tryParse(
-            withdrawalCtrl?.text.replaceAll(',', '').trim() ?? '',
+            monthlyPrinCtrl?.text.replaceAll(',', '').trim() ?? '',
+          ) ??
+          0.0;
+      final monthlyPayoutVal =
+          double.tryParse(
+            monthlyPayoutCtrl?.text.replaceAll(',', '').trim() ?? '',
+          ) ??
+          0.0;
+      final monthlyWithdrawalVal =
+          double.tryParse(
+            monthlyWithdrawalCtrl?.text.replaceAll(',', '').trim() ?? '',
           ) ??
           0.0;
 
-      if (finalBalance > 0 || withdrawalVal > 0 || prinVal > 0) {
+      // 💡 누적 값 자동 계산 (전월 누적 + 당월분)
+      final prevPrincipal = prevData?.principal ?? 0.0;
+      final prevTotalPayout = prevData?.totalPayout ?? 0.0;
+      final prevTotalWithdrawalProd = prevData?.totalWithdrawal ?? 0.0;
+
+      final finalPrincipal = prevPrincipal + monthlyPrinVal;
+      final finalTotalPayout = prevTotalPayout + monthlyPayoutVal;
+      final finalTotalWithdrawalProd =
+          prevTotalWithdrawalProd + monthlyWithdrawalVal;
+
+      if (finalBalance > 0 ||
+          monthlyWithdrawalVal > 0 ||
+          monthlyPrinVal > 0 ||
+          finalPrincipal > 0) {
         itemsToSave.add(
           MonthlyPensionBalance(
             yearMonth: _selectedYearMonth,
             accountId: _selectedAccountId!,
             productId: prodId,
             balance: finalBalance,
-            principal: prinVal,
-            totalPayout: payoutVal,
-            totalWithdrawal: withdrawalVal, // 💡 DB에는 최종 계산된 당월 환매액만 저장
+            principal: finalPrincipal, // 누적 원금 저장
+            monthlyPrincipal: monthlyPrinVal, // 당월 납입액 저장
+            totalPayout: finalTotalPayout, // 누적 수령액 저장
+            monthlyPayout: monthlyPayoutVal, // 당월 수령액 저장
+            totalWithdrawal: finalTotalWithdrawalProd, // 누적 환매액 저장
+            monthlyWithdrawal: monthlyWithdrawalVal, // 당월 환매액 저장
           ),
         );
       }

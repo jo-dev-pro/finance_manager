@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -106,13 +107,16 @@ class MonthlyBankBalanceNotifier extends _$MonthlyBankBalanceNotifier {
 
     // 💡 2. account_name이 포함된 최신 모델 생성
     final targetBalance = balance.copyWith(accountName: resolvedAccountName);
+
+    // 💡 3. 기준년월_계정ID 형식의 문서 ID 생성
+    final docId = '${targetBalance.yearMonth}_${targetBalance.accountId}';
     final data = targetBalance.toJson()..remove('id');
 
-    if (targetBalance.id == null) {
-      await firestore.collection(monthlyBankBalanceDBName).add(data);
-    } else {
-      await firestore.collection(monthlyBankBalanceDBName).doc(targetBalance.id).update(data);
-    }
+    // 💡 4. .add() 대신 .doc(docId).set()을 사용하여 문서명 고정
+    await firestore
+        .collection(monthlyBankBalanceDBName)
+        .doc(docId)
+        .set(data, SetOptions(merge: true));
     
     ref.invalidateSelf();
     ref.invalidate(allMonthlyBankBalancesProvider);

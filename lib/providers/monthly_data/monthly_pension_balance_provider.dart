@@ -1,21 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:collection/collection.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-import '../../core/providers/firestore_provider.dart';
-import '../../core/utils/collection_name.dart';
-import '../../models/account/account.dart';
-import '../../models/account/account_name.dart';
-import '../../models/monthly_data/monthly_pension_balance.dart';
-import '../../models/pension/pension_holding_product.dart';
-import '../../models/pension/pension_product.dart';
-import '../account/account_name_provider.dart';
-import '../account/account_provider.dart';
-import '../pension/pension_holding_product_provider.dart';
-import '../pension/pension_product_provider.dart';
-
-part 'monthly_pension_balance_provider.g.dart';
-
 @Riverpod(keepAlive: true)
 class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
   @override
@@ -58,7 +40,7 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
     }).toList();
   }
 
-  // 💡 계좌명 및 상품명 텍스트 자동 조회 헬퍼
+  // 계좌명 및 상품명 텍스트 자동 조회 헬퍼
   Future<MonthlyPensionBalance> _enrichBalanceNames(MonthlyPensionBalance balance) async {
     String? resolvedAccountName = balance.accountName;
     String? resolvedProductName = balance.productName;
@@ -98,16 +80,14 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
   Future<void> saveBalance(MonthlyPensionBalance balance) async {
     final firestore = ref.read(firestoreProvider);
     final targetItem = await _enrichBalanceNames(balance);
+    final docId = '${targetItem.yearMonth}_${targetItem.accountId}_${targetItem.productId}';
     final data = targetItem.toJson()..remove('id');
 
-    if (targetItem.id == null) {
-      await firestore.collection(monthlyPensionBalanceDBName).add(data);
-    } else {
-      await firestore
-          .collection(monthlyPensionBalanceDBName)
-          .doc(targetItem.id)
-          .update(data);
-    }
+    await firestore
+        .collection(monthlyPensionBalanceDBName)
+        .doc(docId)
+        .set(data, SetOptions(merge: true));
+
     ref.invalidateSelf();
   }
 

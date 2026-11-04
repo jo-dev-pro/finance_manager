@@ -11,6 +11,7 @@ abstract class AppRoutePath {
   static const String monthlyBankBalanceSub = 'monthly';
   static const String monthlyPensionBalanceSub = 'monthly';
   static const String monthlyStockBalanceSub = 'monthly';
+  static const String assetsGuideSub = 'assets-guide';
   static const String pensionGuideSub = 'pension-guide';
   static const String stockGuideSub = 'stock-guide';
   static const String investmentSub = 'investment';
@@ -25,6 +26,7 @@ abstract class AppRoutePath {
   static const String monthlyBankBalance = '/bank/monthly';
   static const String monthlyPensionBalance = '/pension/monthly';
   static const String monthlyStockBalance = '/stock/monthly';
+  static const String assetsGuide = '/all/assets-guide';
   static const String pensionGuide = '/all/pension-guide';
   static const String stockGuide = '/all/stock-guide';
   static const String investment = '/all/investment';

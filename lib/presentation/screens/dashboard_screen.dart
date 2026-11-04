@@ -11,29 +11,26 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen<AsyncValue<List<String>>>(
-      availableYearMonthsProvider,
-      (previous, next) {
-        next.whenData((months) {
-          if (months.isNotEmpty) {
-            final selectedMonth = ref.read(selectedYearMonthProvider);
-            if (selectedMonth == null || !months.contains(selectedMonth)) {
-              ref.read(selectedYearMonthProvider.notifier).select(months.first);
-            }
+    ref.listen<AsyncValue<List<String>>>(availableYearMonthsProvider, (
+      previous,
+      next,
+    ) {
+      next.whenData((months) {
+        if (months.isNotEmpty) {
+          final selectedMonth = ref.read(selectedYearMonthProvider);
+          if (selectedMonth == null || !months.contains(selectedMonth)) {
+            ref.read(selectedYearMonthProvider.notifier).select(months.first);
           }
-        });
-      },
-    );
+        }
+      });
+    });
 
     final monthsAsync = ref.watch(availableYearMonthsProvider);
     final selectedMonth = ref.watch(selectedYearMonthProvider);
     final summaryAsync = ref.watch(dashboardSummaryProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('대시보드'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('대시보드'), elevation: 0),
       body: monthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),
@@ -49,7 +46,9 @@ class DashboardScreen extends ConsumerWidget {
 
           if (selectedMonth == null || !months.contains(selectedMonth)) {
             Future.microtask(() {
-              ref.read(selectedYearMonthProvider.notifier).select(activeCurrentMonth);
+              ref
+                  .read(selectedYearMonthProvider.notifier)
+                  .select(activeCurrentMonth);
             });
           }
 
@@ -82,24 +81,32 @@ class DashboardScreen extends ConsumerWidget {
                               children: [
                                 summaryAsync.when(
                                   data: (summary) {
-                                    final num totalValuation = summary.totalValuation;
-                                    final num totalInvested = summary.totalInvested;
-                                    final num profitOrLoss = summary.profitOrLoss;
+                                    final num totalValuation =
+                                        summary.totalValuation;
+                                    final num totalInvested =
+                                        summary.totalInvested;
+                                    final num profitOrLoss =
+                                        summary.profitOrLoss;
                                     final num returnRate = summary.returnRate;
 
                                     final num bankBalance = summary.bankBalance;
-                                    final num stockBalance = summary.stockBalance;
-                                    final num pensionBalance = summary.pensionBalance;
+                                    final num stockBalance =
+                                        summary.stockBalance;
+                                    final num pensionBalance =
+                                        summary.pensionBalance;
 
                                     return Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Container(
                                           width: double.infinity,
                                           padding: const EdgeInsets.all(20),
                                           decoration: BoxDecoration(
                                             color: Colors.indigo.shade600,
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
                                             boxShadow: const [
                                               BoxShadow(
                                                 color: Colors.black12,
@@ -109,7 +116,8 @@ class DashboardScreen extends ConsumerWidget {
                                             ],
                                           ),
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               const Text(
                                                 '총 자산 평가액',
@@ -129,14 +137,21 @@ class DashboardScreen extends ConsumerWidget {
                                                 ),
                                               ),
                                               const SizedBox(height: 16),
-                                              
-                                              const Divider(color: Colors.white24, height: 1),
+
+                                              const Divider(
+                                                color: Colors.white24,
+                                                height: 1,
+                                              ),
                                               const SizedBox(height: 16),
                                               Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
                                                 children: [
                                                   Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: [
                                                       const Text(
                                                         '투자 원금',
@@ -151,13 +166,15 @@ class DashboardScreen extends ConsumerWidget {
                                                         style: const TextStyle(
                                                           color: Colors.white,
                                                           fontSize: 15,
-                                                          fontWeight: FontWeight.w600,
+                                                          fontWeight:
+                                                              FontWeight.w600,
                                                         ),
                                                       ),
                                                     ],
                                                   ),
                                                   Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.end,
                                                     children: [
                                                       const Text(
                                                         '평가 손익 (수익률)',
@@ -169,19 +186,28 @@ class DashboardScreen extends ConsumerWidget {
                                                       const SizedBox(height: 2),
                                                       Row(
                                                         children: [
-                                                          profitOrLoss.toSignedPriceText(
-                                                            style: const TextStyle(
-                                                              fontSize: 15,
-                                                              fontWeight: FontWeight.bold,
-                                                            ),
+                                                          profitOrLoss
+                                                              .toSignedPriceText(
+                                                                style: const TextStyle(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                              ),
+                                                          const SizedBox(
+                                                            width: 4,
                                                           ),
-                                                          const SizedBox(width: 4),
                                                           returnRate.toSignedPercentText(
-                                                            withParentheses: true,
-                                                            style: const TextStyle(
-                                                              fontSize: 13,
-                                                              fontWeight: FontWeight.bold,
-                                                            ),
+                                                            withParentheses:
+                                                                true,
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontSize: 13,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
                                                           ),
                                                         ],
                                                       ),
@@ -197,7 +223,7 @@ class DashboardScreen extends ConsumerWidget {
                                         const Text(
                                           '자산별 현황',
                                           style: TextStyle(
-                                            fontSize: 18,
+                                            fontSize: 20,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -229,7 +255,7 @@ class DashboardScreen extends ConsumerWidget {
                                         const Text(
                                           '자산 비중',
                                           style: TextStyle(
-                                            fontSize: 18,
+                                            fontSize: 20,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -239,11 +265,16 @@ class DashboardScreen extends ConsumerWidget {
                                       ],
                                     );
                                   },
-                                  loading: () => const Padding(
-                                    padding: EdgeInsets.only(top: 40),
-                                    child: Center(child: CircularProgressIndicator()),
-                                  ),
-                                  error: (e, st) => Center(child: Text('데이터 로드 오류: $e')),
+                                  loading:
+                                      () => const Padding(
+                                        padding: EdgeInsets.only(top: 40),
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                  error:
+                                      (e, st) =>
+                                          Center(child: Text('데이터 로드 오류: $e')),
                                 ),
                               ],
                             ),
@@ -373,10 +404,7 @@ class DashboardScreen extends ConsumerWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
         Text(
@@ -408,25 +436,30 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            onPressed: (currentIndex >= 0 && currentIndex < months.length - 1)
-                ? () {
-                    ref.read(selectedYearMonthProvider.notifier).select(months[currentIndex + 1]);
-                  }
-                : null,
+            onPressed:
+                (currentIndex >= 0 && currentIndex < months.length - 1)
+                    ? () {
+                      ref
+                          .read(selectedYearMonthProvider.notifier)
+                          .select(months[currentIndex + 1]);
+                    }
+                    : null,
           ),
           DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: months.contains(currentMonth) ? currentMonth : months.first,
+              value:
+                  months.contains(currentMonth) ? currentMonth : months.first,
               icon: const Icon(Icons.arrow_drop_down),
-              items: months.map((String month) {
-                return DropdownMenuItem<String>(
-                  value: month,
-                  child: Text(
-                    month,
-                    style: const TextStyle(color: Colors.black87),
-                  ),
-                );
-              }).toList(),
+              items:
+                  months.map((String month) {
+                    return DropdownMenuItem<String>(
+                      value: month,
+                      child: Text(
+                        month,
+                        style: const TextStyle(color: Colors.black87),
+                      ),
+                    );
+                  }).toList(),
               onChanged: (String? newMonth) {
                 if (newMonth != null) {
                   ref.read(selectedYearMonthProvider.notifier).select(newMonth);
@@ -436,11 +469,14 @@ class DashboardScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
-            onPressed: currentIndex > 0
-                ? () {
-                    ref.read(selectedYearMonthProvider.notifier).select(months[currentIndex - 1]);
-                  }
-                : null,
+            onPressed:
+                currentIndex > 0
+                    ? () {
+                      ref
+                          .read(selectedYearMonthProvider.notifier)
+                          .select(months[currentIndex - 1]);
+                    }
+                    : null,
           ),
         ],
       ),
@@ -466,7 +502,13 @@ class DashboardScreen extends ConsumerWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -474,7 +516,11 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             Text(
               amountWon,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
