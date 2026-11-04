@@ -15,18 +15,6 @@ import '../../../../providers/monthly_data/monthly_pension_account_balance_provi
 import '../../../../providers/pension/pension_holding_product_provider.dart';
 import '../../../../providers/pension/pension_product_provider.dart';
 
-class _GroupedPensionItem {
-  final String accountId;
-  final String productId;
-  double principal;
-
-  _GroupedPensionItem({
-    required this.accountId,
-    required this.productId,
-    required this.principal,
-  });
-}
-
 class MonthlyPensionBalanceDialog extends ConsumerStatefulWidget {
   final String yearMonth;
 
@@ -69,12 +57,12 @@ class _MonthlyPensionBalanceDialogState
 
   @override
   void dispose() {
-    for (var c in _balanceControllers.values) c.dispose();
-    for (var c in _quantityControllers.values) c.dispose();
-    for (var c in _basePriceControllers.values) c.dispose();
-    for (var c in _monthlyPrincipalControllers.values) c.dispose();
-    for (var c in _monthlyPayoutControllers.values) c.dispose();
-    for (var c in _monthlyWithdrawalControllers.values) c.dispose();
+    for (var c in _balanceControllers.values) { c.dispose(); }
+    for (var c in _quantityControllers.values) { c.dispose(); }
+    for (var c in _basePriceControllers.values) { c.dispose(); }
+    for (var c in _monthlyPrincipalControllers.values) { c.dispose(); }
+    for (var c in _monthlyPayoutControllers.values) { c.dispose(); }
+    for (var c in _monthlyWithdrawalControllers.values) { c.dispose(); }
     _accountCashBalanceController.dispose();
     _accountMonthlyWithdrawalController.dispose();
     super.dispose();
@@ -364,6 +352,12 @@ class _MonthlyPensionBalanceDialogState
                               existingCurrentBalancesAsync.value ?? [];
                           final prevBalances =
                               existingPrevBalancesAsync.value ?? [];
+
+                          // 💡 currentBalanceMap 정의 추가
+                          final currentBalanceMap = {
+                            for (var b in currentBalances)
+                              '${b.accountId}_${b.productId}': b,
+                          };
 
                           final prevBalanceMap = {
                             for (var b in prevBalances)
