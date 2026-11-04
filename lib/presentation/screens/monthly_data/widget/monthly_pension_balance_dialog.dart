@@ -39,7 +39,7 @@ class _MonthlyPensionBalanceDialogState
   final Map<String, TextEditingController> _monthlyPayoutControllers = {};
   final Map<String, TextEditingController> _monthlyWithdrawalControllers = {};
 
-  // 계좌 공통 입력 컨트롤러 (예수금, 당월 납입액, 당월 인출액)
+  // 계좌 공통 입력 컨트롤러 (예수금, 당월 입금액, 당월 인출액)
   final TextEditingController _accountCashBalanceController =
       TextEditingController();
   final TextEditingController _accountMonthlyPrincipalController =
@@ -121,7 +121,7 @@ class _MonthlyPensionBalanceDialogState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    '연금 월말 평가액/납입액 일괄 입력',
+                    '연금 월말 평가액/입금액 일괄 입력',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
@@ -263,7 +263,7 @@ class _MonthlyPensionBalanceDialogState
                       ),
                       const SizedBox(height: 16),
 
-                      // 상단 계좌 공통 정보 카드 (예수금, 당월 납입액, 당월 인출액)
+                      // 상단 계좌 공통 정보 카드 (예수금, 당월 입금액, 당월 인출액)
                       Card(
                         color: Colors.teal.shade50,
                         shape: RoundedRectangleBorder(
@@ -284,7 +284,7 @@ class _MonthlyPensionBalanceDialogState
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    '계좌 공통 현금성 자산 및 납입/인출 관리',
+                                    '계좌 공통 현금성 자산 및 입금/인출 관리',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
@@ -326,7 +326,7 @@ class _MonthlyPensionBalanceDialogState
                                         ThousandsSeparatorInputFormatter(),
                                       ],
                                       decoration: const InputDecoration(
-                                        labelText: '계좌 당월 납입액',
+                                        labelText: '당월 계좌 입금액',
                                         hintText: '0',
                                         suffixText: '원',
                                         border: OutlineInputBorder(),
@@ -703,7 +703,7 @@ class _MonthlyPensionBalanceDialogState
                                                 ThousandsSeparatorInputFormatter(),
                                               ],
                                               decoration: const InputDecoration(
-                                                labelText: '당월 납입액 (추가원금)',
+                                                labelText: '당월 입금액 (추가원금)',
                                                 hintText: '0',
                                                 suffixText: '원',
                                                 border: OutlineInputBorder(),
@@ -781,7 +781,7 @@ class _MonthlyPensionBalanceDialogState
       monthlyPensionAccountBalanceNotifierProvider(_selectedYearMonth).notifier,
     );
 
-    // 1. 계좌 요약 테이블 저장 (전월 누적원금 + 당월 납입액 연동)
+    // 1. 계좌 요약 테이블 저장 (전월 누적원금 + 당월 입금액 연동)
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
     final prevAccountBalances =
         ref

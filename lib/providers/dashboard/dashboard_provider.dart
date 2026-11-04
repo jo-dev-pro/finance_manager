@@ -5,6 +5,8 @@ import '../../core/providers/firestore_provider.dart';
 import '../../core/utils/collection_name.dart';
 import '../../core/utils/number_formatter.dart';
 import '../monthly_data/monthly_bank_balance_provider.dart';
+// 💡 연금 계좌별 잔액 Provider 추가 임포트
+import '../monthly_data/monthly_pension_account_balance_provider.dart';
 
 part 'dashboard_provider.g.dart';
 
@@ -16,6 +18,9 @@ Future<List<String>> availableYearMonths(AvailableYearMonthsRef ref) async {
   final stockSnap = await firestore.collection(monthlyStockBalanceDBName).get();
   final pensionSnap =
       await firestore.collection(monthlyPensionBalanceDBName).get();
+  // 계좌별 현금성 자산 컬렉션도 기준월 수집에 포함
+  final pensionAccountSnap =
+      await firestore.collection(monthlyPensionAccountBalanceDBName).get();
 
   final Set<String> months = {};
   for (var doc in bankSnap.docs) {
@@ -33,6 +38,11 @@ Future<List<String>> availableYearMonths(AvailableYearMonthsRef ref) async {
       months.add(doc.data()['year_month'] as String);
     }
   }
+  for (var doc in pensionAccountSnap.docs) {
+    if (doc.data()['year_month'] != null) {
+      months.add(doc.data()['year_month'] as String);
+    }
+  }
 
   // 내림차순 정렬 (가장 최신 월이 Index 0)
   final sortedList = months.toList()..sort((a, b) => b.compareTo(a));
@@ -43,7 +53,6 @@ Future<List<String>> availableYearMonths(AvailableYearMonthsRef ref) async {
 class SelectedYearMonth extends _$SelectedYearMonth {
   @override
   String? build() {
-    // availableYearMonthsProvider의 상태를 관찰하여 최신 월(index 0)을 기본값으로 설정
     final monthsAsync = ref.watch(availableYearMonthsProvider);
     return monthsAsync.when(
       data: (months) => months.isNotEmpty ? months.first : null,
@@ -64,7 +73,8 @@ class DashboardSummary {
   final double stockBalance;
   final double pensionBalance;
 
-  double get totalValuation => bankBalance + stockBalance;
+  // 💡 총 자산 평가액에 연금 자산도 함께 포함
+  double get totalValuation => bankBalance + stockBalance + pensionBalance;
   double get profitOrLoss => totalValuation - totalInvested;
   double get returnRate =>
       totalInvested > 0 ? (profitOrLoss / totalInvested) * 100 : 0.0;
@@ -76,10 +86,6 @@ class DashboardSummary {
     required this.stockBalance,
     required this.pensionBalance,
   });
-
-  // ------------------------------------------------------------
-  // NumberFormatter 확장 메서드 활용 Getter
-  // ------------------------------------------------------------
 
   int get totalInvestedInt => totalInvested.round();
   int get bankBalanceInt => bankBalance.round();
@@ -115,7 +121,6 @@ class DashboardSummary {
 Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
   String? selectedMonth = ref.watch(selectedYearMonthProvider);
 
-  // 만약 선택된 월이 없으면 availableYearMonths에서 최신 월을 가져옴
   if (selectedMonth == null) {
     final availableMonths = await ref.watch(availableYearMonthsProvider.future);
     if (availableMonths.isNotEmpty) {
@@ -161,17 +166,29 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
         sum + ((doc.data()['evaluation_amount'] ?? 0) as num).toDouble(),
   );
 
-  // 4. 연금 총 평가액
+  // 4. 연금 상품별 총 평가액
   final pensionSnap =
       await firestore
           .collection(monthlyPensionBalanceDBName)
           .where('year_month', isEqualTo: selectedMonth)
           .get();
-  final pensionBalance = pensionSnap.docs.fold<double>(
+  final pensionProductBalance = pensionSnap.docs.fold<double>(
     0,
     (sum, doc) =>
         sum + ((doc.data()['balance'] ?? 0) as num).toDouble(),
   );
+
+  // 💡 5. 연금 계좌별 현금성 자산(예수금) 총액 합산
+  final pensionAccountBalances = await ref.watch(
+    monthlyPensionAccountBalanceNotifierProvider(selectedMonth).future,
+  );
+  final pensionCashBalance = pensionAccountBalances.fold<double>(
+    0.0,
+    (sum, item) => sum + item.cashBalance,
+  );
+
+  // 최종 연금 자산 = 연금 상품 평가액 + 연금 계좌 예수금
+  final pensionBalance = pensionProductBalance + pensionCashBalance;
 
   return DashboardSummary(
     yearMonth: selectedMonth,
