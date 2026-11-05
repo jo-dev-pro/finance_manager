@@ -14,8 +14,10 @@ _$MonthlyStockAccountBalanceImpl _$$MonthlyStockAccountBalanceImplFromJson(
   accountId: json['account_id'] as String,
   accountName: json['account_name'] as String?,
   cashBalance: (json['cash_balance'] as num?)?.toDouble() ?? 0.0,
-  monthlyWithdrawal: (json['monthly_withdrawal'] as num?)?.toDouble() ?? 0.0,
+  principal: (json['principal'] as num?)?.toDouble() ?? 0.0,
+  monthlyPrincipal: (json['monthly_principal'] as num?)?.toDouble() ?? 0.0,
   totalWithdrawal: (json['total_withdrawal'] as num?)?.toDouble() ?? 0.0,
+  monthlyWithdrawal: (json['monthly_withdrawal'] as num?)?.toDouble() ?? 0.0,
 );
 
 Map<String, dynamic> _$$MonthlyStockAccountBalanceImplToJson(
@@ -26,6 +28,8 @@ Map<String, dynamic> _$$MonthlyStockAccountBalanceImplToJson(
   'account_id': instance.accountId,
   'account_name': instance.accountName,
   'cash_balance': instance.cashBalance,
-  'monthly_withdrawal': instance.monthlyWithdrawal,
+  'principal': instance.principal,
+  'monthly_principal': instance.monthlyPrincipal,
   'total_withdrawal': instance.totalWithdrawal,
+  'monthly_withdrawal': instance.monthlyWithdrawal,
 };

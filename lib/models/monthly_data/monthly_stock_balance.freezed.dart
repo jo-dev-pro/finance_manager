@@ -37,11 +37,20 @@ mixin _$MonthlyStockBalance {
   double get currentPrice => throw _privateConstructorUsedError; // 당월 말 현재가
   double get balance =>
       throw _privateConstructorUsedError; // 당월 말 평가액 (quantity * currentPrice)
+  // 1. 투자 원금 (누적 및 당월분)
   double get principal => throw _privateConstructorUsedError; // 누적 투자 원금
+  @JsonKey(name: 'monthly_principal')
+  double get monthlyPrincipal => throw _privateConstructorUsedError; // 당월 추가 매수/입금 원금
+  // 2. 배당금 및 기타 수령액 (누적 및 당월분)
   @JsonKey(name: 'total_payout')
-  double get totalPayout => throw _privateConstructorUsedError; // 누적 배당금 등 수령액
+  double get totalPayout => throw _privateConstructorUsedError; // 누적 배당금/수령액
+  @JsonKey(name: 'monthly_payout')
+  double get monthlyPayout => throw _privateConstructorUsedError; // 당월 배당금/수령액
+  // 3. 매도 및 인출액 (누적 및 당월분)
   @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal => throw _privateConstructorUsedError; // 누적 인출액(계좌인출)
+  double get totalWithdrawal => throw _privateConstructorUsedError; // 누적 매도/인출액
+  @JsonKey(name: 'monthly_withdrawal')
+  double get monthlyWithdrawal => throw _privateConstructorUsedError; // 당월 매도/인출액
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate => throw _privateConstructorUsedError;
 
@@ -73,8 +82,11 @@ abstract class $MonthlyStockBalanceCopyWith<$Res> {
     @JsonKey(name: 'current_price') double currentPrice,
     double balance,
     double principal,
+    @JsonKey(name: 'monthly_principal') double monthlyPrincipal,
     @JsonKey(name: 'total_payout') double totalPayout,
+    @JsonKey(name: 'monthly_payout') double monthlyPayout,
     @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
+    @JsonKey(name: 'monthly_withdrawal') double monthlyWithdrawal,
     @JsonKey(name: 'purchase_date') String? purchaseDate,
   });
 }
@@ -104,8 +116,11 @@ class _$MonthlyStockBalanceCopyWithImpl<$Res, $Val extends MonthlyStockBalance>
     Object? currentPrice = null,
     Object? balance = null,
     Object? principal = null,
+    Object? monthlyPrincipal = null,
     Object? totalPayout = null,
+    Object? monthlyPayout = null,
     Object? totalWithdrawal = null,
+    Object? monthlyWithdrawal = null,
     Object? purchaseDate = freezed,
   }) {
     return _then(
@@ -160,15 +175,30 @@ class _$MonthlyStockBalanceCopyWithImpl<$Res, $Val extends MonthlyStockBalance>
                     ? _value.principal
                     : principal // ignore: cast_nullable_to_non_nullable
                         as double,
+            monthlyPrincipal:
+                null == monthlyPrincipal
+                    ? _value.monthlyPrincipal
+                    : monthlyPrincipal // ignore: cast_nullable_to_non_nullable
+                        as double,
             totalPayout:
                 null == totalPayout
                     ? _value.totalPayout
                     : totalPayout // ignore: cast_nullable_to_non_nullable
                         as double,
+            monthlyPayout:
+                null == monthlyPayout
+                    ? _value.monthlyPayout
+                    : monthlyPayout // ignore: cast_nullable_to_non_nullable
+                        as double,
             totalWithdrawal:
                 null == totalWithdrawal
                     ? _value.totalWithdrawal
                     : totalWithdrawal // ignore: cast_nullable_to_non_nullable
+                        as double,
+            monthlyWithdrawal:
+                null == monthlyWithdrawal
+                    ? _value.monthlyWithdrawal
+                    : monthlyWithdrawal // ignore: cast_nullable_to_non_nullable
                         as double,
             purchaseDate:
                 freezed == purchaseDate
@@ -201,8 +231,11 @@ abstract class _$$MonthlyStockBalanceImplCopyWith<$Res>
     @JsonKey(name: 'current_price') double currentPrice,
     double balance,
     double principal,
+    @JsonKey(name: 'monthly_principal') double monthlyPrincipal,
     @JsonKey(name: 'total_payout') double totalPayout,
+    @JsonKey(name: 'monthly_payout') double monthlyPayout,
     @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
+    @JsonKey(name: 'monthly_withdrawal') double monthlyWithdrawal,
     @JsonKey(name: 'purchase_date') String? purchaseDate,
   });
 }
@@ -231,8 +264,11 @@ class __$$MonthlyStockBalanceImplCopyWithImpl<$Res>
     Object? currentPrice = null,
     Object? balance = null,
     Object? principal = null,
+    Object? monthlyPrincipal = null,
     Object? totalPayout = null,
+    Object? monthlyPayout = null,
     Object? totalWithdrawal = null,
+    Object? monthlyWithdrawal = null,
     Object? purchaseDate = freezed,
   }) {
     return _then(
@@ -287,15 +323,30 @@ class __$$MonthlyStockBalanceImplCopyWithImpl<$Res>
                 ? _value.principal
                 : principal // ignore: cast_nullable_to_non_nullable
                     as double,
+        monthlyPrincipal:
+            null == monthlyPrincipal
+                ? _value.monthlyPrincipal
+                : monthlyPrincipal // ignore: cast_nullable_to_non_nullable
+                    as double,
         totalPayout:
             null == totalPayout
                 ? _value.totalPayout
                 : totalPayout // ignore: cast_nullable_to_non_nullable
                     as double,
+        monthlyPayout:
+            null == monthlyPayout
+                ? _value.monthlyPayout
+                : monthlyPayout // ignore: cast_nullable_to_non_nullable
+                    as double,
         totalWithdrawal:
             null == totalWithdrawal
                 ? _value.totalWithdrawal
                 : totalWithdrawal // ignore: cast_nullable_to_non_nullable
+                    as double,
+        monthlyWithdrawal:
+            null == monthlyWithdrawal
+                ? _value.monthlyWithdrawal
+                : monthlyWithdrawal // ignore: cast_nullable_to_non_nullable
                     as double,
         purchaseDate:
             freezed == purchaseDate
@@ -321,8 +372,11 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
     @JsonKey(name: 'current_price') this.currentPrice = 0.0,
     this.balance = 0.0,
     this.principal = 0.0,
+    @JsonKey(name: 'monthly_principal') this.monthlyPrincipal = 0.0,
     @JsonKey(name: 'total_payout') this.totalPayout = 0.0,
+    @JsonKey(name: 'monthly_payout') this.monthlyPayout = 0.0,
     @JsonKey(name: 'total_withdrawal') this.totalWithdrawal = 0.0,
+    @JsonKey(name: 'monthly_withdrawal') this.monthlyWithdrawal = 0.0,
     @JsonKey(name: 'purchase_date') this.purchaseDate,
   }) : super._();
 
@@ -360,25 +414,40 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
   @JsonKey()
   final double balance;
   // 당월 말 평가액 (quantity * currentPrice)
+  // 1. 투자 원금 (누적 및 당월분)
   @override
   @JsonKey()
   final double principal;
   // 누적 투자 원금
   @override
+  @JsonKey(name: 'monthly_principal')
+  final double monthlyPrincipal;
+  // 당월 추가 매수/입금 원금
+  // 2. 배당금 및 기타 수령액 (누적 및 당월분)
+  @override
   @JsonKey(name: 'total_payout')
   final double totalPayout;
-  // 누적 배당금 등 수령액
+  // 누적 배당금/수령액
+  @override
+  @JsonKey(name: 'monthly_payout')
+  final double monthlyPayout;
+  // 당월 배당금/수령액
+  // 3. 매도 및 인출액 (누적 및 당월분)
   @override
   @JsonKey(name: 'total_withdrawal')
   final double totalWithdrawal;
-  // 누적 인출액(계좌인출)
+  // 누적 매도/인출액
+  @override
+  @JsonKey(name: 'monthly_withdrawal')
+  final double monthlyWithdrawal;
+  // 당월 매도/인출액
   @override
   @JsonKey(name: 'purchase_date')
   final String? purchaseDate;
 
   @override
   String toString() {
-    return 'MonthlyStockBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, stockItemId: $stockItemId, accountName: $accountName, stockItemName: $stockItemName, quantity: $quantity, currentPrice: $currentPrice, balance: $balance, principal: $principal, totalPayout: $totalPayout, totalWithdrawal: $totalWithdrawal, purchaseDate: $purchaseDate)';
+    return 'MonthlyStockBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, stockItemId: $stockItemId, accountName: $accountName, stockItemName: $stockItemName, quantity: $quantity, currentPrice: $currentPrice, balance: $balance, principal: $principal, monthlyPrincipal: $monthlyPrincipal, totalPayout: $totalPayout, monthlyPayout: $monthlyPayout, totalWithdrawal: $totalWithdrawal, monthlyWithdrawal: $monthlyWithdrawal, purchaseDate: $purchaseDate)';
   }
 
   @override
@@ -404,10 +473,16 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
             (identical(other.balance, balance) || other.balance == balance) &&
             (identical(other.principal, principal) ||
                 other.principal == principal) &&
+            (identical(other.monthlyPrincipal, monthlyPrincipal) ||
+                other.monthlyPrincipal == monthlyPrincipal) &&
             (identical(other.totalPayout, totalPayout) ||
                 other.totalPayout == totalPayout) &&
+            (identical(other.monthlyPayout, monthlyPayout) ||
+                other.monthlyPayout == monthlyPayout) &&
             (identical(other.totalWithdrawal, totalWithdrawal) ||
                 other.totalWithdrawal == totalWithdrawal) &&
+            (identical(other.monthlyWithdrawal, monthlyWithdrawal) ||
+                other.monthlyWithdrawal == monthlyWithdrawal) &&
             (identical(other.purchaseDate, purchaseDate) ||
                 other.purchaseDate == purchaseDate));
   }
@@ -426,8 +501,11 @@ class _$MonthlyStockBalanceImpl extends _MonthlyStockBalance {
     currentPrice,
     balance,
     principal,
+    monthlyPrincipal,
     totalPayout,
+    monthlyPayout,
     totalWithdrawal,
+    monthlyWithdrawal,
     purchaseDate,
   );
 
@@ -460,8 +538,11 @@ abstract class _MonthlyStockBalance extends MonthlyStockBalance {
     @JsonKey(name: 'current_price') final double currentPrice,
     final double balance,
     final double principal,
+    @JsonKey(name: 'monthly_principal') final double monthlyPrincipal,
     @JsonKey(name: 'total_payout') final double totalPayout,
+    @JsonKey(name: 'monthly_payout') final double monthlyPayout,
     @JsonKey(name: 'total_withdrawal') final double totalWithdrawal,
+    @JsonKey(name: 'monthly_withdrawal') final double monthlyWithdrawal,
     @JsonKey(name: 'purchase_date') final String? purchaseDate,
   }) = _$MonthlyStockBalanceImpl;
   const _MonthlyStockBalance._() : super._();
@@ -493,14 +574,26 @@ abstract class _MonthlyStockBalance extends MonthlyStockBalance {
   double get currentPrice; // 당월 말 현재가
   @override
   double get balance; // 당월 말 평가액 (quantity * currentPrice)
+  // 1. 투자 원금 (누적 및 당월분)
   @override
   double get principal; // 누적 투자 원금
   @override
+  @JsonKey(name: 'monthly_principal')
+  double get monthlyPrincipal; // 당월 추가 매수/입금 원금
+  // 2. 배당금 및 기타 수령액 (누적 및 당월분)
+  @override
   @JsonKey(name: 'total_payout')
-  double get totalPayout; // 누적 배당금 등 수령액
+  double get totalPayout; // 누적 배당금/수령액
+  @override
+  @JsonKey(name: 'monthly_payout')
+  double get monthlyPayout; // 당월 배당금/수령액
+  // 3. 매도 및 인출액 (누적 및 당월분)
   @override
   @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal; // 누적 인출액(계좌인출)
+  double get totalWithdrawal; // 누적 매도/인출액
+  @override
+  @JsonKey(name: 'monthly_withdrawal')
+  double get monthlyWithdrawal; // 당월 매도/인출액
   @override
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate;

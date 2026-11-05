@@ -4,25 +4,45 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 // import '../../presentation/screens/dashboard_screen.dart';
+// import '../../presentation/screens/account/account_screen.dart';
+// import '../../presentation/screens/all_menu_screen.dart';
+// import '../../presentation/screens/account/account_name_screen.dart';
+// import '../../presentation/screens/bank/bank_screen.dart';
+// import '../../presentation/screens/guide/pension_guide.dart';
+// import '../../presentation/screens/guide/stock_guide.dart';
+// import '../../presentation/screens/guide/asset_management_guide_screen.dart';
+// import '../../presentation/screens/investment/investment_screen.dart';
+// import '../../presentation/screens/monthly_data/monthly_bank_balance_screen.dart';
+// import '../../presentation/screens/monthly_data/monthly_pension_balance_screen.dart';
+// import '../../presentation/screens/monthly_data/monthly_stock_balance_screen.dart';
+// import '../../presentation/screens/pension/pension_screen.dart';
+// import '../../presentation/screens/pension/pension_holding_product_screen.dart';
+// import '../../presentation/screens/pension/pension_product_screen.dart';
+// import '../../presentation/screens/stock/stock_holding_item_screen.dart';
+// import '../../presentation/screens/stock/stock_item_screen.dart';
+// import '../../presentation/screens/stock/stock_screen.dart';
+// import '../../presentation/responsive/responsive_scaffold.dart';
+
 import '../../responsive/features/dashboard/dashboard_screen.dart';
-import '../../presentation/screens/account/account_screen.dart';
-import '../../presentation/screens/all_menu_screen.dart';
-import '../../presentation/screens/account/account_name_screen.dart';
-import '../../presentation/screens/bank/bank_screen.dart';
-import '../../presentation/screens/guide/asset_management_guide_screen.dart';
-import '../../presentation/screens/guide/pension_guide.dart';
-import '../../presentation/screens/guide/stock_guide.dart';
-import '../../presentation/screens/investment/investment_screen.dart';
-import '../../presentation/screens/monthly_data/monthly_bank_balance_screen.dart';
-import '../../presentation/screens/monthly_data/monthly_pension_balance_screen.dart';
-import '../../presentation/screens/monthly_data/monthly_stock_balance_screen.dart';
-import '../../presentation/screens/pension/pension_holding_product_screen.dart';
-import '../../presentation/screens/pension/pension_product_screen.dart';
-import '../../presentation/screens/pension/pension_screen.dart';
-import '../../presentation/screens/stock/stock_holding_item_screen.dart';
-import '../../presentation/screens/stock/stock_item_screen.dart';
-import '../../presentation/screens/stock/stock_screen.dart';
-import '../../presentation/responsive/responsive_scaffold.dart';
+import '../../responsive/features/all_menu/all_menu_screen.dart';
+import '../../responsive/features/guide/asset_management_guide_screen.dart';
+import '../../responsive/features/account/account_screen.dart';
+import '../../responsive/features/account/account_name_screen.dart';
+import '../../responsive/features/bank/bank_screen.dart';
+import '../../responsive/features/investment/investment_screen.dart';
+import '../../responsive/features/monthly_bank/monthly_bank_balance_screen.dart';
+import '../../responsive/features/monthly_pension/monthly_pension_balance_screen.dart';
+import '../../responsive/features/monthly_stock/monthly_stock_balance_screen.dart';
+
+import '../../responsive/features/pension/pension_screen.dart';
+import '../../responsive/features/pension/pension_product_screen.dart';
+import '../../responsive/features/pension/pension_holding_product_screen.dart';
+
+import '../../responsive/features/stock/stock_screen.dart';
+import '../../responsive/features/stock/stock_item_screen.dart';
+import '../../responsive/features/stock/stock_holding_item_screen.dart';
+
+import '../../responsive/scaffold/app_responsive_scaffold.dart';
 import 'app_router_path.dart';
 
 part 'app_router.g.dart';
@@ -124,14 +144,14 @@ GoRouter router(RouterRef ref) {
                     path: AppRoutePath.assetsGuideSub,
                     builder: (context, state) => const AssetManagementGuideScreen(),
                   ),
-                  GoRoute(
-                    path: AppRoutePath.pensionGuideSub,
-                    builder: (context, state) => const PensionGuideScreen(),
-                  ),
-                  GoRoute(
-                    path: AppRoutePath.stockGuideSub,
-                    builder: (context, state) => const StockGuideScreen(),
-                  ),
+                  // GoRoute(
+                  //   path: AppRoutePath.pensionGuideSub,
+                  //   builder: (context, state) => const PensionGuideScreen(),
+                  // ),
+                  // GoRoute(
+                  //   path: AppRoutePath.stockGuideSub,
+                  //   builder: (context, state) => const StockGuideScreen(),
+                  // ),
                   GoRoute(
                     path: AppRoutePath.investmentSub,
                     builder: (context, state) => const InvestmentScreen(),

@@ -7,7 +7,7 @@ part of 'dashboard_provider.dart';
 // **************************************************************************
 
 String _$availableYearMonthsHash() =>
-    r'aeaab12ac59a71d756f0e7248aa25e49651f2b87';
+    r'770d332183ce360da49391413a91aafcadef9a43';
 
 /// See also [availableYearMonths].
 @ProviderFor(availableYearMonths)
@@ -26,7 +26,7 @@ final availableYearMonthsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AvailableYearMonthsRef = AutoDisposeFutureProviderRef<List<String>>;
-String _$dashboardSummaryHash() => r'5e4debc7347f6ee2fae0c9c525e6a25094d5aa85';
+String _$dashboardSummaryHash() => r'cc3b7c0373675a2be7322fc9687e9e0d6c974b3e';
 
 /// See also [dashboardSummary].
 @ProviderFor(dashboardSummary)
