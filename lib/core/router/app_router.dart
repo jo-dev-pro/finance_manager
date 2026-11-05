@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+// import '../../presentation/screens/dashboard_screen.dart';
+import '../../responsive/features/dashboard/dashboard_screen.dart';
 import '../../presentation/screens/account/account_screen.dart';
 import '../../presentation/screens/all_menu_screen.dart';
 import '../../presentation/screens/account/account_name_screen.dart';
 import '../../presentation/screens/bank/bank_screen.dart';
-import '../../presentation/screens/dashboard_screen.dart';
 import '../../presentation/screens/guide/asset_management_guide_screen.dart';
 import '../../presentation/screens/guide/pension_guide.dart';
 import '../../presentation/screens/guide/stock_guide.dart';

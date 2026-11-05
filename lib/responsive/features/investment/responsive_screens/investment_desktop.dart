@@ -1,0 +1,234 @@
+// lib/responsive/features/investment/responsive_screens/investment_desktop.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/utils/number_formatter.dart';
+import '../../../../models/investment/investment.dart';
+import '../../../../providers/investment/investment_provider.dart';
+import '../../../scaffold/widgets/common_desktop_container.dart';
+import 'widgets/investment_dialog.dart';
+
+class InvestmentDesktopScreen extends ConsumerWidget {
+  const InvestmentDesktopScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final investmentState = ref.watch(investmentNotifierProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('투자 내역 관리 (데스크톱)'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
+            color: Colors.grey.shade700,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () => _showAddDialog(context),
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
+      body: investmentState.when(
+        data: (investments) {
+          final totalAmount = investments.fold<double>(
+            0,
+            (sum, item) => sum + item.amount,
+          );
+
+          return DesktopContainer(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                // 상단 요약 카드 (총 투자금)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.blue.shade100),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '총 투자금액',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${totalAmount.toCommaString()} 원',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 내역 리스트 (카드 형태)
+                Expanded(
+                  child: investments.isEmpty
+                      ? const Center(
+                        child: Text(
+                          '등록된 투자 내역이 없습니다.\n우측 상단의 + 버튼을 눌러 추가해 보세요.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      )
+                      : ListView.builder(
+                        itemCount: investments.length,
+                        itemBuilder: (context, index) {
+                          final item = investments[index];
+                          return Card(
+                            elevation: 1,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              side: BorderSide(color: Colors.grey.shade200),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.description,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        if (item.createdAt != null &&
+                                            item.createdAt!.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            item.createdAt!,
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    '${item.amount.toCommaString()} 원',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.blueAccent,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.edit_outlined,
+                                      size: 20,
+                                    ),
+                                    color: Colors.grey.shade700,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    onPressed: () => _showEditDialog(context, item),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      size: 20,
+                                    ),
+                                    color: Colors.red.shade400,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    onPressed: () => _confirmDelete(
+                                      context,
+                                      ref,
+                                      item,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                ),
+              ],
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text('데이터를 불러오는 중 오류가 발생했습니다:\n$e')),
+      ),
+    );
+  }
+
+  void _showAddDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => const InvestmentDialog(),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, Investment investment) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => InvestmentDialog(initialData: investment),
+    );
+  }
+
+  void _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    Investment investment,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('삭제 확인'),
+        content: Text('\'${investment.description}\' 내역을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (investment.id != null) {
+                ref
+                    .read(investmentNotifierProvider.notifier)
+                    .deleteInvestment(investment.id!);
+              }
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('삭제', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+}
