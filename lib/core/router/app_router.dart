@@ -14,7 +14,7 @@ import '../../presentation/screens/all_menu_screen.dart';
 // import '../../presentation/screens/investment/investment_screen.dart';
 // import '../../presentation/screens/monthly_data/monthly_bank_balance_screen.dart';
 // import '../../presentation/screens/monthly_data/monthly_pension_balance_screen.dart';
-// import '../../presentation/screens/monthly_data/monthly_stock_balance_screen.dart';
+import '../../presentation/screens/monthly_data/monthly_stock_balance_screen.dart';
 // import '../../presentation/screens/pension/pension_screen.dart';
 // import '../../presentation/screens/pension/pension_holding_product_screen.dart';
 // import '../../presentation/screens/pension/pension_product_screen.dart';
@@ -32,7 +32,7 @@ import '../../responsive/features/bank/bank_screen.dart';
 import '../../responsive/features/investment/investment_screen.dart';
 import '../../responsive/features/monthly_bank/monthly_bank_balance_screen.dart';
 import '../../responsive/features/monthly_pension/monthly_pension_balance_screen.dart';
-import '../../responsive/features/monthly_stock/monthly_stock_balance_screen.dart';
+// import '../../responsive/features/monthly_stock/monthly_stock_balance_screen.dart';
 
 import '../../responsive/features/pension/pension_screen.dart';
 import '../../responsive/features/pension/pension_product_screen.dart';

@@ -20,12 +20,16 @@ class _GroupedStockItem {
   final String accountId;
   final String stockItemId;
   double principal;
+  double totalPayout;
+  double totalWithdrawal;
   String? purchaseDate;
 
   _GroupedStockItem({
     required this.accountId,
     required this.stockItemId,
     required this.principal,
+    required this.totalPayout,
+    required this.totalWithdrawal,
     this.purchaseDate,
   });
 }
@@ -45,11 +49,12 @@ class _MonthlyStockBalanceDialogState
   late String _selectedYearMonth;
   String? _selectedAccountId;
 
-  // 종목별 입력 컨트롤러
+  // 종목별 입력 컨트롤러 (당월 항목들)
   final Map<String, TextEditingController> _quantityControllers = {};
   final Map<String, TextEditingController> _priceControllers = {};
-  final Map<String, TextEditingController> _addPrincipalControllers = {};
-  final Map<String, TextEditingController> _payoutControllers = {};
+  final Map<String, TextEditingController> _monthlyPrincipalControllers = {}; // 당월 투자금
+  final Map<String, TextEditingController> _monthlyPayoutControllers = {}; // 당월 배당금(기타수입 등)
+  final Map<String, TextEditingController> _monthlyWithdrawalControllers = {}; // 당월 매도액
 
   // 계좌 공통 입력 컨트롤러 (현금성 잔액, 당월 인출액)
   final TextEditingController _accountCashBalanceController =
@@ -70,18 +75,11 @@ class _MonthlyStockBalanceDialogState
 
   @override
   void dispose() {
-    for (var c in _quantityControllers.values) {
-      c.dispose();
-    }
-    for (var c in _priceControllers.values) {
-      c.dispose();
-    }
-    for (var c in _addPrincipalControllers.values) {
-      c.dispose();
-    }
-    for (var c in _payoutControllers.values) {
-      c.dispose();
-    }
+    for (var c in _quantityControllers.values) c.dispose();
+    for (var c in _priceControllers.values) c.dispose();
+    for (var c in _monthlyPrincipalControllers.values) c.dispose();
+    for (var c in _monthlyPayoutControllers.values) c.dispose();
+    for (var c in _monthlyWithdrawalControllers.values) c.dispose();
     _accountCashBalanceController.dispose();
     _accountMonthlyWithdrawalController.dispose();
     super.dispose();
@@ -188,7 +186,6 @@ class _MonthlyStockBalanceDialogState
       monthlyStockBalanceNotifierProvider(prevYearMonth),
     );
 
-    // 계좌별 요약 데이터 (현재월 및 전월) 감시
     final currentAccountBalancesAsync = ref.watch(
       monthlyStockAccountBalanceNotifierProvider(_selectedYearMonth),
     );
@@ -280,7 +277,6 @@ class _MonthlyStockBalanceDialogState
                     _selectedAccountId = stockAccounts.first.id;
                   }
 
-                  // 계좌 공통 필드 기본값 세팅 (현금성 잔액은 전월값 자동 상속 또는 현재값 반영)
                   final currentAccBalances = currentAccountBalancesAsync.value ?? [];
                   final prevAccBalances = prevAccountBalancesAsync.value ?? [];
                   
@@ -331,7 +327,6 @@ class _MonthlyStockBalanceDialogState
                         onChanged: (val) {
                           setState(() {
                             _selectedAccountId = val;
-                            // 계좌 변경 시 컨트롤러 초기화 후 다시 세팅되도록 비움
                             _accountCashBalanceController.clear();
                             _accountMonthlyWithdrawalController.clear();
                           });
@@ -339,7 +334,6 @@ class _MonthlyStockBalanceDialogState
                       ),
                       const SizedBox(height: 16),
 
-                      // 💡 [계좌 공통] 현금성 잔액 및 당월 인출액 카드
                       Card(
                         color: Colors.indigo.shade50,
                         shape: RoundedRectangleBorder(
@@ -456,6 +450,8 @@ class _MonthlyStockBalanceDialogState
                               accountId: hi.accountId,
                               stockItemId: stockId,
                               principal: prevData?.principal ?? 0.0,
+                              totalPayout: prevData?.totalPayout ?? 0.0,
+                              totalWithdrawal: prevData?.totalWithdrawal ?? 0.0,
                               purchaseDate: hi.initialPurchaseDate,
                             );
                           }
@@ -544,13 +540,9 @@ class _MonthlyStockBalanceDialogState
                                           ? currentPriceVal.toCommaString()
                                           : '',
                                     );
-                                    _addPrincipalControllers[key] =
-                                        TextEditingController();
-                                    
-                                    final currentPayout = currentData?.totalPayout ?? 0.0;
-                                    _payoutControllers[key] = TextEditingController(
-                                      text: currentPayout > 0 ? currentPayout.toCommaString() : '',
-                                    );
+                                    _monthlyPrincipalControllers[key] = TextEditingController();
+                                    _monthlyPayoutControllers[key] = TextEditingController();
+                                    _monthlyWithdrawalControllers[key] = TextEditingController();
                                   }
 
                                   final isLoading =
@@ -643,16 +635,33 @@ class _MonthlyStockBalanceDialogState
                                               ),
                                             ],
                                           ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '누적 원금: ${groupItem.principal.toWon()}',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: Colors.grey.shade600,
+                                          const SizedBox(height: 6),
+
+                                          // 💡 디스플레이 전용 누적 항목들 표시
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade100,
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text('누적투자금: ${groupItem.principal.toWon()}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                                    Text('누적배당금: ${groupItem.totalPayout.toWon()}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text('누적매도액: ${groupItem.totalWithdrawal.toWon()}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                              ],
                                             ),
                                           ),
                                           const Divider(height: 16),
                                           
+                                          // 수량 및 현재가
                                           Row(
                                             children: [
                                               Expanded(
@@ -705,12 +714,13 @@ class _MonthlyStockBalanceDialogState
                                           ),
                                           const SizedBox(height: 10),
                                           
+                                          // 💡 입력 항목들: 당월투자금, 당월배당금(기타수입 등), 당월매도액
                                           Row(
                                             children: [
                                               Expanded(
                                                 child: TextFormField(
                                                   controller:
-                                                      _addPrincipalControllers[key],
+                                                      _monthlyPrincipalControllers[key],
                                                   keyboardType:
                                                       TextInputType.number,
                                                   inputFormatters: [
@@ -720,7 +730,7 @@ class _MonthlyStockBalanceDialogState
                                                   ],
                                                   decoration:
                                                       const InputDecoration(
-                                                        labelText: '추가 매수액',
+                                                        labelText: '당월투자금',
                                                         hintText: '0',
                                                         suffixText: '원',
                                                         border:
@@ -732,22 +742,43 @@ class _MonthlyStockBalanceDialogState
                                               const SizedBox(width: 8),
                                               Expanded(
                                                 child: TextFormField(
-                                                  controller: _payoutControllers[key],
-                                                  keyboardType: TextInputType.number,
+                                                  controller:
+                                                      _monthlyPayoutControllers[key],
+                                                  keyboardType:
+                                                      TextInputType.number,
                                                   inputFormatters: [
-                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
                                                     ThousandsSeparatorInputFormatter(),
                                                   ],
-                                                  decoration: const InputDecoration(
-                                                    labelText: '당월 배당금',
-                                                    hintText: '0',
-                                                    suffixText: '원',
-                                                    border: OutlineInputBorder(),
-                                                    isDense: true,
-                                                  ),
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '당월배당금',
+                                                        hintText: '0',
+                                                        suffixText: '원',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
                                                 ),
                                               ),
                                             ],
+                                          ),
+                                          const SizedBox(height: 10),
+                                          TextFormField(
+                                            controller: _monthlyWithdrawalControllers[key],
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.digitsOnly,
+                                              ThousandsSeparatorInputFormatter(),
+                                            ],
+                                            decoration: const InputDecoration(
+                                              labelText: '당월매도액',
+                                              hintText: '0',
+                                              suffixText: '원',
+                                              border: OutlineInputBorder(),
+                                              isDense: true,
+                                            ),
                                           ),
                                           const SizedBox(height: 8),
                                           Align(
@@ -810,7 +841,6 @@ class _MonthlyStockBalanceDialogState
       monthlyStockAccountBalanceNotifierProvider(_selectedYearMonth).notifier,
     );
 
-    // 1. 전월 누적 인출액 계산을 위한 준비
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
     final prevAccountBalances = ref.read(
           monthlyStockAccountBalanceNotifierProvider(prevYearMonth),
@@ -821,7 +851,6 @@ class _MonthlyStockBalanceDialogState
     );
     final prevTotalWithdrawal = prevAccountBalance?.totalWithdrawal ?? 0.0;
 
-    // 2. 공통 입력 파싱 (현금성 잔액, 당월 인출액)
     final accountCashBalance = double.tryParse(
           _accountCashBalanceController.text.replaceAll(RegExp(r'[^0-9]'), ''),
         ) ??
@@ -831,10 +860,8 @@ class _MonthlyStockBalanceDialogState
         ) ??
         0.0;
 
-    // 3. 당월 누적 인출액 산출 (전월 누적 + 당월 인출액)
     final finalTotalWithdrawal = prevTotalWithdrawal + currentMonthlyWithdrawal;
 
-    // 4. 계좌별 요약 테이블에 저장
     final accountBalanceItem = MonthlyStockAccountBalance(
       yearMonth: _selectedYearMonth,
       accountId: _selectedAccountId!,
@@ -844,7 +871,6 @@ class _MonthlyStockBalanceDialogState
     );
     await accountBalanceNotifier.saveBalance(accountBalanceItem);
 
-    // 5. 종목별 데이터 저장 처리
     final holdingItems = ref.read(stockHoldingItemNotifierProvider).value ?? [];
     final Map<String, _GroupedStockItem> groupedMap = {};
 
@@ -866,6 +892,8 @@ class _MonthlyStockBalanceDialogState
         accountId: hi.accountId,
         stockItemId: stockId,
         principal: prevData?.principal ?? 0.0,
+        totalPayout: prevData?.totalPayout ?? 0.0,
+        totalWithdrawal: prevData?.totalWithdrawal ?? 0.0,
         purchaseDate: hi.initialPurchaseDate,
       );
     }
@@ -879,8 +907,9 @@ class _MonthlyStockBalanceDialogState
 
       final qtyCtrl = _quantityControllers[key];
       final priceCtrl = _priceControllers[key];
-      final addPrinCtrl = _addPrincipalControllers[key];
-      final payoutCtrl = _payoutControllers[key];
+      final monthlyPrinCtrl = _monthlyPrincipalControllers[key];
+      final monthlyPayoutCtrl = _monthlyPayoutControllers[key];
+      final monthlyWithCtrl = _monthlyWithdrawalControllers[key];
 
       if (qtyCtrl != null &&
           qtyCtrl.text.isNotEmpty &&
@@ -892,19 +921,28 @@ class _MonthlyStockBalanceDialogState
             double.tryParse(priceCtrl.text.replaceAll(',', '').trim()) ?? 0.0;
         final balanceVal = qtyVal * priceVal;
 
-        final addPrinVal =
+        final monthlyPrinVal =
             double.tryParse(
-              addPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+              monthlyPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
             ) ??
             0.0;
         
-        final payoutVal =
+        final monthlyPayoutVal =
             double.tryParse(
-              payoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+              monthlyPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
             ) ??
             0.0;
 
-        final finalPrincipal = groupItem.principal + addPrinVal;
+        final monthlyWithVal =
+            double.tryParse(
+              monthlyWithCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+            ) ??
+            0.0;
+
+        // 최종 누적값 산출 (전월 누적 + 당월 입력값)
+        final finalPrincipal = groupItem.principal + monthlyPrinVal;
+        final finalTotalPayout = groupItem.totalPayout + monthlyPayoutVal;
+        final finalTotalWithdrawal = groupItem.totalWithdrawal + monthlyWithVal;
 
         itemsToSave.add(
           MonthlyStockBalance(
@@ -915,8 +953,11 @@ class _MonthlyStockBalanceDialogState
             currentPrice: priceVal,
             balance: balanceVal,
             principal: finalPrincipal,
-            totalPayout: payoutVal,
-            totalWithdrawal: 0.0, // 종목별 테이블에서는 인출액 분리 완료
+            monthlyPrincipal: monthlyPrinVal,
+            totalPayout: finalTotalPayout,
+            monthlyPayout: monthlyPayoutVal,
+            totalWithdrawal: finalTotalWithdrawal,
+            monthlyWithdrawal: monthlyWithVal,
             purchaseDate: groupItem.purchaseDate,
           ),
         );
