@@ -18,7 +18,7 @@ class PensionHoldingProductDesktopScreen extends ConsumerStatefulWidget {
 }
 
 class _PensionHoldingProductDesktopScreenState
-    extends ConsumerState<PensionHoldingProductDesktopScreen> {
+    extends ConsumerState<PensionHoldingProductDesktopScreen> { 
   String? _selectedAccountId;
 
   @override

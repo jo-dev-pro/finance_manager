@@ -22,7 +22,7 @@ class DashboardDesktopScreen extends ConsumerWidget {
         final activeCurrentMonth =
             (selectedMonth != null && months.contains(selectedMonth))
                 ? selectedMonth
-                : months.first;
+                : months.first; 
 
         return RefreshIndicator(
           onRefresh: () async {

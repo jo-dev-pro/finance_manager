@@ -32,7 +32,9 @@ mixin _$MonthlyStockAccountBalance {
   String? get accountName => throw _privateConstructorUsedError;
   @JsonKey(name: 'cash_balance')
   double get cashBalance => throw _privateConstructorUsedError; // 계좌 현금성 잔액(예수금)
-  // 1. 계좌 입금액 / 추가원금 (누적 및 당월분)
+  // 💡 신규 추가: 당월 말일 적용 환율 (예: 1350.50, 원화계좌는 기본값 1.0)
+  @JsonKey(name: 'exchange_rate')
+  double get exchangeRate => throw _privateConstructorUsedError; // 1. 계좌 입금액 / 추가원금 (누적 및 당월분)
   double get principal => throw _privateConstructorUsedError; // 누적 계좌 입금액 (원금)
   @JsonKey(name: 'monthly_principal')
   double get monthlyPrincipal => throw _privateConstructorUsedError; // 당월 계좌 입금액
@@ -69,6 +71,7 @@ abstract class $MonthlyStockAccountBalanceCopyWith<$Res> {
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'account_name') String? accountName,
     @JsonKey(name: 'cash_balance') double cashBalance,
+    @JsonKey(name: 'exchange_rate') double exchangeRate,
     double principal,
     @JsonKey(name: 'monthly_principal') double monthlyPrincipal,
     @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
@@ -99,6 +102,7 @@ class _$MonthlyStockAccountBalanceCopyWithImpl<
     Object? accountId = null,
     Object? accountName = freezed,
     Object? cashBalance = null,
+    Object? exchangeRate = null,
     Object? principal = null,
     Object? monthlyPrincipal = null,
     Object? totalWithdrawal = null,
@@ -130,6 +134,11 @@ class _$MonthlyStockAccountBalanceCopyWithImpl<
                 null == cashBalance
                     ? _value.cashBalance
                     : cashBalance // ignore: cast_nullable_to_non_nullable
+                        as double,
+            exchangeRate:
+                null == exchangeRate
+                    ? _value.exchangeRate
+                    : exchangeRate // ignore: cast_nullable_to_non_nullable
                         as double,
             principal:
                 null == principal
@@ -172,6 +181,7 @@ abstract class _$$MonthlyStockAccountBalanceImplCopyWith<$Res>
     @JsonKey(name: 'account_id') String accountId,
     @JsonKey(name: 'account_name') String? accountName,
     @JsonKey(name: 'cash_balance') double cashBalance,
+    @JsonKey(name: 'exchange_rate') double exchangeRate,
     double principal,
     @JsonKey(name: 'monthly_principal') double monthlyPrincipal,
     @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
@@ -202,6 +212,7 @@ class __$$MonthlyStockAccountBalanceImplCopyWithImpl<$Res>
     Object? accountId = null,
     Object? accountName = freezed,
     Object? cashBalance = null,
+    Object? exchangeRate = null,
     Object? principal = null,
     Object? monthlyPrincipal = null,
     Object? totalWithdrawal = null,
@@ -233,6 +244,11 @@ class __$$MonthlyStockAccountBalanceImplCopyWithImpl<$Res>
             null == cashBalance
                 ? _value.cashBalance
                 : cashBalance // ignore: cast_nullable_to_non_nullable
+                    as double,
+        exchangeRate:
+            null == exchangeRate
+                ? _value.exchangeRate
+                : exchangeRate // ignore: cast_nullable_to_non_nullable
                     as double,
         principal:
             null == principal
@@ -268,6 +284,7 @@ class _$MonthlyStockAccountBalanceImpl extends _MonthlyStockAccountBalance {
     @JsonKey(name: 'account_id') required this.accountId,
     @JsonKey(name: 'account_name') this.accountName,
     @JsonKey(name: 'cash_balance') this.cashBalance = 0.0,
+    @JsonKey(name: 'exchange_rate') this.exchangeRate = 1.0,
     this.principal = 0.0,
     @JsonKey(name: 'monthly_principal') this.monthlyPrincipal = 0.0,
     @JsonKey(name: 'total_withdrawal') this.totalWithdrawal = 0.0,
@@ -293,6 +310,10 @@ class _$MonthlyStockAccountBalanceImpl extends _MonthlyStockAccountBalance {
   @JsonKey(name: 'cash_balance')
   final double cashBalance;
   // 계좌 현금성 잔액(예수금)
+  // 💡 신규 추가: 당월 말일 적용 환율 (예: 1350.50, 원화계좌는 기본값 1.0)
+  @override
+  @JsonKey(name: 'exchange_rate')
+  final double exchangeRate;
   // 1. 계좌 입금액 / 추가원금 (누적 및 당월분)
   @override
   @JsonKey()
@@ -313,7 +334,7 @@ class _$MonthlyStockAccountBalanceImpl extends _MonthlyStockAccountBalance {
 
   @override
   String toString() {
-    return 'MonthlyStockAccountBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, accountName: $accountName, cashBalance: $cashBalance, principal: $principal, monthlyPrincipal: $monthlyPrincipal, totalWithdrawal: $totalWithdrawal, monthlyWithdrawal: $monthlyWithdrawal)';
+    return 'MonthlyStockAccountBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, accountName: $accountName, cashBalance: $cashBalance, exchangeRate: $exchangeRate, principal: $principal, monthlyPrincipal: $monthlyPrincipal, totalWithdrawal: $totalWithdrawal, monthlyWithdrawal: $monthlyWithdrawal)';
   }
 
   @override
@@ -330,6 +351,8 @@ class _$MonthlyStockAccountBalanceImpl extends _MonthlyStockAccountBalance {
                 other.accountName == accountName) &&
             (identical(other.cashBalance, cashBalance) ||
                 other.cashBalance == cashBalance) &&
+            (identical(other.exchangeRate, exchangeRate) ||
+                other.exchangeRate == exchangeRate) &&
             (identical(other.principal, principal) ||
                 other.principal == principal) &&
             (identical(other.monthlyPrincipal, monthlyPrincipal) ||
@@ -349,6 +372,7 @@ class _$MonthlyStockAccountBalanceImpl extends _MonthlyStockAccountBalance {
     accountId,
     accountName,
     cashBalance,
+    exchangeRate,
     principal,
     monthlyPrincipal,
     totalWithdrawal,
@@ -378,6 +402,7 @@ abstract class _MonthlyStockAccountBalance extends MonthlyStockAccountBalance {
     @JsonKey(name: 'account_id') required final String accountId,
     @JsonKey(name: 'account_name') final String? accountName,
     @JsonKey(name: 'cash_balance') final double cashBalance,
+    @JsonKey(name: 'exchange_rate') final double exchangeRate,
     final double principal,
     @JsonKey(name: 'monthly_principal') final double monthlyPrincipal,
     @JsonKey(name: 'total_withdrawal') final double totalWithdrawal,
@@ -402,7 +427,10 @@ abstract class _MonthlyStockAccountBalance extends MonthlyStockAccountBalance {
   @override
   @JsonKey(name: 'cash_balance')
   double get cashBalance; // 계좌 현금성 잔액(예수금)
-  // 1. 계좌 입금액 / 추가원금 (누적 및 당월분)
+  // 💡 신규 추가: 당월 말일 적용 환율 (예: 1350.50, 원화계좌는 기본값 1.0)
+  @override
+  @JsonKey(name: 'exchange_rate')
+  double get exchangeRate; // 1. 계좌 입금액 / 추가원금 (누적 및 당월분)
   @override
   double get principal; // 누적 계좌 입금액 (원금)
   @override

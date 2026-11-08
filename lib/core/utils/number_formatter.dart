@@ -81,6 +81,11 @@ extension NumberFormatter on num {
   String toWon() {
     return '${toCommaString()}원';
   }
+  
+  /// 뒤에 '달러($)' 및 앞에 기호 부착 (예: 187.05 -> "$187.05")
+  String toUSD() {
+    return '\$${toCommaString()}';
+  }
 
   /// 부호 포함 3자리 콤마 (예: 1500 -> "+1,500", -500 -> "-500", 0 -> "0")
   String toSignedCommaString() {

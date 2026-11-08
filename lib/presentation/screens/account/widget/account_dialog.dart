@@ -25,11 +25,13 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
   String? _selectedAccountNameId;
   String? _selectedAccountName;
   late String _selectedType;
+  late String _selectedCurrency; // 선택된 통화 상태
 
   XFile? _selectedImage;
   Uint8List? _imageBytes;
 
   final List<String> _accountTypes = ['은행', '연금', '증권', '기타'];
+  final List<String> _currencies = ['KRW', 'USD']; // 지원 통화 리스트
 
   bool get _isEditing => widget.initialAccount != null;
 
@@ -52,6 +54,12 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
     _selectedType = widget.initialAccount?.accountType ?? '은행';
     if (!_accountTypes.contains(_selectedType)) {
       _selectedType = '기타';
+    }
+
+    // 초기 통화 설정 (기본값 KRW)
+    _selectedCurrency = widget.initialAccount?.currency ?? 'KRW';
+    if (!_currencies.contains(_selectedCurrency)) {
+      _selectedCurrency = 'KRW';
     }
   }
 
@@ -107,6 +115,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
           accountName: _selectedAccountName!,
           accountNumber: number.isEmpty ? null : number,
           sortOrder: sortOrder,
+          currency: _selectedCurrency, // 통화 정보 반영
         );
         ref
             .read(accountNotifierProvider.notifier)
@@ -119,6 +128,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
           accountName: _selectedAccountName!,
           accountNumber: number.isEmpty ? null : number,
           sortOrder: sortOrder,
+          currency: _selectedCurrency, // 통화 정보 반영
         );
         ref
             .read(accountNotifierProvider.notifier)
@@ -190,7 +200,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
                                   size: 20,
                                   color: Colors.grey[800],
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   '로고 선택',
                                   style: TextStyle(
@@ -221,7 +231,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
 
               // 계좌구분 선택
               DropdownButtonFormField<String>(
-                initialValue: _selectedType,
+                value: _selectedType,
                 decoration: const InputDecoration(
                   labelText: '계좌구분',
                   border: OutlineInputBorder(),
@@ -237,11 +247,29 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
               ),
               const SizedBox(height: 12),
 
+              // 통화 선택 드롭다운
+              DropdownButtonFormField<String>(
+                value: _selectedCurrency,
+                decoration: const InputDecoration(
+                  labelText: '통화 구분',
+                  border: OutlineInputBorder(),
+                ),
+                icon: const Icon(Icons.arrow_drop_down),
+                items:
+                    _currencies
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _selectedCurrency = val);
+                },
+              ),
+              const SizedBox(height: 12),
+
               // 계좌명 선택
               accountNamesAsync.when(
                 data: (accountNames) {
                   return DropdownButtonFormField<String>(
-                    initialValue: _selectedAccountNameId,
+                    value: _selectedAccountNameId,
                     decoration: const InputDecoration(
                       labelText: '계좌명 선택',
                       border: OutlineInputBorder(),

@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/utils/screen_size.dart';
+import '../../../core/widgets/main_constrainedbox.dart';
+import '../../../core/widgets/month_selector_header.dart';
 import '../../../models/account/account.dart';
 import '../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../providers/account/account_name_provider.dart';
@@ -105,7 +107,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
             monthlyPensionBalanceNotifierProvider(lastMonth),
           );
 
-          // 당월 및 전월 계좌별 현금성 자산 데이터
+          // 당월 및 전월 계좌별 현금성 자산 및 인출액 데이터
           final accountBalancesAsync = ref.watch(
             monthlyPensionAccountBalanceNotifierProvider(activeCurrentMonth),
           );
@@ -113,263 +115,228 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
             monthlyPensionAccountBalanceNotifierProvider(lastMonth),
           );
 
-          return Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: desktopWidthSize),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildMonthSelectorHeader(
-                    context,
-                    months,
-                    activeCurrentMonth,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          balancesAsync.when(
-                            loading:
-                                () => const Center(
-                                  child: CircularProgressIndicator(),
+          return MainConstrainedBox(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MonthSelectorHeader(
+                  months: months,
+                  currentMonth: activeCurrentMonth,
+                ),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        balancesAsync.when(
+                          loading:
+                              () => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                          error: (err, _) => Text('오류: $err'),
+                          data: (balances) {
+                            final accountBalances =
+                                accountBalancesAsync.value ?? [];
+                            final lastBalances = lastBalancesAsync.value ?? [];
+                            final lastAccountBalances =
+                                lastAccountBalancesAsync.value ?? [];
+
+                            final productBalanceSum = balances.fold<double>(
+                              0.0,
+                              (sum, item) => sum + item.balance,
+                            );
+                            final productPrincipalSum = balances.fold<double>(
+                              0.0,
+                              (sum, item) => sum + item.principal,
+                            );
+
+                            // 계좌별 누적 인출액 합산 (계좌 단위 인출액만 반영)
+                            final totalAccountWithdrawalSum = accountBalances
+                                .fold<double>(
+                                  0.0,
+                                  (sum, item) => sum + item.totalWithdrawal,
+                                );
+
+                            final accountCashSum = accountBalances.fold<double>(
+                              0.0,
+                              (sum, item) => sum + item.cashBalance,
+                            );
+
+                            final totalBalance =
+                                productBalanceSum + accountCashSum;
+                            final totalPrincipal =
+                                productPrincipalSum + accountCashSum;
+
+                            // 총 평가 손익 = (현재 잔액 + 계좌 누적 인출액) - 총 투자 원금
+                            final totalProfitOrLoss =
+                                (totalBalance + totalAccountWithdrawalSum) -
+                                totalPrincipal;
+
+                            final totalReturnRate =
+                                totalPrincipal > 0
+                                    ? (totalProfitOrLoss / totalPrincipal) * 100
+                                    : 0.0;
+
+                            final lastProductSum = lastBalances.fold<double>(
+                              0.0,
+                              (sum, item) => sum + item.balance,
+                            );
+                            final lastCashSum = lastAccountBalances
+                                .fold<double>(
+                                  0.0,
+                                  (sum, item) => sum + item.cashBalance,
+                                );
+                            final lastTotalBalance =
+                                lastProductSum + lastCashSum;
+
+                            return _buildSummaryCard(
+                              totalBalance: totalBalance,
+                              totalPrincipal: totalPrincipal,
+                              totalProfitOrLoss: totalProfitOrLoss,
+                              totalReturnRate: totalReturnRate,
+                              totalWithdrawal: totalAccountWithdrawalSum,
+                              diffFromLastMonth:
+                                  totalBalance - lastTotalBalance,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          '계좌 목록',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        balancesAsync.when(
+                          loading: () => const CircularProgressIndicator(),
+                          error: (err, _) => Text('로드 실패: $err'),
+                          data: (balances) {
+                            final accountBalances =
+                                accountBalancesAsync.value ?? [];
+                            final lastBalances = lastBalancesAsync.value ?? [];
+                            final lastAccountBalances =
+                                lastAccountBalancesAsync.value ?? [];
+
+                            final accounts = accountsAsync.value ?? [];
+                            final accountNames = accountNamesAsync.value ?? [];
+                            final products = productsAsync.value ?? [];
+
+                            final Map<String, List<MonthlyPensionBalance>>
+                            accountGroups = {};
+                            for (var item in balances) {
+                              accountGroups
+                                  .putIfAbsent(item.accountId, () => [])
+                                  .add(item);
+                            }
+
+                            for (var accBal in accountBalances) {
+                              accountGroups.putIfAbsent(
+                                accBal.accountId,
+                                () => [],
+                              );
+                            }
+
+                            final Map<String, List<MonthlyPensionBalance>>
+                            lastAccountGroups = {};
+                            for (var item in lastBalances) {
+                              lastAccountGroups
+                                  .putIfAbsent(item.accountId, () => [])
+                                  .add(item);
+                            }
+
+                            if (accountGroups.isEmpty) {
+                              return const Center(
+                                child: Text('등록된 연금 계좌 데이터가 없습니다.'),
+                              );
+                            }
+
+                            final accountIds = accountGroups.keys.toList();
+                            final accountCashMap = {
+                              for (var ab in accountBalances)
+                                ab.accountId: ab.cashBalance,
+                            };
+                            final accountWithdrawalMap = {
+                              for (var ab in accountBalances)
+                                ab.accountId: ab.totalWithdrawal,
+                            };
+                            final lastAccountCashMap = {
+                              for (var lab in lastAccountBalances)
+                                lab.accountId: lab.cashBalance,
+                            };
+
+                            final totalProductSum = balances.fold<double>(
+                              0.0,
+                              (s, i) => s + i.balance,
+                            );
+                            final totalCashSum = accountBalances.fold<double>(
+                              0.0,
+                              (s, i) => s + i.cashBalance,
+                            );
+                            final overallTotalBalance =
+                                totalProductSum + totalCashSum;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildAccountGrid(
+                                  accountIds,
+                                  accountGroups,
+                                  accountCashMap,
+                                  accountWithdrawalMap,
+                                  lastAccountGroups,
+                                  lastAccountCashMap,
+                                  accounts,
+                                  accountNames,
+                                  products,
                                 ),
-                            error: (err, _) => Text('오류: $err'),
-                            data: (balances) {
-                              final accountBalances =
-                                  accountBalancesAsync.value ?? [];
-                              final lastBalances =
-                                  lastBalancesAsync.value ?? [];
-                              final lastAccountBalances =
-                                  lastAccountBalancesAsync.value ?? [];
-
-                              final productBalanceSum = balances.fold<double>(
-                                0.0,
-                                (sum, item) => sum + item.balance,
-                              );
-                              final productPrincipalSum = balances.fold<double>(
-                                0.0,
-                                (sum, item) => sum + item.principal,
-                              );
-
-                              final accountCashSum = accountBalances
-                                  .fold<double>(
-                                    0.0,
-                                    (sum, item) => sum + item.cashBalance,
-                                  );
-
-                              final totalBalance =
-                                  productBalanceSum + accountCashSum;
-                              final totalPrincipal =
-                                  productPrincipalSum + accountCashSum;
-
-                              final totalProfitOrLoss = balances.fold<double>(
-                                0.0,
-                                (sum, item) => sum + item.profitOrLoss,
-                              );
-                              final totalReturnRate =
-                                  totalPrincipal > 0
-                                      ? (totalProfitOrLoss / totalPrincipal) *
-                                          100
-                                      : 0.0;
-
-                              final lastProductSum = lastBalances.fold<double>(
-                                0.0,
-                                (sum, item) => sum + item.balance,
-                              );
-                              final lastCashSum = lastAccountBalances
-                                  .fold<double>(
-                                    0.0,
-                                    (sum, item) => sum + item.cashBalance,
-                                  );
-                              final lastTotalBalance =
-                                  lastProductSum + lastCashSum;
-
-                              return _buildSummaryCard(
-                                totalBalance: totalBalance,
-                                totalPrincipal: totalPrincipal,
-                                totalProfitOrLoss: totalProfitOrLoss,
-                                totalReturnRate: totalReturnRate,
-                                diffFromLastMonth:
-                                    totalBalance - lastTotalBalance,
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            '계좌 목록',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          balancesAsync.when(
-                            loading: () => const CircularProgressIndicator(),
-                            error: (err, _) => Text('로드 실패: $err'),
-                            data: (balances) {
-                              final accountBalances =
-                                  accountBalancesAsync.value ?? [];
-
-                              final accounts = accountsAsync.value ?? [];
-                              final accountNames =
-                                  accountNamesAsync.value ?? [];
-                              final products = productsAsync.value ?? [];
-
-                              final Map<String, List<MonthlyPensionBalance>>
-                              accountGroups = {};
-                              for (var item in balances) {
-                                accountGroups
-                                    .putIfAbsent(item.accountId, () => [])
-                                    .add(item);
-                              }
-
-                              for (var accBal in accountBalances) {
-                                accountGroups.putIfAbsent(
-                                  accBal.accountId,
-                                  () => [],
-                                );
-                              }
-
-                              if (accountGroups.isEmpty) {
-                                return const Center(
-                                  child: Text('등록된 연금 계좌 데이터가 없습니다.'),
-                                );
-                              }
-
-                              final accountIds = accountGroups.keys.toList();
-                              final accountCashMap = {
-                                for (var ab in accountBalances)
-                                  ab.accountId: ab.cashBalance,
-                              };
-
-                              final totalProductSum = balances.fold<double>(
-                                0.0,
-                                (s, i) => s + i.balance,
-                              );
-                              final totalCashSum = accountBalances.fold<double>(
-                                0.0,
-                                (s, i) => s + i.cashBalance,
-                              );
-                              final overallTotalBalance =
-                                  totalProductSum + totalCashSum;
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildAccountGrid(
-                                    accountIds,
-                                    accountGroups,
-                                    accountCashMap,
-                                    accounts,
-                                    accountNames,
-                                    products,
+                                const SizedBox(height: 28),
+                                const Text(
+                                  '계좌별 평가 비중',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(height: 28),
-                                  const Text(
-                                    '계좌별 평가 비중',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                ),
+                                const SizedBox(height: 12),
+                                _buildPortionSection(
+                                  accountIds,
+                                  accountGroups,
+                                  accountCashMap,
+                                  accounts,
+                                  accountNames,
+                                  overallTotalBalance,
+                                ),
+                                const SizedBox(height: 28),
+                                const Text(
+                                  '계좌별 월말 수익률 추이 (%)',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(height: 12),
-                                  _buildPortionSection(
-                                    accountIds,
-                                    accountGroups,
-                                    accountCashMap,
-                                    accounts,
-                                    accountNames,
-                                    overallTotalBalance,
-                                  ),
-                                  const SizedBox(height: 28),
-                                  const Text(
-                                    '계좌별 월말 수익률 추이 (%)',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _buildReturnRateChart(
-                                    accountIds,
-                                    months,
-                                    accounts,
-                                    accountNames,
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+                                ),
+                                const SizedBox(height: 12),
+                                _buildReturnRateChart(
+                                  accountIds,
+                                  months,
+                                  accounts,
+                                  accountNames,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildMonthSelectorHeader(
-    BuildContext context,
-    List<String> months,
-    String currentMonth,
-  ) {
-    final currentIndex = months.indexOf(currentMonth);
-
-    return Container(
-      color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed:
-                currentIndex < months.length - 1
-                    ? () {
-                      ref
-                          .read(selectedYearMonthProvider.notifier)
-                          .select(months[currentIndex + 1]);
-                    }
-                    : null,
-          ),
-          DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value:
-                  months.contains(currentMonth) ? currentMonth : months.first,
-              icon: const Icon(Icons.arrow_drop_down),
-              items:
-                  months.map((String month) {
-                    return DropdownMenuItem<String>(
-                      value: month,
-                      child: Text(month),
-                    );
-                  }).toList(),
-              onChanged: (String? newMonth) {
-                if (newMonth != null) {
-                  ref.read(selectedYearMonthProvider.notifier).select(newMonth);
-                }
-              },
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed:
-                currentIndex > 0
-                    ? () {
-                      ref
-                          .read(selectedYearMonthProvider.notifier)
-                          .select(months[currentIndex - 1]);
-                    }
-                    : null,
-          ),
-        ],
       ),
     );
   }
@@ -379,6 +346,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     required double totalPrincipal,
     required double totalProfitOrLoss,
     required double totalReturnRate,
+    required double totalWithdrawal,
     required double diffFromLastMonth,
   }) {
     return Container(
@@ -393,7 +361,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         children: [
           const Text(
             '연금 자산 전체 금액',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+            style: TextStyle(color: Colors.white70, fontSize: 15),
           ),
           const SizedBox(height: 6),
           Text(
@@ -402,7 +370,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
               color: Colors.white,
               fontSize: 26,
               fontWeight: FontWeight.bold,
-              height: 1.2,
             ),
           ),
           const SizedBox(height: 16),
@@ -444,9 +411,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
-                        positiveColor: const Color(0xFFFF8A80),
-                        negativeColor: const Color(0xFF82B1FF),
-                        zeroColor: Colors.white,
                       ),
                       const SizedBox(width: 4),
                       totalReturnRate.toSignedPercentText(
@@ -455,9 +419,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
-                        positiveColor: const Color(0xFFFF8A80),
-                        negativeColor: const Color(0xFF82B1FF),
-                        zeroColor: Colors.white,
                       ),
                     ],
                   ),
@@ -465,6 +426,25 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
               ),
             ],
           ),
+          if (totalWithdrawal > 0) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Text(
+                  '계좌 누적 인출액: ',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                Text(
+                  totalWithdrawal.toWon(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [
@@ -492,6 +472,9 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     List<String> accountIds,
     Map<String, List<MonthlyPensionBalance>> accountGroups,
     Map<String, double> accountCashMap,
+    Map<String, double> accountWithdrawalMap,
+    Map<String, List<MonthlyPensionBalance>> lastAccountGroups,
+    Map<String, double> lastAccountCashMap,
     List<Account> accounts,
     List<dynamic> accountNames,
     List<dynamic> products,
@@ -510,33 +493,63 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
         crossAxisCount: MediaQuery.of(context).size.width > 900 ? 2 : 1,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        mainAxisExtent: 120,
+        mainAxisExtent: 170,
       ),
       itemCount: accountIds.length,
       itemBuilder: (context, index) {
         final accountId = accountIds[index];
         final items = accountGroups[accountId] ?? [];
+        final lastItems = lastAccountGroups[accountId] ?? [];
 
         final productSum = items.fold<double>(
           0.0,
           (sum, item) => sum + item.balance,
         );
+        final productPrincipalSum = items.fold<double>(
+          0.0,
+          (sum, item) => sum + item.principal,
+        );
+
+        // 계좌별 인출액만 반영
+        final accountWithdrawal = accountWithdrawalMap[accountId] ?? 0.0;
         final cashBalance = accountCashMap[accountId] ?? 0.0;
+
         final totalAccountBalance = productSum + cashBalance;
+        final totalAccountPrincipal = productPrincipalSum + cashBalance;
+
+        final totalProfitOrLoss =
+            (totalAccountBalance + accountWithdrawal) - totalAccountPrincipal;
+
+        final returnRate =
+            totalAccountPrincipal > 0
+                ? (totalProfitOrLoss / totalAccountPrincipal) * 100
+                : 0.0;
+
+        // 전월 대비 계산
+        final lastProductSum = lastItems.fold<double>(
+          0.0,
+          (sum, item) => sum + item.balance,
+        );
+        final lastCashBalance = lastAccountCashMap[accountId] ?? 0.0;
+        final lastTotalAccountBalance = lastProductSum + lastCashBalance;
+        final diffFromLastMonth = totalAccountBalance - lastTotalAccountBalance;
 
         final matchedAcc = accountMap[accountId];
         final matchedAccountName =
             matchedAcc != null
                 ? accountNameMap[matchedAcc.accountNameId]
                 : null;
-
-        final institution = matchedAcc?.financialInstitution ?? '기타';
         final accountName = matchedAccountName?.accountName ?? accountId;
 
         return _AccountCard(
           account: matchedAcc,
           accountName: accountName,
           totalBalance: totalAccountBalance,
+          totalPrincipal: totalAccountPrincipal,
+          totalProfitOrLoss: totalProfitOrLoss,
+          returnRate: returnRate,
+          totalWithdrawal: accountWithdrawal,
+          diffFromLastMonth: diffFromLastMonth,
           itemCount: items.length,
           cashBalance: cashBalance,
           onTap: () {
@@ -610,7 +623,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // 💡 평가 비중 목록에도 Row(로고, 계좌명) 적용
                       Expanded(
                         child: Row(
                           children: [
@@ -675,109 +687,209 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     final allBalances =
         ref.watch(allMonthlyPensionBalancesProvider).value ?? [];
 
+    final accountNameMap = {for (var an in accountNames) an.id: an};
+    final accountMap = {for (var a in accounts) a.id!: a};
+
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: SizedBox(
-        height: 280,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: LineChart(
-            LineChartData(
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  getTooltipColor: (_) => Colors.grey.shade900,
-                  getTooltipItems: (touchedSpots) {
-                    return touchedSpots.map((spot) {
-                      return LineTooltipItem(
-                        '수익률: ${spot.y.toStringAsFixed(1)}%',
-                        const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      );
-                    }).toList();
-                  },
-                ),
-              ),
-              titlesData: FlTitlesData(
-                show: true,
-                leftTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: true, reservedSize: 40),
-                ),
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 30,
-                    interval:
-                        sortedMonths.length > 12
-                            ? (sortedMonths.length / 6).ceil().toDouble()
-                            : 1.0,
-                    getTitlesWidget: (val, meta) {
-                      int idx = val.toInt();
-                      if (idx >= 0 && idx < sortedMonths.length) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            sortedMonths[idx],
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-              ),
-              lineBarsData:
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children:
                   accountIds.asMap().entries.map((entry) {
                     final idx = entry.key;
                     final accId = entry.value;
+                    final matchedAcc = accountMap[accId];
+                    final matchedName =
+                        matchedAcc != null
+                            ? accountNameMap[matchedAcc.accountNameId]
+                            : null;
+                    final name = matchedName?.accountName ?? accId;
+                    final logoUrl = matchedAcc?.logoUrl;
+                    final color = _chartColors[idx % _chartColors.length];
 
-                    final spots =
-                        sortedMonths.asMap().entries.map((mEntry) {
-                          final mIdx = mEntry.key;
-                          final ym = mEntry.value;
-
-                          final items = allBalances.where(
-                            (b) =>
-                                b.balanceItem.yearMonth == ym &&
-                                b.balanceItem.accountId == accId,
-                          );
-                          final totalBal = items.fold<double>(
-                            0.0,
-                            (s, item) => s + item.balanceItem.balance,
-                          );
-                          final totalPrin = items.fold<double>(
-                            0.0,
-                            (s, item) => s + item.balanceItem.principal,
-                          );
-
-                          final rate =
-                              totalPrin > 0
-                                  ? ((totalBal - totalPrin) / totalPrin) * 100
-                                  : 0.0;
-                          return FlSpot(mIdx.toDouble(), rate);
-                        }).toList();
-
-                    return LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      color: _chartColors[idx % _chartColors.length],
-                      barWidth: 2.5,
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        if (logoUrl != null && logoUrl.isNotEmpty)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.network(
+                              logoUrl,
+                              width: 16,
+                              height: 16,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => const Icon(
+                                    Icons.account_balance,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
+                            ),
+                          )
+                        else
+                          const Icon(
+                            Icons.account_balance,
+                            size: 14,
+                            color: Colors.indigo,
+                          ),
+                        const SizedBox(width: 4),
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     );
                   }).toList(),
             ),
-          ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 260,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: true,
+                    getDrawingHorizontalLine:
+                        (value) =>
+                            FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+                    getDrawingVerticalLine:
+                        (value) =>
+                            FlLine(color: Colors.grey.shade100, strokeWidth: 1),
+                  ),
+                  lineTouchData: LineTouchData(
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (_) => Colors.grey.shade900,
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((spot) {
+                          return LineTooltipItem(
+                            '수익률: ${spot.y.toStringAsFixed(1)}%',
+                            const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          );
+                        }).toList();
+                      },
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 45,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            '${value.toInt()}%',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        interval:
+                            sortedMonths.length > 12
+                                ? (sortedMonths.length / 6).ceil().toDouble()
+                                : 1.0,
+                        getTitlesWidget: (val, meta) {
+                          int idx = val.toInt();
+                          if (idx >= 0 && idx < sortedMonths.length) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                sortedMonths[idx],
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ),
+                  ),
+                  lineBarsData:
+                      accountIds.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final accId = entry.value;
+
+                        final spots =
+                            sortedMonths.asMap().entries.map((mEntry) {
+                              final mIdx = mEntry.key;
+                              final ym = mEntry.value;
+
+                              final items = allBalances.where(
+                                (b) =>
+                                    b.balanceItem.yearMonth == ym &&
+                                    b.balanceItem.accountId == accId,
+                              );
+                              final totalBal = items.fold<double>(
+                                0.0,
+                                (s, item) => s + item.balanceItem.balance,
+                              );
+                              final totalPrin = items.fold<double>(
+                                0.0,
+                                (s, item) => s + item.balanceItem.principal,
+                              );
+
+                              // 차트에서도 계좌 인출액 기준으로 수익률 산출 연동 가능
+                              final rate =
+                                  totalPrin > 0
+                                      ? ((totalBal - totalPrin) / totalPrin) *
+                                          100
+                                      : 0.0;
+                              return FlSpot(mIdx.toDouble(), rate);
+                            }).toList();
+
+                        return LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color: _chartColors[idx % _chartColors.length],
+                          barWidth: 3,
+                          dotData: const FlDotData(show: true),
+                          belowBarData: BarAreaData(show: false),
+                        );
+                      }).toList(),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -808,7 +920,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 💡 바텀시트 상단 타이틀 영역에도 Row(로고, 계좌명) 적용
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -891,7 +1002,9 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                               : (productMap[item.productId] ?? '연금 상품');
 
                       return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 8.0,
+                        ),
                         title: Text(
                           productName,
                           style: const TextStyle(
@@ -916,11 +1029,15 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
   }
 }
 
-// 💡 로고와 계좌명이 Row(로고, 계좌명) 형태로 표현되는 계좌 카드 위젯
 class _AccountCard extends StatelessWidget {
   final Account? account;
   final String accountName;
   final double totalBalance;
+  final double totalPrincipal;
+  final double totalProfitOrLoss;
+  final double returnRate;
+  final double totalWithdrawal;
+  final double diffFromLastMonth;
   final int itemCount;
   final double cashBalance;
   final VoidCallback onTap;
@@ -929,6 +1046,11 @@ class _AccountCard extends StatelessWidget {
     required this.account,
     required this.accountName,
     required this.totalBalance,
+    required this.totalPrincipal,
+    required this.totalProfitOrLoss,
+    required this.returnRate,
+    required this.totalWithdrawal,
+    required this.diffFromLastMonth,
     required this.itemCount,
     required this.cashBalance,
     required this.onTap,
@@ -949,12 +1071,11 @@ class _AccountCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 상단: Row(로고, 계좌명)
               Row(
                 children: [
                   if (logoUrl != null && logoUrl.isNotEmpty)
@@ -962,13 +1083,13 @@ class _AccountCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                       child: Image.network(
                         logoUrl,
-                        width: 24,
-                        height: 24,
+                        width: 22,
+                        height: 22,
                         fit: BoxFit.cover,
                         errorBuilder:
                             (_, __, ___) => const Icon(
                               Icons.account_balance,
-                              size: 22,
+                              size: 20,
                               color: Colors.grey,
                             ),
                       ),
@@ -976,7 +1097,7 @@ class _AccountCard extends StatelessWidget {
                   else
                     const Icon(
                       Icons.account_balance,
-                      size: 22,
+                      size: 20,
                       color: Colors.indigo,
                     ),
                   const SizedBox(width: 8),
@@ -984,7 +1105,7 @@ class _AccountCard extends StatelessWidget {
                     child: Text(
                       accountName,
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
@@ -992,29 +1113,107 @@ class _AccountCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ],
-              ),
-              // 하단: 보유 상품 정보 & 계좌 금액
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    cashBalance > 0
-                        ? '상품 $itemCount개 + 현금'
-                        : '보유상품 $itemCount개',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
                   Text(
                     totalBalance.toWon(),
-                    style: const TextStyle(
-                      fontSize: 20,
+                    style: TextStyle(
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2E43B3),
+                      color: Colors.indigo[800],
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '투자 원금',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        totalPrincipal.toWon(),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '평가 손익 (수익률)',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          totalProfitOrLoss.toSignedPriceText(
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          returnRate.toSignedPercentText(
+                            withParentheses: true,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              // 인출액이 없어도 투명도(Opacity)를 통해 카드 간격과 레이아웃이 완벽하게 일치하도록 고정
+              Opacity(
+                opacity: totalWithdrawal > 0 ? 1.0 : 0.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '계좌 누적 인출액',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 11,
+                      ),
+                    ),
+                    Text(
+                      totalWithdrawal > 0 ? totalWithdrawal.toWon() : '-',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    '전월 대비: ',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                  ),
+                  diffFromLastMonth.toSignedPriceText(
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

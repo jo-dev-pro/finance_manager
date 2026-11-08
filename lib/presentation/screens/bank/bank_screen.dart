@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/screen_size.dart';
+import '../../../core/widgets/main_constrainedbox.dart';
+import '../../../core/widgets/month_selector_header.dart';
 import '../../../providers/bank/bank_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../core/utils/number_formatter.dart';
@@ -97,209 +99,203 @@ class BankScreen extends ConsumerWidget {
             ),
           );
 
-          return Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: desktopWidthSize),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildMonthSelectorHeader(
-                    context,
-                    ref,
-                    months,
-                    activeCurrentMonth,
-                  ),
+          return MainConstrainedBox(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 💡 공통 위젯 호출
+                MonthSelectorHeader(
+                  months: months,
+                  currentMonth: activeCurrentMonth,
+                ),
 
-                  Expanded(
-                    child: bankDataAsync.when(
-                      loading:
-                          () =>
-                              const Center(child: CircularProgressIndicator()),
-                      error:
-                          (err, stack) => Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '계좌 정보를 불러오지 못했습니다:\n$err',
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 12),
-                                ElevatedButton(
-                                  onPressed:
-                                      () => ref.invalidate(
-                                        bankScreenDataProvider,
-                                      ),
-                                  child: const Text('다시 시도'),
-                                ),
-                              ],
-                            ),
+                Expanded(
+                  child: bankDataAsync.when(
+                    loading:
+                        () => const Center(child: CircularProgressIndicator()),
+                    error:
+                        (err, stack) => Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '계좌 정보를 불러오지 못했습니다:\n$err',
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed:
+                                    () =>
+                                        ref.invalidate(bankScreenDataProvider),
+                                child: const Text('다시 시도'),
+                              ),
+                            ],
                           ),
-                      data: (rawItems) {
-                        final items =
-                            rawItems.where((item) {
-                              final type =
-                                  item.account.accountType.toUpperCase();
-                              return type == '은행';
-                            }).toList();
+                        ),
+                    data: (rawItems) {
+                      final items =
+                          rawItems.where((item) {
+                            final type = item.account.accountType.toUpperCase();
+                            return type == '은행';
+                          }).toList();
 
-                        final double totalCurrentBalance = items.fold(
-                          0,
-                          (sum, i) => sum + i.currentBalance,
-                        );
-                        final double totalDiffFromLastMonth = items.fold(
-                          0,
-                          (sum, i) => sum + i.diffFromLastMonth,
-                        );
+                      final double totalCurrentBalance = items.fold(
+                        0,
+                        (sum, i) => sum + i.currentBalance,
+                      );
+                      final double totalDiffFromLastMonth = items.fold(
+                        0,
+                        (sum, i) => sum + i.diffFromLastMonth,
+                      );
 
-                        return LayoutBuilder(
-                          builder: (context, constraints) {
-                            return RefreshIndicator(
-                              onRefresh: () async {
-                                ref.invalidate(availableYearMonthsProvider);
-                                ref.invalidate(bankScreenDataProvider);
-                              },
-                              child: SingleChildScrollView(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(20),
-                                      decoration: BoxDecoration(
-                                        color: Colors.indigo.shade600,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                            color: Colors.black12,
-                                            blurRadius: 8,
-                                            offset: Offset(0, 4),
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              ref.invalidate(availableYearMonthsProvider);
+                              ref.invalidate(bankScreenDataProvider);
+                            },
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.indigo.shade600,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Colors.black12,
+                                          blurRadius: 8,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          '은행 계좌 전체 금액',
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            '은행 계좌 전체 금액',
-                                            style: TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          totalCurrentBalance.toWon(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            totalCurrentBalance.toWon(),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 26,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.18),
-                                                  borderRadius:
-                                                      BorderRadius.circular(6),
-                                                ),
-                                                child: const Text(
-                                                  '전월 대비',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w500,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
                                                   ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.18,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: const Text(
+                                                '전월 대비',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
                                               ),
-                                              const SizedBox(width: 8),
-                                              totalDiffFromLastMonth
-                                                  .toSignedPriceText(
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                    positiveColor: const Color(
-                                                      0xFFFF8A80,
-                                                    ),
-                                                    negativeColor: const Color(
-                                                      0xFF82B1FF,
-                                                    ),
-                                                    zeroColor: Colors.white,
-                                                  ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 24),
-
-                                    const Text(
-                                      '계좌별 잔액',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-
-                                    if (items.isEmpty)
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 32,
-                                        ),
-                                        child: Center(
-                                          child: Text('등록된 은행 계좌/자산 내역이 없습니다.'),
-                                        ),
-                                      )
-                                    else
-                                      GridView.builder(
-                                        shrinkWrap: true,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        gridDelegate:
-                                            SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount:
-                                                  MediaQuery.of(
-                                                            context,
-                                                          ).size.width >
-                                                          900
-                                                      ? 2
-                                                      : 1,
-                                              crossAxisSpacing: 16,
-                                              mainAxisSpacing: 16,
-                                              mainAxisExtent:
-                                                  140, // 💡 중요: 카드 세로 높이를 140px로 고정하여 세로 공간 축소
                                             ),
-                                        itemCount: items.length,
-                                        itemBuilder:
-                                            (context, index) =>
-                                                _buildBankTile(items[index]),
+                                            const SizedBox(width: 8),
+                                            
+                                            totalDiffFromLastMonth
+                                                .toSignedPriceText(
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  positiveColor: const Color(
+                                                    0xFFFF8A80,
+                                                  ),
+                                                  negativeColor: const Color(
+                                                    0xFF82B1FF,
+                                                  ),
+                                                  zeroColor: Colors.white,
+                                                ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  const Text(
+                                    '계좌별 잔액',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+
+                                  if (items.isEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 32,
                                       ),
-                                  ],
-                                ),
+                                      child: Center(
+                                        child: Text('등록된 은행 계좌/자산 내역이 없습니다.'),
+                                      ),
+                                    )
+                                  else
+                                    GridView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount:
+                                                MediaQuery.of(
+                                                          context,
+                                                        ).size.width >
+                                                        900
+                                                    ? 2
+                                                    : 1,
+                                            crossAxisSpacing: 16,
+                                            mainAxisSpacing: 16,
+                                            mainAxisExtent:
+                                                140, // 💡 중요: 카드 세로 높이를 140px로 고정하여 세로 공간 축소
+                                          ),
+                                      itemCount: items.length,
+                                      itemBuilder:
+                                          (context, index) =>
+                                              _buildBankTile(items[index]),
+                                    ),
+                                ],
                               ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -404,12 +400,12 @@ class BankScreen extends ConsumerWidget {
                   Text(
                     item.productName,
                     style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
                   Text(

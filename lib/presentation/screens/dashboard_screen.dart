@@ -2,7 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/utils/screen_size.dart';
+import '../../core/widgets/main_constrainedbox.dart';
+import '../../core/widgets/month_selector_header.dart';
 import '../../providers/dashboard/dashboard_provider.dart';
 import '../../core/utils/number_formatter.dart';
 
@@ -52,242 +53,238 @@ class DashboardScreen extends ConsumerWidget {
             });
           }
 
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              return RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(availableYearMonthsProvider);
-                  ref.invalidate(dashboardSummaryProvider);
-                },
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: desktopWidthSize),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildMonthSelectorHeader(
-                            context,
-                            ref,
-                            months,
-                            activeCurrentMonth,
-                          ),
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(availableYearMonthsProvider);
+              ref.invalidate(dashboardSummaryProvider);
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: MainConstrainedBox(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    MonthSelectorHeader(
+                      months: months,
+                      currentMonth: activeCurrentMonth,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Builder(
+                        builder: (context) {
+                          // 💡 데이터가 로딩 중이거나 새로고침 중일 때도 직전 데이터를 유지하여 깜박임 원천 차단
+                          final summary = summaryAsync.valueOrNull;
 
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                summaryAsync.when(
-                                  data: (summary) {
-                                    final num totalValuation =
-                                        summary.totalValuation;
-                                    final num totalInvested =
-                                        summary.totalInvested;
-                                    final num profitOrLoss =
-                                        summary.profitOrLoss;
-                                    final num returnRate = summary.returnRate;
+                          if (summary == null) {
+                            return const Padding(
+                              padding: EdgeInsets.only(top: 60),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
 
-                                    final num bankBalance = summary.bankBalance;
-                                    final num stockBalance =
-                                        summary.stockBalance;
-                                    final num pensionBalance =
-                                        summary.pensionBalance;
+                          final num totalValuation = summary.totalValuation;
+                          final num totalInvested = summary.totalInvested;
+                          final num profitOrLoss = summary.profitOrLoss;
+                          final num returnRate = summary.returnRate;
 
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          width: double.infinity,
-                                          padding: const EdgeInsets.all(20),
-                                          decoration: BoxDecoration(
-                                            color: Colors.indigo.shade600,
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
-                                            boxShadow: const [
-                                              BoxShadow(
-                                                color: Colors.black12,
-                                                blurRadius: 8,
-                                                offset: Offset(0, 4),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                '총 자산 평가액',
-                                                style: TextStyle(
-                                                  color: Colors.white70,
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 6),
-                                              Text(
-                                                totalValuation.toWon(),
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 26,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 16),
+                          final num bankBalance = summary.bankBalance;
+                          final num stockBalance = summary.stockBalance;
+                          final num pensionBalance = summary.pensionBalance;
+                          final double diffFromLastMonth = summary.diffFromLastMonth;
 
-                                              const Divider(
-                                                color: Colors.white24,
-                                                height: 1,
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      const Text(
-                                                        '투자 원금',
-                                                        style: TextStyle(
-                                                          color: Colors.white70,
-                                                          fontSize: 12,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 2),
-                                                      Text(
-                                                        totalInvested.toWon(),
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 15,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment.end,
-                                                    children: [
-                                                      const Text(
-                                                        '평가 손익 (수익률)',
-                                                        style: TextStyle(
-                                                          color: Colors.white70,
-                                                          fontSize: 12,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 2),
-                                                      Row(
-                                                        children: [
-                                                          profitOrLoss
-                                                              .toSignedPriceText(
-                                                                style: const TextStyle(
-                                                                  fontSize: 15,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                ),
-                                                              ),
-                                                          const SizedBox(
-                                                            width: 4,
-                                                          ),
-                                                          returnRate.toSignedPercentText(
-                                                            withParentheses:
-                                                                true,
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontSize: 13,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 24),
-
-                                        const Text(
-                                          '자산별 현황',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-
-                                        _buildAssetTile(
-                                          icon: Icons.account_balance,
-                                          color: Colors.blue.shade100,
-                                          iconColor: Colors.blue.shade800,
-                                          title: '은행 잔액',
-                                          amountWon: bankBalance.toWon(),
-                                        ),
-                                        _buildAssetTile(
-                                          icon: Icons.show_chart,
-                                          color: Colors.orange.shade100,
-                                          iconColor: Colors.orange.shade800,
-                                          title: '증권 평가액',
-                                          amountWon: stockBalance.toWon(),
-                                        ),
-                                        _buildAssetTile(
-                                          icon: Icons.savings,
-                                          color: Colors.green.shade100,
-                                          iconColor: Colors.green.shade800,
-                                          title: '연금 평가액',
-                                          amountWon: pensionBalance.toWon(),
-                                        ),
-                                        const SizedBox(height: 28),
-
-                                        const Text(
-                                          '자산 비중',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-
-                                        _buildAssetRatioChartCard(summary),
-                                      ],
-                                    );
-                                  },
-                                  loading:
-                                      () => const Padding(
-                                        padding: EdgeInsets.only(top: 40),
-                                        child: Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      ),
-                                  error:
-                                      (e, st) =>
-                                          Center(child: Text('데이터 로드 오류: $e')),
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSummaryCard(
+                                totalValuation: totalValuation,
+                                totalInvested: totalInvested,
+                                profitOrLoss: profitOrLoss,
+                                returnRate: returnRate,
+                                diffFromLastMonth: diffFromLastMonth,
+                              ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                '자산별 현황',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              ],
-                            ),
-                          ),
-                        ],
+                              ),
+                              const SizedBox(height: 12),
+                              _buildAssetTile(
+                                icon: Icons.account_balance,
+                                color: Colors.blue.shade100,
+                                iconColor: Colors.blue.shade800,
+                                title: '은행 잔액',
+                                amountWon: bankBalance.toWon(),
+                              ),
+                              _buildAssetTile(
+                                icon: Icons.show_chart,
+                                color: Colors.orange.shade100,
+                                iconColor: Colors.orange.shade800,
+                                title: '증권 평가액',
+                                amountWon: stockBalance.toWon(),
+                              ),
+                              _buildAssetTile(
+                                icon: Icons.savings,
+                                color: Colors.green.shade100,
+                                iconColor: Colors.green.shade800,
+                                title: '연금 평가액',
+                                amountWon: pensionBalance.toWon(),
+                              ),
+                              const SizedBox(height: 28),
+                              const Text(
+                                '자산 비중',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildAssetRatioChartCard(summary),
+                            ],
+                          );
+                        },
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              );
-            },
+              ),
+            ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard({
+    required num totalValuation,
+    required num totalInvested,
+    required num profitOrLoss,
+    required num returnRate,
+    required double diffFromLastMonth,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade600,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '총 자산 평가액',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            totalValuation.toWon(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Divider(
+            color: Colors.white24,
+            height: 1,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '총 투자 원금',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    totalInvested.toWon(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text(
+                    '평가 손익 (수익률)',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      profitOrLoss.toSignedPriceText(
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        positiveColor: const Color(0xFFFF8A80),
+                        negativeColor: const Color(0xFF82B1FF),
+                        zeroColor: Colors.white,
+                      ),
+                      const SizedBox(width: 4),
+                      returnRate.toSignedPercentText(
+                        withParentheses: true,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        positiveColor: const Color(0xFFFF8A80),
+                        negativeColor: const Color(0xFF82B1FF),
+                        zeroColor: Colors.white,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Text(
+                '전월 대비: ',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              diffFromLastMonth.toSignedPriceText(
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                positiveColor: const Color(0xFFFF8A80),
+                negativeColor: const Color(0xFF82B1FF),
+                zeroColor: Colors.white,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -416,70 +413,6 @@ class DashboardScreen extends ConsumerWidget {
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
         ),
       ],
-    );
-  }
-
-  Widget _buildMonthSelectorHeader(
-    BuildContext context,
-    WidgetRef ref,
-    List<String> months,
-    String currentMonth,
-  ) {
-    final currentIndex = months.indexOf(currentMonth);
-
-    return Container(
-      color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed:
-                (currentIndex >= 0 && currentIndex < months.length - 1)
-                    ? () {
-                      ref
-                          .read(selectedYearMonthProvider.notifier)
-                          .select(months[currentIndex + 1]);
-                    }
-                    : null,
-          ),
-          DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value:
-                  months.contains(currentMonth) ? currentMonth : months.first,
-              icon: const Icon(Icons.arrow_drop_down),
-              items:
-                  months.map((String month) {
-                    return DropdownMenuItem<String>(
-                      value: month,
-                      child: Text(
-                        month,
-                        style: const TextStyle(color: Colors.black87),
-                      ),
-                    );
-                  }).toList(),
-              onChanged: (String? newMonth) {
-                if (newMonth != null) {
-                  ref.read(selectedYearMonthProvider.notifier).select(newMonth);
-                }
-              },
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed:
-                currentIndex > 0
-                    ? () {
-                      ref
-                          .read(selectedYearMonthProvider.notifier)
-                          .select(months[currentIndex - 1]);
-                    }
-                    : null,
-          ),
-        ],
-      ),
     );
   }
 

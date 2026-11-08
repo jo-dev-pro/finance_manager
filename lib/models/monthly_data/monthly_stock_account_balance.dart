@@ -14,6 +14,9 @@ class MonthlyStockAccountBalance with _$MonthlyStockAccountBalance {
     @JsonKey(name: 'account_name') String? accountName,
     @JsonKey(name: 'cash_balance') @Default(0.0) double cashBalance,         // 계좌 현금성 잔액(예수금)
 
+    // 💡 신규 추가: 당월 말일 적용 환율 (예: 1350.50, 원화계좌는 기본값 1.0)
+    @JsonKey(name: 'exchange_rate') @Default(1.0) double exchangeRate,
+
     // 1. 계좌 입금액 / 추가원금 (누적 및 당월분)
     @Default(0.0) double principal, // 누적 계좌 입금액 (원금)
     @JsonKey(name: 'monthly_principal') @Default(0.0) double monthlyPrincipal, // 당월 계좌 입금액

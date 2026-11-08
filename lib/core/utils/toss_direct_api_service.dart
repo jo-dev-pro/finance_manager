@@ -43,27 +43,30 @@ class TossDirectApiService {
     }
   }
 
-  /// 특정 종목 코드와 연월('yyyy-MM')을 받아 해당 월의 말일 종가를 가져옵니다. 
-  static Future<double?> getMonthlyClosePrice(String stockCode, String yearMonth) async {
+  /// 특정 종목 코드와 연월('yyyy-MM')을 받아 해당 월의 말일 종가를 가져옵니다.
+  static Future<double?> getMonthlyClosePrice(
+    String stockCode,
+    String yearMonth,
+  ) async {
     try {
       final token = await _getAccessToken();
-      
+
       // 해당 연월의 마지막 날짜 계산 (예: 2026-09 -> 2026-09-30)
       final parts = yearMonth.split('-');
       final year = int.parse(parts[0]);
       final month = int.parse(parts[1]);
-      final lastDay = DateTime(year, month + 1, 0); 
-      
+      final lastDay = DateTime(year, month + 1, 0);
+
       // ISO 8601 형식의 before 파라미터 생성 (해당 월 말일 장 마감 기준)
       final formattedDay = lastDay.day.toString().padLeft(2, '0');
       final formattedMonth = lastDay.month.toString().padLeft(2, '0');
       final beforeStr = '$year-$formattedMonth-${formattedDay}T23:59:59+09:00';
-      
+
       // ✅ 올바른 캔들 조회 엔드포인트: /api/v1/candles
       final url = Uri.parse(
         '$_baseUrl/api/v1/candles?symbol=$stockCode&interval=1d&count=30&before=$beforeStr',
       );
-      
+
       final response = await http.get(
         url,
         headers: {
@@ -78,9 +81,11 @@ class TossDirectApiService {
       }
 
       final data = jsonDecode(response.body);
-      
+
       // 응답 구조 파싱 (result -> candles 배열)
-      if (data is Map && data['result'] != null && data['result']['candles'] != null) {
+      if (data is Map &&
+          data['result'] != null &&
+          data['result']['candles'] != null) {
         final candles = data['result']['candles'] as List;
         if (candles.isNotEmpty) {
           // 내림차순 정렬된 캔들 중 요청한 연월(yearMonth)에 일치하는 첫 번째(가장 월말에 가까운) 데이터 선택[cite: 4]
@@ -153,6 +158,60 @@ class TossDirectApiService {
       return null;
     } catch (e) {
       print('토스증권 가격 조회 예외 발생: $e');
+      return null;
+    }
+  }
+
+  /// 특정 연월('yyyy-MM')의 월말 기준 원·달러 환율을 조회합니다.
+  static Future<double?> getMonthlyExchangeRate(String yearMonth) async {
+    try {
+      final token = await _getAccessToken();
+
+      // 해당 연월의 마지막 날짜 계산 (예: 2026-09 -> 2026-09-30)
+      final parts = yearMonth.split('-');
+      final year = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final lastDay = DateTime(year, month + 1, 0);
+
+      final formattedDay = lastDay.day.toString().padLeft(2, '0');
+      final formattedMonth = lastDay.month.toString().padLeft(2, '0');
+
+      // 장 마감 시점 또는 해당 월말의 특정 시간 (예: 15:30:00 또는 23:59:59)
+      final dateTimeStr =
+          '$year-$formattedMonth-${formattedDay}T15:30:00+09:00';
+
+      // 💡 공식 문서 규격: /api/v1/exchange-rate?baseCurrency=USD&dateTime=...
+      final url = Uri.parse(
+        '$_baseUrl/api/v1/exchange-rate?baseCurrency=USD&quoteCurrency=KRW&dateTime=$dateTimeStr',
+      );
+
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        print('토스 환율 API 응답 오류 코드: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+
+      final data = jsonDecode(response.body);
+
+      // 💡 문서 응답 구조(result -> rate)에 맞게 파싱
+      if (data is Map && data['result'] != null) {
+        final result = data['result'];
+        final rateStr = result['rate'] ?? result['midRate'];
+        if (rateStr != null) {
+          return double.tryParse(rateStr.toString());
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('토스증권 월말 환율 조회 예외 발생: $e');
       return null;
     }
   }

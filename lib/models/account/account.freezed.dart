@@ -36,7 +36,9 @@ mixin _$Account {
   String? get logoUrl => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   @JsonKey(name: 'sort_order')
-  int get sortOrder => throw _privateConstructorUsedError;
+  int get sortOrder => throw _privateConstructorUsedError; // 💡 1. 통화 구분 필드 추가 (기본값 'KRW', 해외 달러 계좌의 경우 'USD')
+  @JsonKey(name: 'currency')
+  String get currency => throw _privateConstructorUsedError;
 
   /// Serializes this Account to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -62,6 +64,7 @@ abstract class $AccountCopyWith<$Res> {
     @JsonKey(name: 'logo_url') String? logoUrl,
     String status,
     @JsonKey(name: 'sort_order') int sortOrder,
+    @JsonKey(name: 'currency') String currency,
   });
 }
 
@@ -89,6 +92,7 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
     Object? logoUrl = freezed,
     Object? status = null,
     Object? sortOrder = null,
+    Object? currency = null,
   }) {
     return _then(
       _value.copyWith(
@@ -137,6 +141,11 @@ class _$AccountCopyWithImpl<$Res, $Val extends Account>
                     ? _value.sortOrder
                     : sortOrder // ignore: cast_nullable_to_non_nullable
                         as int,
+            currency:
+                null == currency
+                    ? _value.currency
+                    : currency // ignore: cast_nullable_to_non_nullable
+                        as String,
           )
           as $Val,
     );
@@ -161,6 +170,7 @@ abstract class _$$AccountImplCopyWith<$Res> implements $AccountCopyWith<$Res> {
     @JsonKey(name: 'logo_url') String? logoUrl,
     String status,
     @JsonKey(name: 'sort_order') int sortOrder,
+    @JsonKey(name: 'currency') String currency,
   });
 }
 
@@ -187,6 +197,7 @@ class __$$AccountImplCopyWithImpl<$Res>
     Object? logoUrl = freezed,
     Object? status = null,
     Object? sortOrder = null,
+    Object? currency = null,
   }) {
     return _then(
       _$AccountImpl(
@@ -235,6 +246,11 @@ class __$$AccountImplCopyWithImpl<$Res>
                 ? _value.sortOrder
                 : sortOrder // ignore: cast_nullable_to_non_nullable
                     as int,
+        currency:
+            null == currency
+                ? _value.currency
+                : currency // ignore: cast_nullable_to_non_nullable
+                    as String,
       ),
     );
   }
@@ -242,7 +258,7 @@ class __$$AccountImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$AccountImpl implements _Account {
+class _$AccountImpl extends _Account {
   const _$AccountImpl({
     this.id,
     @JsonKey(name: 'financial_institution') required this.financialInstitution,
@@ -253,7 +269,8 @@ class _$AccountImpl implements _Account {
     @JsonKey(name: 'logo_url') this.logoUrl,
     this.status = '활동',
     @JsonKey(name: 'sort_order') this.sortOrder = 0,
-  });
+    @JsonKey(name: 'currency') this.currency = 'KRW',
+  }) : super._();
 
   factory _$AccountImpl.fromJson(Map<String, dynamic> json) =>
       _$$AccountImplFromJson(json);
@@ -284,10 +301,14 @@ class _$AccountImpl implements _Account {
   @override
   @JsonKey(name: 'sort_order')
   final int sortOrder;
+  // 💡 1. 통화 구분 필드 추가 (기본값 'KRW', 해외 달러 계좌의 경우 'USD')
+  @override
+  @JsonKey(name: 'currency')
+  final String currency;
 
   @override
   String toString() {
-    return 'Account(id: $id, financialInstitution: $financialInstitution, accountNameId: $accountNameId, accountName: $accountName, accountType: $accountType, accountNumber: $accountNumber, logoUrl: $logoUrl, status: $status, sortOrder: $sortOrder)';
+    return 'Account(id: $id, financialInstitution: $financialInstitution, accountNameId: $accountNameId, accountName: $accountName, accountType: $accountType, accountNumber: $accountNumber, logoUrl: $logoUrl, status: $status, sortOrder: $sortOrder, currency: $currency)';
   }
 
   @override
@@ -309,7 +330,9 @@ class _$AccountImpl implements _Account {
             (identical(other.logoUrl, logoUrl) || other.logoUrl == logoUrl) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.sortOrder, sortOrder) ||
-                other.sortOrder == sortOrder));
+                other.sortOrder == sortOrder) &&
+            (identical(other.currency, currency) ||
+                other.currency == currency));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -325,6 +348,7 @@ class _$AccountImpl implements _Account {
     logoUrl,
     status,
     sortOrder,
+    currency,
   );
 
   /// Create a copy of Account
@@ -341,7 +365,7 @@ class _$AccountImpl implements _Account {
   }
 }
 
-abstract class _Account implements Account {
+abstract class _Account extends Account {
   const factory _Account({
     final String? id,
     @JsonKey(name: 'financial_institution')
@@ -353,7 +377,9 @@ abstract class _Account implements Account {
     @JsonKey(name: 'logo_url') final String? logoUrl,
     final String status,
     @JsonKey(name: 'sort_order') final int sortOrder,
+    @JsonKey(name: 'currency') final String currency,
   }) = _$AccountImpl;
+  const _Account._() : super._();
 
   factory _Account.fromJson(Map<String, dynamic> json) = _$AccountImpl.fromJson;
 
@@ -381,7 +407,10 @@ abstract class _Account implements Account {
   String get status;
   @override
   @JsonKey(name: 'sort_order')
-  int get sortOrder;
+  int get sortOrder; // 💡 1. 통화 구분 필드 추가 (기본값 'KRW', 해외 달러 계좌의 경우 'USD')
+  @override
+  @JsonKey(name: 'currency')
+  String get currency;
 
   /// Create a copy of Account
   /// with the given fields replaced by the non-null parameter values.

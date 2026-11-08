@@ -8,6 +8,7 @@ import '../../providers/pension/pension_product_provider.dart';
 import '../../providers/stock/stock_item_provider.dart';
 import '../utils/collection_name.dart';
 import '../../core/providers/firestore_provider.dart';
+import '../utils/toss_direct_api_service.dart';
 
 class FirestoreDBMigrateScreen extends ConsumerStatefulWidget {
   const FirestoreDBMigrateScreen({super.key});
@@ -658,6 +659,64 @@ class _FirestoreDBMigrateScreenState
     }
   }
 
+  /// 기존 월말 주식 계좌 데이터를 읽어와 누락된 월말 환율을 업데이트합니다.
+  static Future<void> migrateExchangeRates(FirebaseFirestore firestore) async {
+    try {
+      print('🔄 월말 주식 계좌 환율 마이그레이션 시작...');
+
+      // 1. 월말 주식 계좌 컬렉션 전체 가져오기
+      final snapshot =
+          await firestore.collection(monthlyStockAccountBalanceDBName).get();
+
+      if (snapshot.docs.isEmpty) {
+        print('ℹ️ 마이그레이션할 월말 계좌 데이터가 없습니다.');
+        return;
+      }
+
+      int updateCount = 0;
+      final batch = firestore.batch();
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final yearMonth = data['year_month'] as String?;
+        final currentRate = (data['exchange_rate'] ?? 1.0) as num;
+
+        // 이미 환율이 정상적으로 입력되어 있는 경우(1.0 초과) 패스할 수 있습니다.
+        // 단, 정확한 갱신이 필요하다면 조건문을 조정하세요.
+        if (yearMonth != null && (currentRate <= 1.0)) {
+          print('⏳ [$yearMonth] 기준 월말 환율 조회 중...');
+
+          // 2. 토스 API를 통해 해당 연월의 말일 환율 조회
+          final fetchedRate = await TossDirectApiService.getMonthlyExchangeRate(
+            yearMonth,
+          );
+
+          if (fetchedRate != null && fetchedRate > 0) {
+            // 3. Firestore 문서 업데이트 배치에 추가
+            batch.update(doc.reference, {'exchange_rate': fetchedRate});
+            updateCount++;
+            print('✅ [$yearMonth] 환율 반영 완료: $fetchedRate원');
+          } else {
+            print('⚠️ [$yearMonth] 환율을 가져오지 못했습니다. 기본값 유지');
+          }
+
+          // 토스 API 호출 제한(Rate Limit) 방지를 위한 짧은 대기 (선택 사항)
+          await Future.delayed(const Duration(milliseconds: 300));
+        }
+      }
+
+      // 4. 일괄 커밋 실행
+      if (updateCount > 0) {
+        await batch.commit();
+        print('🎉 총 $updateCount개의 월말 계좌 환율 데이터 마이그레이션이 성공적으로 완료되었습니다!');
+      } else {
+        print('ℹ️ 새로 업데이트할 대상 데이터가 없습니다.');
+      }
+    } catch (e) {
+      print('❌ 환율 마이그레이션 중 오류 발생: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -827,6 +886,32 @@ class _FirestoreDBMigrateScreenState
                         )
                         : const Icon(Icons.upload_file),
                 label: Text(_isLoading ? '처리 중...' : '월말연금, 월말은행 문서ID 마이그레이션'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton.icon(
+                onPressed:
+                    _isLoading
+                        ? null
+                        : () async {
+                          final firestore = ref.read(firestoreProvider);
+                          await migrateExchangeRates(firestore);
+                        },
+                icon:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.upload_file),
+                label: Text(_isLoading ? '처리 중...' : '월말환율 입력 마이그레이션'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
