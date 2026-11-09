@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/main_constrainedbox.dart';
+import '../../../core/widgets/summary_card.dart';
 import '../../../models/investment/investment.dart';
 import '../../../providers/investment/investment_provider.dart';
 import 'widget/investment_dialog.dart';
@@ -20,8 +23,8 @@ class InvestmentScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
             color: Colors.grey.shade700,
-            padding: EdgeInsets.zero, // 기본 패딩 제거
-            constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
             onPressed: () => _showAddDialog(context),
           ),
           const SizedBox(width: 16),
@@ -34,75 +37,40 @@ class InvestmentScreen extends ConsumerWidget {
             (sum, item) => sum + item.amount,
           );
 
-          return Column(
-            children: [
-              // 상단 요약 카드 (총 투자금)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.blue.shade100),
+          return MainConstrainedBox(
+            child: Column(
+              children: [
+                SummaryCard(
+                  title: '총 투자금액',
+                  mainAmountText: totalAmount.toWon(),
+                  margin: const EdgeInsets.all(16),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '총 투자금액',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${totalAmount.toCommaString()} 원',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade900,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                const SizedBox(height: 16),
 
-              // 내역 리스트 (카드 형태)
-              Expanded(
-                child:
-                    investments.isEmpty
-                        ? const Center(
-                          child: Text(
-                            '등록된 투자 내역이 없습니다.\n하단의 + 버튼을 눌러 추가해 보세요.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey, fontSize: 16),
-                          ),
-                        )
-                        : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: investments.length,
-                          itemBuilder: (context, index) {
-                            final item = investments[index];
-                            return Card(
-                              elevation: 1,
-                              margin: const EdgeInsets.only(bottom: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                side: BorderSide(color: Colors.grey.shade200),
+                Expanded(
+                  child:
+                      investments.isEmpty
+                          ? const Center(
+                            child: Text(
+                              '등록된 투자 내역이 없습니다.\n하단의 + 버튼을 눌러 추가해 보세요.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
+                            ),
+                          )
+                          : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: investments.length,
+                            itemBuilder: (context, index) {
+                              final item = investments[index];
+                              return Padding(
+                                padding: const EdgeInsets.all(16.0),
                                 child: Row(
                                   mainAxisSize:
-                                      MainAxisSize.min, // 필요한 만큼만 공간 차지
+                                      MainAxisSize.min,
                                   children: [
-                                    // 투자 정보 (설명, 날짜)
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -119,7 +87,6 @@ class InvestmentScreen extends ConsumerWidget {
                                               item.createdAt!.isNotEmpty) ...[
                                             const SizedBox(height: 4),
                                             Text(
-                                              // String 값을 그대로 혹은 포맷팅하여 출력
                                               item.createdAt!,
                                               style: TextStyle(
                                                 color: Colors.grey.shade600,
@@ -131,7 +98,6 @@ class InvestmentScreen extends ConsumerWidget {
                                       ),
                                     ),
 
-                                    // 투자 금액
                                     Text(
                                       '${item.amount.toCommaString()} 원',
                                       style: const TextStyle(
@@ -142,45 +108,18 @@ class InvestmentScreen extends ConsumerWidget {
                                     ),
                                     const SizedBox(width: 16),
 
-                                    // 수정 & 삭제 버튼
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit_outlined,
-                                        size: 20,
-                                      ),
-                                      color: Colors.grey.shade700,
-                                      padding: EdgeInsets.zero, // 기본 패딩 제거
-                                      constraints:
-                                          const BoxConstraints(), // 최소 48x48 제약 제거
-                                      onPressed:
-                                          () => _showEditDialog(context, item),
-                                    ),
-                                    const SizedBox(width: 8),
-
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline,
-                                        size: 20,
-                                      ),
-                                      color: Colors.red.shade400,
-                                      padding: EdgeInsets.zero, // 기본 패딩 제거
-                                      constraints:
-                                          const BoxConstraints(), // 최소 48x48 제약 제거
-                                      onPressed:
-                                          () => _confirmDelete(
-                                            context,
-                                            ref,
-                                            item,
-                                          ),
+                                    EditDeleteButtons(
+                                      onEdit: () => _showEditDialog(context, item),
+                                      onDelete: () => _confirmDelete(context, ref, item),
                                     ),
                                   ],
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-              ),
-            ],
+                              );
+                            },
+                          ),
+                ),
+              ],
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -192,7 +131,7 @@ class InvestmentScreen extends ConsumerWidget {
   void _showAddDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -203,7 +142,7 @@ class InvestmentScreen extends ConsumerWidget {
   void _showEditDialog(BuildContext context, Investment investment) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

@@ -75,7 +75,8 @@ class DashboardSummary {
   final double pensionBalance;
   final double diffFromLastMonth;
 
-  double get totalValuation => bankBalance + stockBalance + pensionBalance;
+  double get totalValuation => bankBalance + stockBalance;
+  // double get totalValuation => bankBalance + stockBalance + pensionBalance;
   double get profitOrLoss => totalValuation - totalInvested;
   double get returnRate =>
       totalInvested > 0 ? (profitOrLoss / totalInvested) * 100 : 0.0;

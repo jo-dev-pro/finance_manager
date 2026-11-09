@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/utils/number_formatter.dart';
+import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/account/account.dart';
-import '../../../models/account/account_name.dart';
 import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
 import 'widget/account_dialog.dart';
@@ -38,7 +37,7 @@ class AccountScreen extends ConsumerWidget {
             error: (err, stack) => Center(child: Text('계좌 명칭을 불러오지 못했습니다: $err')),
             data: (accountNames) {
               final accountNameMap = {for (var an in accountNames) an.id: an};
-
+      
               if (accounts.isEmpty) {
                 return Center(
                   child: Column(
@@ -46,8 +45,10 @@ class AccountScreen extends ConsumerWidget {
                     children: [
                       const Icon(Icons.account_balance_wallet_outlined, size: 64, color: Colors.grey),
                       const SizedBox(height: 16),
+
                       const Text('등록된 계좌가 없습니다.', style: TextStyle(color: Colors.grey, fontSize: 16)),
                       const SizedBox(height: 16),
+
                       ElevatedButton.icon(
                         onPressed: () => _showAccountDialog(context, ref, null),
                         icon: const Icon(Icons.add),
@@ -57,28 +58,28 @@ class AccountScreen extends ConsumerWidget {
                   ),
                 );
               }
-
+      
               // 자산 유형별 또는 상태별로 그룹화하거나 리스트 형태로 출력
-              return MainConstrainedBox(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: accounts.length,
-                  itemBuilder: (context, index) {
-                    final account = accounts[index];
-                    final accountNameObj = accountNameMap[account.accountNameId];
-                    final accountName = accountNameObj?.accountName ?? '지정 안됨';
-                    final institution = account.financialInstitution;
-                    final accountType = account.accountType;
-                    final status = account.status;
-                    final logoUrl = account.logoUrl;
-
-                    // 💡 모델의 isForeignCurrency 겟터 및 currency 필드 활용
-                    final isForeign = account.isForeignCurrency;
-                    final currencyLabel = isForeign ? '외화 (USD)' : '원화 (KRW)';
-
-                    return Card(
-                      elevation: 1.5,
-                      margin: const EdgeInsets.only(bottom: 12),
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: accounts.length,
+                itemBuilder: (context, index) {
+                  final account = accounts[index];
+                  final accountNameObj = accountNameMap[account.accountNameId];
+                  final accountName = accountNameObj?.accountName ?? '지정 안됨';
+                  final institution = account.financialInstitution;
+                  final accountType = account.accountType;
+                  final status = account.status;
+                  final logoUrl = account.logoUrl;
+                      
+                  // 💡 모델의 isForeignCurrency 겟터 및 currency 필드 활용
+                  final isForeign = account.isForeignCurrency;
+                  final currencyLabel = isForeign ? '외화 (USD)' : '원화 (KRW)';
+                      
+                  return MainConstrainedBox(
+                    child: Card(
+                      elevation: 2,
+                      margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(color: Colors.grey.shade200),
@@ -142,23 +143,16 @@ class AccountScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
-                              onPressed: () => _showAccountDialog(context, ref, account),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
-                              onPressed: () => _confirmDelete(context, ref, account),
-                            ),
-                          ],
-                        ),
+                        
+                        trailing:  // 수정 & 삭제 버튼
+                          EditDeleteButtons(
+                            onEdit: () => _showAccountDialog(context, ref, account),
+                            onDelete: () => _confirmDelete(context, ref, account),
+                          ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               );
             },
           );
@@ -183,7 +177,7 @@ class AccountScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('계좌 삭제'),
-        content: Text('정말 "${account.financialInstitution} 계좌"를 삭제하시겠습니까?'),
+        content: Text('"${account.financialInstitution} 계좌"를 삭제하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),

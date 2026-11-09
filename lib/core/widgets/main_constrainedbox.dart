@@ -10,7 +10,10 @@ class MainConstrainedBox extends StatelessWidget {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: 1200),
-        child: child,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: child,
+        ),
       ),
     );
   }

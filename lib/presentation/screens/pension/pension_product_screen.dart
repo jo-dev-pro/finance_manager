@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/pension/pension_product.dart';
 import '../../../providers/pension/pension_product_provider.dart';
 import 'widget/pension_product_dialog.dart';
@@ -13,9 +15,10 @@ class PensionProductScreen extends ConsumerWidget {
     final productsState = ref.watch(pensionProductNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('연금상품 관리'),
-       actions: [ 
-          IconButton( 
+      appBar: AppBar(
+        title: const Text('연금상품 관리'),
+        actions: [
+          IconButton(
             icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
             color: Colors.grey.shade700,
             padding: EdgeInsets.zero, // 기본 패딩 제거
@@ -37,24 +40,15 @@ class PensionProductScreen extends ConsumerWidget {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final item = products[index];
+          return MainConstrainedBox(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final item = products[index];
 
-              return Card(
-                elevation: 1,
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                return Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -71,29 +65,15 @@ class PensionProductScreen extends ConsumerWidget {
                       const SizedBox(width: 16),
 
                       // 수정 & 삭제 버튼
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined, size: 20),
-                        color: Colors.grey.shade700,
-                         padding: EdgeInsets.zero, // 기본 패딩 제거
-                                      constraints:
-                                          const BoxConstraints(), // 최소 48x48 제약 제거
-                        onPressed: () => _showEditDialog(context, item),
-                      ),
-                      const SizedBox(width: 8),
-
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 20),
-                        color: Colors.red.shade400,
-                         padding: EdgeInsets.zero, // 기본 패딩 제거
-                                      constraints:
-                                          const BoxConstraints(), // 최소 48x48 제약 제거
-                        onPressed: () => _confirmDelete(context, ref, item),
+                      EditDeleteButtons(
+                        onEdit: () => _showEditDialog(context, item),
+                        onDelete: () => _confirmDelete(context, ref, item),
                       ),
                     ],
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),

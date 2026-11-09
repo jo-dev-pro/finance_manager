@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:collection/collection.dart';
 
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/widgets/bottom_action_button.dart';
+import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/monthly_data/monthly_stock_balance.dart';
 import '../../../models/monthly_data/monthly_stock_account_balance.dart';
 import '../../../models/account/account_name.dart';
@@ -58,15 +61,32 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('주식 월말 내역 관리')),
-      body: balancesAsync.when(
+      body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('데이터를 불러오지 못했습니다: $err')),
-        data: (items) {
+        data: (months) {
+          if (months.isEmpty) {
+            return const Center(child: Text('등록된 주식 데이터가 없습니다.'));
+          }
+
+          final activeCurrentMonth =
+              (selectedMonth != null && months.contains(selectedMonth))
+                  ? selectedMonth
+                  : months.first;
+
+          if (selectedMonth == null || !months.contains(selectedMonth)) {
+            Future.microtask(() {
+              ref
+                  .read(selectedYearMonthProvider.notifier)
+                  .select(activeCurrentMonth);
+            });
+          }
+
           final accounts = accountsAsync.value ?? [];
           final accountNames = accountNamesAsync.value ?? [];
           final stockItems = stockItemsAsync.value ?? [];
           final accountBalances = accountBalancesAsync.value ?? [];
-          final availableMonths = availableMonthsAsync.value ?? [targetMonth];
+          final items = balancesAsync.value ?? [];
 
           final accountMap = {for (var a in accounts) a.id!: a};
           final accountNameMap = {for (var an in accountNames) an.id: an};
@@ -97,7 +117,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
 
           for (var b in filteredStockItems) {
             final acc = accountMap[b.accountId];
-            // 💡 모델의 isForeignCurrency 필드로 정확히 판별[cite: 8]
             final isOverseas = acc?.isForeignCurrency ?? false;
 
             if (isOverseas) {
@@ -133,17 +152,13 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
           final selectedAcc = selectedAccountId != null ? accountMap[selectedAccountId] : null;
           final isSelectedAccountOverseas = selectedAcc?.isForeignCurrency ?? false;
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(monthlyStockBalanceNotifierProvider(targetMonth));
-              ref.invalidate(monthlyStockAccountBalanceNotifierProvider(targetMonth));
-            },
+          return MainConstrainedBox(
             child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 💡 상단 기준년월 & 계좌선택 콤보박스 (가로 Row 배치)
                   Row(
                     children: [
                       Expanded(
@@ -155,9 +170,9 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
-                              value: availableMonths.contains(targetMonth) ? targetMonth : availableMonths.first,
+                              value: months.contains(activeCurrentMonth) ? activeCurrentMonth : months.first,
                               isExpanded: true,
-                              items: availableMonths.map((ym) {
+                              items: months.map((ym) {
                                 return DropdownMenuItem(
                                   value: ym,
                                   child: Text(ym, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
@@ -218,6 +233,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
 
+                  // 요약 카드
                   Card(
                     elevation: 0,
                     color: Colors.indigo.shade50,
@@ -333,7 +349,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                     accountNameMap,
                     accountBalanceMap,
                     selectedAccountId,
-                    targetMonth,
+                    activeCurrentMonth,
                   ),
 
                   const SizedBox(height: 20),
@@ -346,7 +362,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                   if (filteredStockItems.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20),
-                      child: Center(child: Text('$targetMonth에 등록된 주식 종목 월말 데이터가 없습니다.')),
+                      child: Center(child: Text('$activeCurrentMonth에 등록된 주식 종목 월말 데이터가 없습니다.')),
                     )
                   else
                     ListView.builder(
@@ -434,24 +450,10 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                                           fontSize: 15,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: const Icon(Icons.edit, size: 19, color: Colors.grey),
-                                            onPressed: () => _showEditBottomSheet(context, ref, item, stockDisplayName),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: const Icon(Icons.delete, size: 19, color: Colors.redAccent),
-                                            onPressed: () => _confirmDelete(context, ref, item, stockDisplayName),
-                                          ),
-                                        ],
+                                      const SizedBox(height: 8),
+                                      EditDeleteButtons(
+                                        onEdit: () => _showEditBottomSheet(context, ref, item, stockDisplayName),
+                                        onDelete: () => _confirmDelete(context, ref, item, stockDisplayName),
                                       ),
                                     ],
                                   ),
@@ -468,25 +470,9 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
           );
         },
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo.shade600,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.add),
-            label: const Text(
-              '주식 월말 평가액 일괄 입력',
-              style: TextStyle(fontSize: 16),
-            ),
-            onPressed: () => _showAddBottomSheet(context, targetMonth),
-          ),
-        ),
+      bottomNavigationBar: BottomActionButton(
+        label: '주식 월말 평가액 일괄 입력',
+        onPressed: () => _showAddBottomSheet(context, targetMonth),
       ),
     );
   }
@@ -567,9 +553,25 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        '현금성 잔액: $cashStr | 당월 인출: $monthlyWithStr (누적: $totalWithStr)',
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                      Row(
+                        children: [
+                          Text(
+                            '현금성 잔액: $cashStr',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                          ),
+                          const SizedBox(width: 8),
+                          Text('|', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+                          const SizedBox(width: 8),
+                          Text(
+                            '당월 인출: $monthlyWithStr',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '(누적: $totalWithStr)',
+                            style: TextStyle(fontSize: 11, color: Colors.indigo.shade600, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -774,12 +776,165 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
     WidgetRef ref,
     MonthlyStockBalance item,
     String stockName,
-  ) {}
+  ) {
+    final quantityController = TextEditingController(
+      text: item.quantity.toCommaString(),
+    );
+    final priceController = TextEditingController(
+      text: item.currentPrice.toCommaString(),
+    );
+    final principalController = TextEditingController(
+      text: item.principal.toCommaString(),
+    );
+    final formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.of(sheetContext).viewInsets.bottom;
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '$stockName (${item.yearMonth}) 내역 수정',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: quantityController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      ThousandsSeparatorInputFormatter(),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: '보유 수량',
+                      suffixText: '주',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) => val == null || val.trim().isEmpty ? '수량을 입력해주세요.' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: priceController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: '현재가',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) => val == null || val.trim().isEmpty ? '현재가를 입력해주세요.' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: principalController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      ThousandsSeparatorInputFormatter(),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: '투자 원금',
+                      suffixText: '원/달러',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) => val == null || val.trim().isEmpty ? '원금을 입력해주세요.' : null,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (!(formKey.currentState?.validate() ?? false)) return;
+
+                        final qty = double.tryParse(quantityController.text.replaceAll(',', '').trim()) ?? 0.0;
+                        final price = double.tryParse(priceController.text.replaceAll(',', '').trim()) ?? 0.0;
+                        final principal = double.tryParse(principalController.text.replaceAll(',', '').trim()) ?? 0.0;
+                        final balance = qty * price;
+
+                        final updatedItem = item.copyWith(
+                          quantity: qty,
+                          currentPrice: price,
+                          principal: principal,
+                          balance: balance,
+                        );
+
+                        await ref
+                            .read(monthlyStockBalanceNotifierProvider(item.yearMonth).notifier)
+                            .saveBalance(updatedItem);
+
+                        if (sheetContext.mounted) Navigator.pop(sheetContext);
+                      },
+                      child: const Text('수정 내용 저장', style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void _confirmDelete(
     BuildContext context,
     WidgetRef ref,
     MonthlyStockBalance item,
     String stockName,
-  ) {}
+  ) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('삭제 확인'),
+        content: Text('$stockName의 ${item.yearMonth} 월말 데이터를 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              if (item.id != null) {
+                await ref
+                    .read(monthlyStockBalanceNotifierProvider(item.yearMonth).notifier)
+                    .deleteBalance(item.id!);
+              }
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+            },
+            child: const Text('삭제', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
 }

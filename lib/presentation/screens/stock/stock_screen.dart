@@ -6,9 +6,11 @@ import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/number_formatter.dart';
-import '../../../core/utils/screen_size.dart';
+import '../../../core/widgets/account_card.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
+import '../../../core/widgets/section_title.dart'; // 💡 공통 SectionTitle 적용
+import '../../../core/widgets/summary_card.dart';
 import '../../../models/account/account.dart';
 import '../../../models/monthly_data/monthly_stock_balance.dart';
 import '../../../providers/account/account_name_provider.dart';
@@ -17,6 +19,7 @@ import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 import '../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
 import '../../../providers/stock/stock_item_provider.dart';
+import 'widget/stock_return_rate_chart.dart';
 
 class StockScreen extends ConsumerStatefulWidget {
   const StockScreen({super.key});
@@ -28,8 +31,6 @@ class StockScreen extends ConsumerStatefulWidget {
 class _StockScreenState extends ConsumerState<StockScreen> {
   final TransformationController _transformationController =
       TransformationController();
-
-  static const String kCashAssetProductId = '_CASH_ASSET_PRODUCT_ID_';
 
   final List<Color> _chartColors = [
     Colors.indigo,
@@ -98,7 +99,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                   : months.first;
 
           final lastMonth = _getLastYearMonth(activeCurrentMonth);
-          
+
           final balancesAsync = ref.watch(
             monthlyStockBalanceNotifierProvider(activeCurrentMonth),
           );
@@ -134,54 +135,69 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                               ),
                           error: (err, _) => Text('오류: $err'),
                           data: (balances) {
-                            final accountBalances = accountBalancesAsync.value ?? [];
-                            final lastAccountBalances = lastAccountBalancesAsync.value ?? [];
+                            final accountBalances =
+                                accountBalancesAsync.value ?? [];
+                            final lastAccountBalances =
+                                lastAccountBalancesAsync.value ?? [];
                             final accounts = accountsAsync.value ?? [];
-                            final accountMap = {for (var a in accounts) a.id!: a};
+                            final accountMap = {
+                              for (var a in accounts) a.id!: a,
+                            };
 
-                            // 💡 계좌 모델의 isForeignCurrency 필드를 확인하여 외화 계좌에만 환율 적용
                             final accountExchangeRateMap = {
                               for (var ab in accountBalances)
-                                ab.accountId: (accountMap[ab.accountId]?.isForeignCurrency ?? false) && ab.exchangeRate > 0
-                                    ? ab.exchangeRate
-                                    : 1.0,
+                                ab.accountId:
+                                    (accountMap[ab.accountId]
+                                                    ?.isForeignCurrency ??
+                                                false) &&
+                                            ab.exchangeRate > 0
+                                        ? ab.exchangeRate
+                                        : 1.0,
                             };
                             final lastAccountExchangeRateMap = {
                               for (var lab in lastAccountBalances)
-                                lab.accountId: (accountMap[lab.accountId]?.isForeignCurrency ?? false) && lab.exchangeRate > 0
-                                    ? lab.exchangeRate
-                                    : 1.0,
+                                lab.accountId:
+                                    (accountMap[lab.accountId]
+                                                    ?.isForeignCurrency ??
+                                                false) &&
+                                            lab.exchangeRate > 0
+                                        ? lab.exchangeRate
+                                        : 1.0,
                             };
 
-                            final totalBalance = balances.fold<double>(
-                              0.0,
-                              (sum, item) {
-                                final rate = accountExchangeRateMap[item.accountId] ?? 1.0;
-                                return sum + (item.balance * rate);
-                              },
-                            );
-                            final totalPrincipal = balances.fold<double>(
-                              0.0,
-                              (sum, item) {
-                                final rate = accountExchangeRateMap[item.accountId] ?? 1.0;
-                                return sum + (item.principal * rate);
-                              },
-                            );
+                            final totalBalance = balances.fold<double>(0.0, (
+                              sum,
+                              item,
+                            ) {
+                              final rate =
+                                  accountExchangeRateMap[item.accountId] ?? 1.0;
+                              return sum + (item.balance * rate);
+                            });
+                            final totalPrincipal = balances.fold<double>(0.0, (
+                              sum,
+                              item,
+                            ) {
+                              final rate =
+                                  accountExchangeRateMap[item.accountId] ?? 1.0;
+                              return sum + (item.principal * rate);
+                            });
 
-                            final totalPayout = balances.fold<double>(
-                              0.0,
-                              (sum, item) {
-                                final rate = accountExchangeRateMap[item.accountId] ?? 1.0;
-                                return sum + (item.totalPayout * rate);
-                              },
-                            );
-                            final totalWithdrawal = balances.fold<double>(
-                              0.0,
-                              (sum, item) {
-                                final rate = accountExchangeRateMap[item.accountId] ?? 1.0;
-                                return sum + (item.totalWithdrawal * rate);
-                              },
-                            );
+                            final totalPayout = balances.fold<double>(0.0, (
+                              sum,
+                              item,
+                            ) {
+                              final rate =
+                                  accountExchangeRateMap[item.accountId] ?? 1.0;
+                              return sum + (item.totalPayout * rate);
+                            });
+                            final totalWithdrawal = balances.fold<double>(0.0, (
+                              sum,
+                              item,
+                            ) {
+                              final rate =
+                                  accountExchangeRateMap[item.accountId] ?? 1.0;
+                              return sum + (item.totalWithdrawal * rate);
+                            });
 
                             final totalProfitOrLoss =
                                 (totalBalance + totalPayout + totalWithdrawal) -
@@ -191,40 +207,97 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                     ? (totalProfitOrLoss / totalPrincipal) * 100
                                     : 0.0;
 
-                            final lastTotalBalance = lastBalancesAsync.maybeWhen(
-                              data: (lb) {
-                                return lb.fold<double>(
-                                  0.0,
-                                  (sum, item) {
-                                    final rate = lastAccountExchangeRateMap[item.accountId] ?? 1.0;
-                                    return sum + (item.balance * rate);
+                            final lastTotalBalance = lastBalancesAsync
+                                .maybeWhen(
+                                  data: (lb) {
+                                    return lb.fold<double>(0.0, (sum, item) {
+                                      final rate =
+                                          lastAccountExchangeRateMap[item
+                                              .accountId] ??
+                                          1.0;
+                                      return sum + (item.balance * rate);
+                                    });
                                   },
+                                  orElse: () => 0.0,
                                 );
-                              },
-                              orElse: () => 0.0,
-                            );
 
-                            return _buildSummaryCard(
-                              totalBalance: totalBalance,
-                              totalPrincipal: totalPrincipal,
-                              totalProfitOrLoss: totalProfitOrLoss,
-                              totalReturnRate: totalReturnRate,
-                              totalPayout: totalPayout,
-                              totalWithdrawal: totalWithdrawal,
-                              diffFromLastMonth:
-                                  totalBalance - lastTotalBalance,
+                            return SummaryCard(
+                              title: '주식 자산 전체 금액',
+                              mainAmountText: totalBalance.toWon(),
+                              principalText: totalPrincipal.toWon(),
+                              profitLossWidget: Row(
+                                children: [
+                                  totalProfitOrLoss.toSignedPriceText(
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    positiveColor: const Color(0xFFFF8A80),
+                                    negativeColor: const Color(0xFF82B1FF),
+                                    zeroColor: Colors.white,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  totalReturnRate.toSignedPercentText(
+                                    withParentheses: true,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    positiveColor: const Color(0xFFFF8A80),
+                                    negativeColor: const Color(0xFF82B1FF),
+                                    zeroColor: Colors.white,
+                                  ),
+                                ],
+                              ),
+                              subInfoWidgets: [
+                                if (totalPayout > 0)
+                                  Text(
+                                    '누적 배당: ${totalPayout.toWon()}',
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                if (totalWithdrawal > 0)
+                                  Text(
+                                    '누적 인출: ${totalWithdrawal.toWon()}',
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                              ],
+                              diffFromLastMonthWidget: Row(
+                                children: [
+                                  const Text(
+                                    '전월 대비: ',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  (totalBalance - lastTotalBalance)
+                                      .toSignedPriceText(
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        positiveColor: const Color(0xFFFF8A80),
+                                        negativeColor: const Color(0xFF82B1FF),
+                                        zeroColor: Colors.white,
+                                      ),
+                                ],
+                              ),
                             );
                           },
                         ),
-                        const SizedBox(height: 24),
-                        const Text(
+
+                        const SectionTitle(
                           '주식 계좌 목록',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          topSpacing: 24,
+                          bottomSpacing: 12,
                         ),
-                        const SizedBox(height: 12),
+
                         balancesAsync.when(
                           loading: () => const CircularProgressIndicator(),
                           error: (err, _) => Text('로드 실패: $err'),
@@ -235,17 +308,24 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                               );
                             }
 
-                            final accountBalances = accountBalancesAsync.value ?? [];
+                            final accountBalances =
+                                accountBalancesAsync.value ?? [];
                             final accounts = accountsAsync.value ?? [];
                             final accountNames = accountNamesAsync.value ?? [];
                             final stockItems = stockItemsAsync.value ?? [];
-                            final accountMap = {for (var a in accounts) a.id!: a};
+                            final accountMap = {
+                              for (var a in accounts) a.id!: a,
+                            };
 
                             final accountExchangeRateMap = {
                               for (var ab in accountBalances)
-                                ab.accountId: (accountMap[ab.accountId]?.isForeignCurrency ?? false) && ab.exchangeRate > 0
-                                    ? ab.exchangeRate
-                                    : 1.0,
+                                ab.accountId:
+                                    (accountMap[ab.accountId]
+                                                    ?.isForeignCurrency ??
+                                                false) &&
+                                            ab.exchangeRate > 0
+                                        ? ab.exchangeRate
+                                        : 1.0,
                             };
                             final accountCashMap = {
                               for (var ab in accountBalances)
@@ -264,7 +344,9 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             final overallTotalBalance = balances.fold<double>(
                               0.0,
                               (sum, item) {
-                                final rate = accountExchangeRateMap[item.accountId] ?? 1.0;
+                                final rate =
+                                    accountExchangeRateMap[item.accountId] ??
+                                    1.0;
                                 return sum + (item.balance * rate);
                               },
                             );
@@ -286,15 +368,13 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                   accountNames,
                                   stockMap,
                                 ),
-                                const SizedBox(height: 28),
-                                const Text(
+
+                                const SectionTitle(
                                   '계좌별 평가 비중',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  topSpacing: 28,
+                                  bottomSpacing: 12,
                                 ),
-                                const SizedBox(height: 12),
+
                                 _buildPortionSection(
                                   accountIds,
                                   accountGroups,
@@ -304,20 +384,19 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                   accountNames,
                                   overallTotalBalance,
                                 ),
-                                const SizedBox(height: 28),
-                                const Text(
+
+                                const SectionTitle(
                                   '계좌별 월말 수익률 추이 (%)',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  topSpacing: 28,
+                                  bottomSpacing: 12,
                                 ),
-                                const SizedBox(height: 12),
-                                _buildReturnRateChart(
-                                  accountIds,
-                                  months,
-                                  accounts,
-                                  accountNames,
+
+                                StockReturnRateChart(
+                                  accountIds: accountIds,
+                                  months: months,
+                                  accounts: accounts,
+                                  accountNames: accountNames,
+                                  chartColors: _chartColors,
                                 ),
                               ],
                             );
@@ -331,139 +410,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard({
-    required double totalBalance,
-    required double totalPrincipal,
-    required double totalProfitOrLoss,
-    required double totalReturnRate,
-    required double totalPayout,
-    required double totalWithdrawal,
-    required double diffFromLastMonth,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.indigo.shade600,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '주식 자산 전체 금액',
-            style: TextStyle(color: Colors.white70, fontSize: 15),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            totalBalance.toWon(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Divider(color: Colors.white24, height: 1),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '총 투자 원금',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    totalPrincipal.toWon(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text(
-                    '평가 손익 (수익률)',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      totalProfitOrLoss.toSignedPriceText(
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        positiveColor: const Color(0xFFFF8A80),
-                        negativeColor: const Color(0xFF82B1FF),
-                        zeroColor: Colors.white,
-                      ),
-                      const SizedBox(width: 4),
-                      totalReturnRate.toSignedPercentText(
-                        withParentheses: true,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        positiveColor: const Color(0xFFFF8A80),
-                        negativeColor: const Color(0xFF82B1FF),
-                        zeroColor: Colors.white,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-          if (totalPayout > 0 || totalWithdrawal > 0) ...[
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (totalPayout > 0)
-                  Text(
-                    '누적 배당: ${totalPayout.toWon()}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                if (totalWithdrawal > 0)
-                  Text(
-                    '누적 인출: ${totalWithdrawal.toWon()}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-              ],
-            ),
-          ],
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Text(
-                '전월 대비: ',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
-              ),
-              diffFromLastMonth.toSignedPriceText(
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-                positiveColor: const Color(0xFFFF8A80),
-                negativeColor: const Color(0xFF82B1FF),
-                zeroColor: Colors.white,
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -493,7 +439,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
       itemBuilder: (context, index) {
         final accountId = accountIds[index];
         final items = accountGroups[accountId]!;
-        
+
         final exchangeRate = accountExchangeRateMap[accountId] ?? 1.0;
         final cashBalance = (accountCashMap[accountId] ?? 0.0) * exchangeRate;
 
@@ -535,8 +481,8 @@ class _StockScreenState extends ConsumerState<StockScreen> {
         final institution = matchedAcc?.financialInstitution ?? '기타';
         final accountName = matchedAccountName?.accountName ?? accountId;
 
-        return _AccountCard(
-          account: matchedAcc,
+        return AccountCard(
+          logoUrl: matchedAcc?.logoUrl,
           institution: institution,
           accountName: accountName,
           totalBalance: totalBalance,
@@ -584,7 +530,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                 final index = entry.key;
                 final accId = entry.value;
                 final items = accountGroups[accId]!;
-                
+
                 final exchangeRate = accountExchangeRateMap[accId] ?? 1.0;
                 final cashBal = (accountCashMap[accId] ?? 0.0) * exchangeRate;
                 final rawBal = items.fold<double>(
@@ -603,7 +549,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                     matchedAcc != null
                         ? accountNameMap[matchedAcc.accountNameId]
                         : null;
-                
+
                 final institution = matchedAcc?.financialInstitution ?? "기타";
                 final accountName = matchedAccountName?.accountName ?? accId;
                 final logoUrl = matchedAcc?.logoUrl;
@@ -670,229 +616,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                   ),
                 );
               }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReturnRateChart(
-    List<String> accountIds,
-    List<String> months,
-    List<Account> accounts,
-    List<dynamic> accountNames,
-  ) {
-    final sortedMonths = months.reversed.toList();
-    final allBalances = ref.watch(allMonthlyStockBalancesProvider).value ?? [];
-
-    final accountNameMap = {for (var an in accountNames) an.id: an};
-    final accountMap = {for (var a in accounts) a.id!: a};
-
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              children:
-                  accountIds.asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final accId = entry.value;
-                    final matchedAcc = accountMap[accId];
-                    final matchedName =
-                        matchedAcc != null
-                            ? accountNameMap[matchedAcc.accountNameId]
-                            : null;
-                    final name = matchedName?.accountName ?? accId;
-                    final logoUrl = matchedAcc?.logoUrl;
-                    final color = _chartColors[idx % _chartColors.length];
-
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        if (logoUrl != null && logoUrl.isNotEmpty)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: Image.network(
-                              logoUrl,
-                              width: 16,
-                              height: 16,
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, __, ___) => const Icon(
-                                    Icons.account_balance,
-                                    size: 14,
-                                    color: Colors.grey,
-                                  ),
-                            ),
-                          )
-                        else
-                          const Icon(
-                            Icons.account_balance,
-                            size: 14,
-                            color: Colors.indigo,
-                          ),
-                        const SizedBox(width: 4),
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 260,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: true,
-                    getDrawingHorizontalLine:
-                        (value) =>
-                            FlLine(color: Colors.grey.shade200, strokeWidth: 1),
-                    getDrawingVerticalLine:
-                        (value) =>
-                            FlLine(color: Colors.grey.shade100, strokeWidth: 1),
-                  ),
-                  lineTouchData: LineTouchData(
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipColor: (_) => Colors.grey.shade900,
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          return LineTooltipItem(
-                            '수익률: ${spot.y.toStringAsFixed(1)}%',
-                            const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 45,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '${value.toInt()}%',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        interval:
-                            sortedMonths.length > 12
-                                ? (sortedMonths.length / 6).ceil().toDouble()
-                                : 1.0,
-                        getTitlesWidget: (val, meta) {
-                          int idx = val.toInt();
-                          if (idx >= 0 && idx < sortedMonths.length) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(
-                                sortedMonths[idx],
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                  ),
-                  lineBarsData:
-                      accountIds.asMap().entries.map((entry) {
-                        final idx = entry.key;
-                        final accId = entry.value;
-
-                        final spots =
-                            sortedMonths.asMap().entries.map((mEntry) {
-                              final mIdx = mEntry.key;
-                              final ym = mEntry.value;
-
-                              final items = allBalances.where(
-                                (b) =>
-                                    b.balanceItem.yearMonth == ym &&
-                                    b.balanceItem.accountId == accId,
-                              );
-                              final totalBal = items.fold<double>(
-                                0.0,
-                                (s, item) => s + item.balanceItem.balance,
-                              );
-                              final totalPrin = items.fold<double>(
-                                0.0,
-                                (s, item) => s + item.balanceItem.principal,
-                              );
-                              final totalPayout = items.fold<double>(
-                                0.0,
-                                (s, item) => s + item.balanceItem.totalPayout,
-                              );
-                              final totalWithdrawal = items.fold<double>(
-                                0.0,
-                                (s, item) => s + item.balanceItem.totalWithdrawal,
-                              );
-
-                              final rate =
-                                  totalPrin > 0
-                                      ? (((totalBal + totalPayout + totalWithdrawal) - totalPrin) / totalPrin) * 100
-                                      : 0.0;
-                              return FlSpot(mIdx.toDouble(), rate);
-                            }).toList();
-
-                        return LineChartBarData(
-                          spots: spots,
-                          isCurved: true,
-                          color: _chartColors[idx % _chartColors.length],
-                          barWidth: 3,
-                          dotData: const FlDotData(show: true),
-                          belowBarData: BarAreaData(show: false),
-                        );
-                      }).toList(),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -997,198 +720,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _AccountCard extends StatelessWidget {
-  final Account? account;
-  final String institution;
-  final String accountName;
-  final double totalBalance;
-  final double totalPrincipal;
-  final double totalProfitOrLoss;
-  final double returnRate;
-  final double totalWithdrawal;
-  final int itemCount;
-  final VoidCallback onTap;
-
-  const _AccountCard({
-    required this.account,
-    required this.institution,
-    required this.accountName,
-    required this.totalBalance,
-    required this.totalPrincipal,
-    required this.totalProfitOrLoss,
-    required this.returnRate,
-    required this.totalWithdrawal,
-    required this.itemCount,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final logoUrl = account?.logoUrl;
-
-    return Card(
-      elevation: 2,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  if (logoUrl != null && logoUrl.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.network(
-                        logoUrl,
-                        width: 22,
-                        height: 22,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (_, __, ___) => const Icon(
-                              Icons.account_balance,
-                              size: 20,
-                              color: Colors.grey,
-                            ),
-                      ),
-                    )
-                  else
-                    const Icon(
-                      Icons.account_balance,
-                      size: 20,
-                      color: Colors.indigo,
-                    ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          institution,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        Text(
-                          accountName,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    totalBalance.toWon(),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2E43B3),
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '투자 원금',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        totalPrincipal.toWon(),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '평가 손익 (수익률)',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          totalProfitOrLoss.toSignedPriceText(
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            positiveColor: Colors.red.shade700,
-                            negativeColor: Colors.blue.shade700,
-                            zeroColor: Colors.black87,
-                          ),
-                          const SizedBox(width: 4),
-                          returnRate.toSignedPercentText(
-                            withParentheses: true,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            positiveColor: Colors.red.shade700,
-                            negativeColor: Colors.blue.shade700,
-                            zeroColor: Colors.black87,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '보유 종목 $itemCount개',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                  ),
-                  Opacity(
-                    opacity: totalWithdrawal > 0 ? 1.0 : 0.0,
-                    child: Text(
-                      totalWithdrawal > 0 ? '인출액: ${totalWithdrawal.toWon()}' : '',
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

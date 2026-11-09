@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/widgets/main_constrainedbox.dart';
+
 class AssetManagementGuideScreen extends StatelessWidget {
   const AssetManagementGuideScreen({super.key});
 
@@ -25,13 +27,15 @@ class AssetManagementGuideScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
-          children: [
-            _OverviewGuideTab(),
-            _BankGuideTab(),
-            _PensionGuideTab(),
-            _StockGuideTab(),
-          ],
+        body: MainConstrainedBox(
+          child: const TabBarView(
+            children: [
+              _OverviewGuideTab(),
+              _BankGuideTab(),
+              _PensionGuideTab(),
+              _StockGuideTab(),
+            ],
+          ),
         ),
       ),
     );
