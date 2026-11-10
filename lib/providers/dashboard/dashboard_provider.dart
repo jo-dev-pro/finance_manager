@@ -76,7 +76,6 @@ class DashboardSummary {
   final double diffFromLastMonth;
 
   double get totalValuation => bankBalance + stockBalance;
-  // double get totalValuation => bankBalance + stockBalance + pensionBalance;
   double get profitOrLoss => totalValuation - totalInvested;
   double get returnRate =>
       totalInvested > 0 ? (profitOrLoss / totalInvested) * 100 : 0.0;
@@ -116,45 +115,35 @@ String _getLastYearMonth(String currentYearMonth) {
   }
 }
 
-// 💡 공통 자산 집계 헬퍼 함수 (환율 적용 및 balance 필드 정정)
 Future _calculateStockAssets(
   Ref ref,
   String yearMonth,
 ) async {
   final firestore = ref.read(firestoreProvider);
   
-  // 1. 계좌별 월말 데이터 (환율 및 현금성 잔액 포함) 조회
   final accountBalances = await ref.watch(
     monthlyStockAccountBalanceNotifierProvider(yearMonth).future,
   );
   
-  // 계좌별 정보 맵핑 (환율 및 해외 계좌 여부 판별)
-  final accountNames = await ref.watch(accountNameNotifierProvider.future);
   final accounts = await ref.watch(accountNotifierProvider.future);
   final accountMap = {for (var a in accounts) a.id!: a};
-  final accountNameMap = {for (var an in accountNames) an.id: an};
 
   final Map<String, double> exchangeRateMap = {};
   final Set<String> overseasAccountIds = {};
 
   for (var ab in accountBalances) {
     final acc = accountMap[ab.accountId];
-    final nameObj = acc != null ? accountNameMap[acc.accountNameId] : null;
-    final accName = nameObj?.accountName ?? '';
-    final inst = acc?.financialInstitution ?? '';
     
-    // 해외 계좌 여부 판별
-    final isOverseas = accName.contains('JO-해외') || inst.contains('JO-해외');
+    // 💡 Account 모델의 currency 기반 isForeignCurrency 필드 참조
+    final isOverseas = acc?.isForeignCurrency ?? false;
     if (isOverseas) {
       overseasAccountIds.add(ab.accountId);
-      // 해외 계좌의 경우 저장된 환율 사용 (환율이 없거나 1 이하이면 기본 1300원 혹은 데이터 값 사용)
-      exchangeRateMap[ab.accountId] = (ab.exchangeRate > 1.0) ? ab.exchangeRate : 1300.0; // 안전 장치
+      exchangeRateMap[ab.accountId] = (ab.exchangeRate > 1.0) ? ab.exchangeRate : 1300.0;
     } else {
-      exchangeRateMap[ab.accountId] = 1.0; // 국내 계좌는 환율 1.0 고정
+      exchangeRateMap[ab.accountId] = 1.0;
     }
   }
   
-  // 계좌별 현금성 잔액 합산
   double cashTotal = 0;
   for (var ab in accountBalances) {
     final cash = ab.cashBalance;
@@ -162,14 +151,12 @@ Future _calculateStockAssets(
     final rate = exchangeRateMap[ab.accountId] ?? 1.0;
 
     if (isOverseas) {
-      // 해외 계좌 현금(달러) * 환율 = 원화 환산
       cashTotal += cash * rate;
     } else {
-      cashTotal += cash; // 국내 계좌 현금
+      cashTotal += cash;
     }
   }
 
-  // 2. 종목별 월말 평가액 (`balance` 필드) 조회
   final stockSnap =
       await firestore
           .collection(monthlyStockBalanceDBName)
@@ -185,16 +172,17 @@ Future _calculateStockAssets(
     final rate = exchangeRateMap[accountId] ?? 1.0;
 
     if (isOverseas) {
-      // 💡 해외 주식 평가액(달러)에 해당 월 환율을 곱해 원화로 환산
       stockBalanceTotal += balance * rate;
     } else {
-      // 국내 주식 평가액은 원화 그대로 합산
       stockBalanceTotal += balance;
     }
   }
 
+  // 💡 소수점 반올림 처리 적용
+  final finalStockBalance = (stockBalanceTotal + cashTotal).roundToDouble();
+
   return {
-    'stockBalance': stockBalanceTotal + cashTotal,
+    'stockBalance': finalStockBalance,
   };
 }
 
@@ -220,14 +208,12 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
 
   final firestore = ref.watch(firestoreProvider);
 
-  // 1. 총 투자원금
   final investSnap = await firestore.collection(investmentDBName).get();
   final totalInvested = investSnap.docs.fold<double>(
     0,
     (sum, doc) => sum + ((doc.data()['amount'] ?? 0) as num).toDouble(),
   );
 
-  // 2. 은행 총 잔액 (당월)
   final bankBalances = await ref.watch(
     monthlyBankBalanceNotifierProvider(selectedMonth).future,
   );
@@ -236,11 +222,9 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
     (sum, item) => sum + item.balance,
   );
 
-  // 3. 증권 총 평가액 (당월 - 환율 반영 및 올바른 필드 연동)
   final stockAssets = await _calculateStockAssets(ref, selectedMonth);
   final stockBalance = stockAssets['stockBalance'] ?? 0.0;
 
-  // 4. 연금 상품별 총 평가액 (당월)
   final pensionSnap =
       await firestore
           .collection(monthlyPensionBalanceDBName)
@@ -252,7 +236,6 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
         sum + ((doc.data()['balance'] ?? 0) as num).toDouble(),
   );
 
-  // 5. 연금 계좌별 현금성 자산(예수금) 총액 합산 (당월)
   final pensionAccountBalances = await ref.watch(
     monthlyPensionAccountBalanceNotifierProvider(selectedMonth).future,
   );
@@ -264,7 +247,6 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
   final pensionBalance = pensionProductBalance + pensionCashBalance;
   final totalValuation = bankBalance + stockBalance + pensionBalance;
 
-  // 6. 전월 총 자산 계산을 위한 전월 데이터 조회
   final lastMonth = _getLastYearMonth(selectedMonth);
   
   final lastBankBalances = await ref.watch(

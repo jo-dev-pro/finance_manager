@@ -40,7 +40,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
             return const Center(child: Text('등록된 월말 잔액 데이터가 없습니다.'));
           }
 
-          final activeCurrentMonth = (targetMonth != null && months.contains(targetMonth))
+          final activeCurrentMonth = (months.contains(targetMonth))
               ? targetMonth
               : months.first;
 
@@ -215,28 +215,6 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
         label: '은행 월말 잔액 일괄 입력',
         onPressed: () => _showAddBottomSheet(context, targetMonth),
       ),
-      // bottomNavigationBar: SafeArea(
-      //   child: Padding(
-      //     padding: const EdgeInsets.all(16.0),
-      //     child: ElevatedButton.icon(
-      //       style: ElevatedButton.styleFrom(
-      //         backgroundColor: Colors.indigo.shade600,
-      //         foregroundColor: Colors.white,
-      //         shape: RoundedRectangleBorder(
-      //           borderRadius: BorderRadius.circular(12),
-      //         ),
-      //       ),
-      //       icon: const Icon(Icons.add),
-      //       label: const Text('월말 잔액 추가 입력', style: TextStyle(fontSize: 16)),
-      //       onPressed: () {
-      //         final currentSelected = ref.read(selectedYearMonthProvider) ?? 
-      //             initialYearMonth ?? 
-      //             DateFormat('yyyy-MM').format(DateTime.now());
-      //         _showAddBottomSheet(context, currentSelected);
-      //       },
-      //     ),
-      //   ),
-      // ),
     );
   }
 

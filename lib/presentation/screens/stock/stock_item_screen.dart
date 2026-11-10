@@ -96,7 +96,7 @@ class StockItemScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '코드: ${item.stockCode}${item.otherName != null && item.otherName!.isNotEmpty ? ' • ${item.otherName}' : ''}',
+                                '코드: ${item.stockCode}${item.otherName.isNotEmpty ? ' • ${item.otherName}' : ''}',
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
                                   fontSize: 12,

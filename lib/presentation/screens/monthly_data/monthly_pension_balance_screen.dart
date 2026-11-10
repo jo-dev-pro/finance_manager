@@ -8,6 +8,7 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/bottom_action_button.dart';
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
+import '../../../core/widgets/summary_item.dart';
 import '../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../models/monthly_data/monthly_pension_account_balance.dart';
 import '../../../models/account/account_name.dart';
@@ -18,6 +19,7 @@ import '../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
 import '../../../providers/pension/pension_product_provider.dart';
 import 'widget/monthly_pension_balance_dialog.dart';
+import 'widget/monthly_pension_account_summary_list.dart'; // 💡 계좌 요약 리스트 위젯 임포트
 
 final selectedPensionAccountFilterProvider = StateProvider.autoDispose<String?>((ref) => null);
 
@@ -127,7 +129,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 💡 상단 기준년월 & 계좌선택 콤보박스 (가로 Row 배치)
+                  // 상단 기준년월 & 계좌선택 콤보박스 (가로 Row 배치)
                   Row(
                     children: [
                       Expanded(
@@ -215,11 +217,11 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildSummaryItem('총 자산', grandTotalBalance.toWon()),
-                          _buildSummaryItem('총 원금', totalPensionPrincipal.toWon()),
-                          _buildSummaryItem(
-                            '평가 손익',
-                            '${totalProfit >= 0 ? '+' : ''}${totalProfit.toWon()}',
+                          SummaryItem(label: '총 자산', value: grandTotalBalance.toWon()),
+                          SummaryItem(label: '총 원금', value: totalPensionPrincipal.toWon()),
+                          SummaryItem(
+                            label: '평가 손익',
+                            value: '${totalProfit >= 0 ? '+' : ''}${totalProfit.toWon()}',
                             color: totalProfit >= 0 ? Colors.red.shade700 : Colors.blue.shade700,
                           ),
                         ],
@@ -234,14 +236,23 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  _buildAccountSummaryList(
-                    context,
-                    ref,
-                    pensionAccounts,
-                    accountNameMap,
-                    accountBalanceMap,
-                    selectedAccountId,
-                    activeCurrentMonth,
+                  // 💡 분리한 MonthlyPensionAccountSummaryList 위젯 호출
+                  MonthlyPensionAccountSummaryList(
+                    pensionAccounts: pensionAccounts,
+                    accountNameMap: accountNameMap,
+                    accountBalanceMap: accountBalanceMap,
+                    selectedAccountId: selectedAccountId,
+                    targetMonth: activeCurrentMonth,
+                    onEditPressed: (accId, displayName, currentBal) {
+                      _showAccountEditBottomSheet(
+                        context,
+                        ref,
+                        accId,
+                        displayName,
+                        activeCurrentMonth,
+                        currentBal,
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 20),
@@ -365,149 +376,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
         label: '연금 월말 평가액 추가 입력',
         onPressed: () => _showAddBottomSheet(context, targetMonth),
       ),
-      // bottomNavigationBar: SafeArea(
-      //   child: Padding(
-      //     padding: const EdgeInsets.all(16.0),
-      //     child: ElevatedButton.icon(
-      //       style: ElevatedButton.styleFrom(
-      //         backgroundColor: Colors.indigo.shade600,
-      //         foregroundColor: Colors.white,
-      //         shape: RoundedRectangleBorder(
-      //           borderRadius: BorderRadius.circular(12),
-      //         ),
-      //       ),
-      //       icon: const Icon(Icons.add),
-      //       label: const Text(
-      //         '연금 월말 평가액 추가 입력',
-      //         style: TextStyle(fontSize: 16),
-      //       ),
-      //       onPressed: () {
-      //         final currentSelected =
-      //             ref.read(selectedYearMonthProvider) ??
-      //             initialYearMonth ??
-      //             DateFormat('yyyy-MM').format(DateTime.now());
-      //         _showAddBottomSheet(context, currentSelected);
-      //       },
-      //     ),
-      //   ),
-      // ),
-    );
-  }
-
-  Widget _buildAccountSummaryList(
-    BuildContext context,
-    WidgetRef ref,
-    List<dynamic> pensionAccounts,
-    Map<String?, AccountName?> accountNameMap,
-    Map<String, MonthlyPensionAccountBalance> accountBalanceMap,
-    String? selectedAccountId,
-    String targetMonth,
-  ) {
-    if (pensionAccounts.isEmpty) {
-      return const Text('등록된 연금 계좌가 없습니다.', style: TextStyle(color: Colors.grey));
-    }
-
-    final displayAccounts = selectedAccountId == null
-        ? pensionAccounts
-        : pensionAccounts.where((a) => a.id == selectedAccountId).toList();
-
-    if (displayAccounts.isEmpty) {
-      return const Text('해당 계좌 정보가 없습니다.', style: TextStyle(color: Colors.grey));
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: displayAccounts.length,
-      itemBuilder: (context, index) {
-        final acc = displayAccounts[index];
-        final accId = acc.id ?? '';
-        final nameObj = accountNameMap[acc.accountNameId];
-        final accName = nameObj?.accountName ?? '계좌';
-        final institution = acc.financialInstitution;
-
-        final accBalanceData = accountBalanceMap[accId];
-        final cash = accBalanceData?.cashBalance ?? 0.0;
-        final monthlyWith = accBalanceData?.monthlyWithdrawal ?? 0.0;
-        final totalWith = accBalanceData?.totalWithdrawal ?? 0.0;
-
-        return Card(
-          elevation: 1.0,
-          margin: const EdgeInsets.only(bottom: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: Colors.grey.shade300),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$institution -$accName',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            '현금성 잔액: ${cash.toWon()}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                          ),
-                          const SizedBox(width: 8),
-                          Text('|', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-                          const SizedBox(width: 8),
-                          Text(
-                            '당월 인출: ${monthlyWith.toWon()}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '(누적: ${totalWith.toWon()})',
-                            style: TextStyle(fontSize: 11, color: Colors.indigo.shade600, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 18, color: Colors.indigo),
-                  onPressed: () => _showAccountEditBottomSheet(
-                    context,
-                    ref,
-                    accId,
-                    '$institution$accName',
-                    targetMonth,
-                    accBalanceData,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSummaryItem(String label, String value, {Color? color}) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: color ?? Colors.black87,
-          ),
-        ),
-      ],
     );
   }
 

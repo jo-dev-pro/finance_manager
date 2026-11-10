@@ -8,6 +8,7 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/bottom_action_button.dart';
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
+import '../../../core/widgets/summary_item.dart'; // 💡 공통 SummaryItem 위젯 임포트
 import '../../../models/monthly_data/monthly_stock_balance.dart';
 import '../../../models/monthly_data/monthly_stock_account_balance.dart';
 import '../../../models/account/account_name.dart';
@@ -18,6 +19,7 @@ import '../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 import '../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
 import '../../../providers/stock/stock_item_provider.dart';
 import 'widget/monthly_stock_balance_dialog.dart';
+import 'widget/monthly_stock_account_summary_list.dart'; // 💡 주식 계좌 요약 리스트 위젯 임포트
 
 final selectedAccountFilterProvider = StateProvider.autoDispose<String?>((ref) => null);
 
@@ -158,7 +160,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 💡 상단 기준년월 & 계좌선택 콤보박스 (가로 Row 배치)
+                  // 상단 기준년월 & 계좌선택 콤보박스 (가로 Row 배치)
                   Row(
                     children: [
                       Expanded(
@@ -233,7 +235,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // 요약 카드
+                  // 요약 카드 (SummaryItem 공통 위젯 적용)
                   Card(
                     elevation: 0,
                     color: Colors.indigo.shade50,
@@ -264,11 +266,11 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  _buildSummaryItem('총 자산 (달러)', grandTotalUsd.toUSD()),
-                                  _buildSummaryItem('달러 원금', totalUsdPrincipal.toUSD()),
-                                  _buildSummaryItem(
-                                    '달러 손익',
-                                    '${totalUsdProfit >= 0 ? '+' : ''}${totalUsdProfit.toUSD()}',
+                                  SummaryItem(label: '총 자산 (달러)', value: grandTotalUsd.toUSD()),
+                                  SummaryItem(label: '달러 원금', value: totalUsdPrincipal.toUSD()),
+                                  SummaryItem(
+                                    label: '달러 손익',
+                                    value: '${totalUsdProfit >= 0 ? '+' : ''}${totalUsdProfit.toUSD()}',
                                     color: totalUsdProfit >= 0 ? Colors.red.shade700 : Colors.blue.shade700,
                                   ),
                                 ],
@@ -277,11 +279,11 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  _buildSummaryItem('총 자산 (원화)', grandTotalKrw.toWon()),
-                                  _buildSummaryItem('원화 원금', totalKrwPrincipal.toWon()),
-                                  _buildSummaryItem(
-                                    '원화 손익',
-                                    '${totalKrwProfit >= 0 ? '+' : ''}${totalKrwProfit.toWon()}',
+                                  SummaryItem(label: '총 자산 (원화)', value: grandTotalKrw.toWon()),
+                                  SummaryItem(label: '원화 원금', value: totalKrwPrincipal.toWon()),
+                                  SummaryItem(
+                                    label: '원화 손익',
+                                    value: '${totalKrwProfit >= 0 ? '+' : ''}${totalKrwProfit.toWon()}',
                                     color: totalKrwProfit >= 0 ? Colors.red.shade700 : Colors.blue.shade700,
                                   ),
                                 ],
@@ -291,11 +293,11 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                _buildSummaryItem('총 자산 (원화)', grandTotalKrw.toWon()),
-                                _buildSummaryItem('원화 원금', totalKrwPrincipal.toWon()),
-                                _buildSummaryItem(
-                                  '원화 손익',
-                                  '${totalKrwProfit >= 0 ? '+' : ''}${totalKrwProfit.toWon()}',
+                                SummaryItem(label: '총 자산 (원화)', value: grandTotalKrw.toWon()),
+                                SummaryItem(label: '원화 원금', value: totalKrwPrincipal.toWon()),
+                                SummaryItem(
+                                  label: '원화 손익',
+                                  value: '${totalKrwProfit >= 0 ? '+' : ''}${totalKrwProfit.toWon()}',
                                   color: totalKrwProfit >= 0 ? Colors.red.shade700 : Colors.blue.shade700,
                                 ),
                               ],
@@ -319,11 +321,11 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  _buildSummaryItem('총 자산 (달러)', grandTotalUsd.toUSD()),
-                                  _buildSummaryItem('달러 원금', totalUsdPrincipal.toUSD()),
-                                  _buildSummaryItem(
-                                    '달러 손익',
-                                    '${totalUsdProfit >= 0 ? '+' : ''}${totalUsdProfit.toUSD()}',
+                                  SummaryItem(label: '총 자산 (달러)', value: grandTotalUsd.toUSD()),
+                                  SummaryItem(label: '달러 원금', value: totalUsdPrincipal.toUSD()),
+                                  SummaryItem(
+                                    label: '달러 손익',
+                                    value: '${totalUsdProfit >= 0 ? '+' : ''}${totalUsdProfit.toUSD()}',
                                     color: totalUsdProfit >= 0 ? Colors.red.shade700 : Colors.blue.shade700,
                                   ),
                                 ],
@@ -342,14 +344,23 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   
-                  _buildAccountSummaryList(
-                    context,
-                    ref,
-                    stockAccounts,
-                    accountNameMap,
-                    accountBalanceMap,
-                    selectedAccountId,
-                    activeCurrentMonth,
+                  // 💡 분리한 MonthlyStockAccountSummaryList 위젯 호출
+                  MonthlyStockAccountSummaryList(
+                    stockAccounts: stockAccounts,
+                    accountNameMap: accountNameMap,
+                    accountBalanceMap: accountBalanceMap,
+                    selectedAccountId: selectedAccountId,
+                    targetMonth: activeCurrentMonth,
+                    onEditPressed: (accId, displayName, currentBal) {
+                      _showAccountEditBottomSheet(
+                        context,
+                        ref,
+                        accId,
+                        displayName,
+                        activeCurrentMonth,
+                        currentBal,
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 20),
@@ -474,141 +485,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
         label: '주식 월말 평가액 일괄 입력',
         onPressed: () => _showAddBottomSheet(context, targetMonth),
       ),
-    );
-  }
-
-  Widget _buildAccountSummaryList(
-    BuildContext context,
-    WidgetRef ref,
-    List<dynamic> stockAccounts,
-    Map<String?, AccountName?> accountNameMap,
-    Map<String, MonthlyStockAccountBalance> accountBalanceMap,
-    String? selectedAccountId,
-    String targetMonth,
-  ) {
-    if (stockAccounts.isEmpty) {
-      return const Text('등록된 증권 계좌가 없습니다.', style: TextStyle(color: Colors.grey));
-    }
-
-    final displayAccounts = selectedAccountId == null
-        ? stockAccounts
-        : stockAccounts.where((a) => a.id == selectedAccountId).toList();
-
-    if (displayAccounts.isEmpty) {
-      return const Text('해당 계좌 정보가 없습니다.', style: TextStyle(color: Colors.grey));
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: displayAccounts.length,
-      itemBuilder: (context, index) {
-        final acc = displayAccounts[index];
-        final accId = acc.id ?? '';
-        final nameObj = accountNameMap[acc.accountNameId];
-        final accName = nameObj?.accountName ?? '계좌';
-        final institution = acc.financialInstitution;
-
-        final isOverseasAccount = acc.isForeignCurrency;
-
-        final accBalanceData = accountBalanceMap[accId];
-        final cash = accBalanceData?.cashBalance ?? 0.0;
-        final monthlyWith = accBalanceData?.monthlyWithdrawal ?? 0.0;
-        final totalWith = accBalanceData?.totalWithdrawal ?? 0.0;
-        final exchangeRate = accBalanceData?.exchangeRate ?? 1.0;
-
-        final cashStr = isOverseasAccount ? cash.toUSD() : cash.toWon();
-        final monthlyWithStr = isOverseasAccount ? monthlyWith.toUSD() : monthlyWith.toWon();
-        final totalWithStr = isOverseasAccount ? totalWith.toUSD() : totalWith.toWon();
-
-        return Card(
-          elevation: 1.0,
-          margin: const EdgeInsets.only(bottom: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: Colors.grey.shade300),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            '$institution - $accName',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                          if (isOverseasAccount && exchangeRate > 1.0) ...[
-                            const SizedBox(width: 8),
-                            Text(
-                              '(환율: ${exchangeRate.toCommaString()})',
-                              style: TextStyle(fontSize: 11, color: Colors.indigo.shade700, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            '현금성 잔액: $cashStr',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                          ),
-                          const SizedBox(width: 8),
-                          Text('|', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-                          const SizedBox(width: 8),
-                          Text(
-                            '당월 인출: $monthlyWithStr',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '(누적: $totalWithStr)',
-                            style: TextStyle(fontSize: 11, color: Colors.indigo.shade600, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 18, color: Colors.indigo),
-                  onPressed: () => _showAccountEditBottomSheet(
-                    context,
-                    ref,
-                    accId,
-                    '$institution $accName',
-                    targetMonth,
-                    accBalanceData,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSummaryItem(String label, String value, {Color? color}) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: color ?? Colors.black87,
-          ),
-        ),
-      ],
     );
   }
 
