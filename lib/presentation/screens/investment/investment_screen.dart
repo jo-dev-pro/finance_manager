@@ -61,58 +61,66 @@ class InvestmentScreen extends ConsumerWidget {
                             ),
                           )
                           : ListView.builder(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                             itemCount: investments.length,
                             itemBuilder: (context, index) {
                               final item = investments[index];
-                              return Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Row(
-                                  mainAxisSize:
-                                      MainAxisSize.min,
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item.description,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                          if (item.createdAt != null &&
-                                              item.createdAt!.isNotEmpty) ...[
-                                            const SizedBox(height: 4),
+                              return Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
                                             Text(
-                                              item.createdAt!,
-                                              style: TextStyle(
-                                                color: Colors.grey.shade600,
-                                                fontSize: 12,
+                                              item.description,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
                                               ),
                                             ),
+                                            if (item.createdAt != null &&
+                                                item.createdAt!.isNotEmpty) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                item.createdAt!,
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
                                           ],
-                                        ],
+                                        ),
                                       ),
-                                    ),
-
-                                    Text(
-                                      '${item.amount.toCommaString()} 원',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: Colors.blueAccent,
+                                      Text(
+                                        '${item.amount.toCommaString()} 원',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.blueAccent,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 16),
-
-                                    EditDeleteButtons(
-                                      onEdit: () => _showEditDialog(context, item),
-                                      onDelete: () => _confirmDelete(context, ref, item),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 16),
+                                      EditDeleteButtons(
+                                        onEdit:
+                                            () =>
+                                                _showEditDialog(context, item),
+                                        onDelete:
+                                            () => _confirmDelete(
+                                              context,
+                                              ref,
+                                              item,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             },

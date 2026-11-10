@@ -31,8 +31,8 @@ class PensionReturnRateChart extends ConsumerWidget {
     final accountMap = {for (var a in accounts) a.id!: a};
 
     return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      // elevation: 1,
+      // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

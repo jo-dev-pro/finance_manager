@@ -34,7 +34,7 @@ class DashboardScreen extends ConsumerWidget {
     final summaryAsync = ref.watch(dashboardSummaryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('대시보드'), elevation: 0),
+      appBar: AppBar(title: const Text('대시보드'), elevation: 0, scrolledUnderElevation: 0),    // 스크롤 시 그림자/색상 변화 방지
       body: monthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),

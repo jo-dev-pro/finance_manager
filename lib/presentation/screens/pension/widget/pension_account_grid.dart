@@ -16,7 +16,7 @@ class PensionAccountGrid extends StatelessWidget {
   final List<dynamic> accountNames;
   final List<dynamic> products;
 
-  static const String kCashAssetProductId = '_CASH_ASSET_PRODUCT_ID_';
+  // static const String kCashAssetProductId = '_CASH_ASSET_PRODUCT_ID_';
 
   const PensionAccountGrid({
     super.key,
@@ -220,10 +220,7 @@ class PensionAccountGrid extends StatelessWidget {
                         ),
                       ),
                     ...products.map((item) {
-                      final productName =
-                          item.productId == kCashAssetProductId
-                              ? '계좌 공통 현금성 자산 (예수금)'
-                              : (productMap[item.productId] ?? '연금 상품');
+                      final productName = (productMap[item.productId] ?? '연금 상품');
 
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(

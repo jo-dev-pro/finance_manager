@@ -192,153 +192,131 @@ class _StockHoldingItemScreenState
                     return orderA.compareTo(orderB);
                   });
 
-                  return RefreshIndicator(
-                    onRefresh: () async {
-                      ref.invalidate(stockHoldingItemNotifierProvider);
-                    },
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: sortedItems.length,
-                      itemBuilder: (context, index) {
-                        final item = sortedItems[index];
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: sortedItems.length,
+                    itemBuilder: (context, index) {
+                      final item = sortedItems[index];
 
-                        final matchedAcc = accountMap[item.accountId];
-                        final institution =
-                            matchedAcc?.financialInstitution ?? '기타 증권사';
-                        final nameObj =
-                            matchedAcc != null
-                                ? accountNameMap[matchedAcc.accountNameId]
-                                : null;
-                        final accountName = nameObj?.accountName ?? '주식계좌';
+                      final matchedAcc = accountMap[item.accountId];
+                      final institution =
+                          matchedAcc?.financialInstitution ?? '기타 증권사';
+                      final nameObj =
+                          matchedAcc != null
+                              ? accountNameMap[matchedAcc.accountNameId]
+                              : null;
+                      final accountName = nameObj?.accountName ?? '주식계좌';
 
-                        final matchedStock = stockMap[item.stockItemId];
-                        final stockName = matchedStock?.itemName ?? '알 수 없는 종목';
-                        final stockSymbol = matchedStock?.stockCode ?? '';
-                        final market = matchedStock?.yahooName ?? '';
+                      final matchedStock = stockMap[item.stockItemId];
+                      final stockName = matchedStock?.itemName ?? '알 수 없는 종목';
+                      final stockSymbol = matchedStock?.stockCode ?? '';
+                      final market = matchedStock?.yahooName ?? '';
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            elevation: 1.5,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: Colors.grey.shade200),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
                                       children: [
-                                        Row(
-                                          children: [
-                                            if (market.isNotEmpty) ...[
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 6,
-                                                      vertical: 2,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.blue.shade50,
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
+                                        if (market.isNotEmpty) ...[
+                                          Container(
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 6,
+                                                  vertical: 2,
                                                 ),
-                                                child: Text(
-                                                  market,
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.blue.shade800,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                            ],
-                                            Expanded(
-                                              child: Text(
-                                                stockName,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 15,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue.shade50,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              market,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.blue.shade800,
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    item.isActive
-                                                        ? Colors.green.shade50
-                                                        : Colors.grey.shade100,
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                                border: Border.all(
-                                                  color:
-                                                      item.isActive
-                                                          ? Colors
-                                                              .green
-                                                              .shade200
-                                                          : Colors
-                                                              .grey
-                                                              .shade300,
-                                                ),
-                                              ),
-                                              child: Text(
-                                                item.isActive ? '보유중' : '매도완료',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                  color:
-                                                      item.isActive
-                                                          ? Colors
-                                                              .green
-                                                              .shade700
-                                                          : Colors
-                                                              .grey
-                                                              .shade600,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          '[$institution] $accountName${stockSymbol.isNotEmpty ? ' • $stockSymbol' : ''}${item.initialPurchaseDate != null ? ' • 최초매수: ${item.initialPurchaseDate}' : ''}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
                                           ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                          const SizedBox(width: 6),
+                                        ],
+                                        Expanded(
+                                          child: Text(
+                                            stockName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                item.isActive
+                                                    ? Colors.green.shade50
+                                                    : Colors.grey.shade100,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            border: Border.all(
+                                              color:
+                                                  item.isActive
+                                                      ? Colors.green.shade200
+                                                      : Colors.grey.shade300,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            item.isActive ? '보유중' : '매도완료',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color:
+                                                  item.isActive
+                                                      ? Colors.green.shade700
+                                                      : Colors.grey.shade600,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  const SizedBox(width: 16),
-
-                                  // 수정 & 삭제 버튼
-                                  EditDeleteButtons(
-                                    onEdit: () => _showEditDialog(context, item),
-                                    onDelete: () => _confirmDelete(context, ref, item),
-                                  ),
-                                ],
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      '[$institution] $accountName${stockSymbol.isNotEmpty ? ' • $stockSymbol' : ''}${item.initialPurchaseDate != null ? ' • 최초매수: ${item.initialPurchaseDate}' : ''}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 16),
+                      
+                              // 수정 & 삭제 버튼
+                              EditDeleteButtons(
+                                onEdit: () => _showEditDialog(context, item),
+                                onDelete: () => _confirmDelete(context, ref, item),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

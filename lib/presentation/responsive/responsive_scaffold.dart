@@ -9,10 +9,7 @@ class ResponsiveScaffold extends StatelessWidget {
 
   void _onDestinationSelected(int index) {
     // initialLocation: true로 설정하여 탭 클릭 시 항상 최상위(대표) 화면으로 이동
-    navigationShell.goBranch(
-      index,
-      initialLocation: true,
-    );
+    navigationShell.goBranch(index, initialLocation: true);
   }
 
   @override
@@ -61,6 +58,7 @@ class ResponsiveScaffold extends StatelessWidget {
         bottomNavigationBar: NavigationBarTheme(
           // 모바일 NavigationBar의 색상 및 라벨 스타일을 웹(NavigationRail)과 일치시킴
           data: NavigationBarThemeData(
+            backgroundColor: const Color(0xFFFAFAFA),
             indicatorColor: indicatorBgColor,
             iconTheme: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {
@@ -99,21 +97,27 @@ class ResponsiveScaffold extends StatelessWidget {
       body: Row(
         children: [
           NavigationRail(
+            backgroundColor: const Color(0xFFFAFAFA),
             minWidth: isTablet ? 120 : 150,
             labelType: NavigationRailLabelType.all,
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: _onDestinationSelected,
             indicatorColor: indicatorBgColor,
-            leading: Image.asset(
-              'assets/logos/finance.png',
-              width: 120,
-              height: 120,
-              fit: BoxFit.cover,
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(8), // 원하는 둥글기 정도
+              child: Container(
+                width: 120,
+                height: 120,
+                color: const Color(0xFFFAFAFA), // 배경색
+                child: Image.asset(
+                  'assets/logos/finance.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
-            selectedIconTheme: IconThemeData(
-              color: primaryColor,
-              size: 24,
-            ),
+            selectedIconTheme: IconThemeData(color: primaryColor, size: 24),
             unselectedIconTheme: IconThemeData(
               color: unselectedColor.withValues(alpha: 0.7),
               size: 22,
@@ -128,15 +132,16 @@ class ResponsiveScaffold extends StatelessWidget {
               fontWeight: FontWeight.normal,
               color: unselectedColor,
             ),
-            destinations: destinations
-                .map(
-                  (d) => NavigationRailDestination(
-                    icon: d.icon,
-                    selectedIcon: d.selectedIcon,
-                    label: Text(d.label),
-                  ),
-                )
-                .toList(),
+            destinations:
+                destinations
+                    .map(
+                      (d) => NavigationRailDestination(
+                        icon: d.icon,
+                        selectedIcon: d.selectedIcon,
+                        label: Text(d.label),
+                      ),
+                    )
+                    .toList(),
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(child: navigationShell),

@@ -34,12 +34,6 @@ class AccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -112,7 +106,7 @@ class AccountCard extends StatelessWidget {
 
               // 2. 중간 영역 (원금 및 손익 - 주식/연금용)
               if (totalPrincipal != null || totalProfitOrLoss != null) ...[
-                const Divider(height: 10),
+                // const Divider(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

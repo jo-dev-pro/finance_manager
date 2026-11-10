@@ -29,7 +29,7 @@ class MyApp extends ConsumerWidget {
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: GoogleFonts.notoSansKr().fontFamily,
-        
+
         // 1. ColorScheme의 surface(표면색)를 흰색으로 지정
         colorScheme: ColorScheme.light(
           primary: Colors.indigo,
@@ -37,9 +37,18 @@ class MyApp extends ConsumerWidget {
         ),
 
         // 2. Scaffold 및 NavigationRail 배경을 흰색으로 고정
-        scaffoldBackgroundColor: Colors.white,
-        navigationRailTheme: const NavigationRailThemeData(
-          backgroundColor: Colors.white,
+        // scaffoldBackgroundColor: Colors.white,
+        scaffoldBackgroundColor: const Color(0xFFFAFAFA),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFFAFAFA), // 바탕색과 동일하게 맞추어 일체감 부여
+          elevation: 0, // 앱바 밑의 그림자 제거 (선택, 토스 스타일)
+          iconTheme: IconThemeData(color: Colors.black), // 앱바 아이콘 색상
+          titleTextStyle: TextStyle(
+            // 앱바 제목 텍스트 스타일
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
 
@@ -48,10 +57,7 @@ class MyApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ko', 'KR'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
       locale: const Locale('ko', 'KR'),
 
       routerConfig: router,

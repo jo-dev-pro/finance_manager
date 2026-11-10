@@ -70,6 +70,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
       appBar: AppBar(
         title: const Text('연금 자산 현황'),
         elevation: 0,
+        scrolledUnderElevation: 0,     // 스크롤 시 그림자/색상 변화 방지
         actions: [
           ElevatedButton.icon(
             onPressed: () {

@@ -11,7 +11,6 @@ import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/summary_item.dart';
 import '../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../models/monthly_data/monthly_pension_account_balance.dart';
-import '../../../models/account/account_name.dart';
 import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';

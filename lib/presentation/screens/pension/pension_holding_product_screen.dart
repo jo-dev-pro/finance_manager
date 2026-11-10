@@ -197,12 +197,6 @@ class _PensionHoldingProductScreenState
                       final productName = productMap[item.productId] ?? '알 수 없는 상품';
         
                       return Card(
-                        elevation: 1,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.grey.shade200),
-                        ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
