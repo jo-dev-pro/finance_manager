@@ -61,6 +61,28 @@ class MyApp extends ConsumerWidget {
       locale: const Locale('ko', 'KR'),
 
       routerConfig: router,
+      builder: (context, child) {
+        // 현재 실행 중인 플랫폼이 모바일(안드로이드 또는 iOS)인지 확인
+        final bool isMobilePlatform =
+            Theme.of(context).platform == TargetPlatform.android ||
+            Theme.of(context).platform == TargetPlatform.iOS;
+
+        return MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(1.0)),
+          child:
+              isMobilePlatform
+                  ? InteractiveViewer(
+                    minScale: 1.0,
+                    maxScale: 3.0,
+                    clipBehavior: Clip.none,
+                    child: child ?? const SizedBox(),
+                  )
+                  : (child ?? const SizedBox()), // PC/웹에서는 기본 스크롤 유지
+        );
+      },
+
     );
   }
 }

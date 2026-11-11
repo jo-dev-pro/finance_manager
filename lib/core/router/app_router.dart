@@ -8,8 +8,6 @@ import '../../presentation/screens/account/account_screen.dart';
 import '../../presentation/screens/all_menu_screen.dart';
 import '../../presentation/screens/account/account_name_screen.dart';
 import '../../presentation/screens/bank/bank_screen.dart';
-import '../../presentation/screens/guide/pension_guide.dart';
-import '../../presentation/screens/guide/stock_guide.dart';
 import '../../presentation/screens/guide/asset_management_guide_screen.dart';
 import '../../presentation/screens/investment/investment_screen.dart';
 import '../../presentation/screens/monthly_data/monthly_bank_balance_screen.dart';
