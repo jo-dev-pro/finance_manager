@@ -6,7 +6,7 @@ import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/account/account.dart';
 import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
-import 'widget/account_dialog.dart';
+import 'widgets/account_dialog.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});

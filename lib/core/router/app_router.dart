@@ -1,47 +1,16 @@
-// app_router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../presentation/screens/dashboard_screen.dart';
-import '../../presentation/screens/account/account_screen.dart';
-import '../../presentation/screens/all_menu_screen.dart';
-import '../../presentation/screens/account/account_name_screen.dart';
-import '../../presentation/screens/bank/bank_screen.dart';
-import '../../presentation/screens/guide/asset_management_guide_screen.dart';
-import '../../presentation/screens/investment/investment_screen.dart';
-import '../../presentation/screens/monthly_data/monthly_bank_balance_screen.dart';
-import '../../presentation/screens/monthly_data/monthly_pension_balance_screen.dart';
-import '../../presentation/screens/monthly_data/monthly_stock_balance_screen.dart';
-import '../../presentation/screens/pension/pension_screen.dart';
-import '../../presentation/screens/pension/pension_holding_product_screen.dart';
-import '../../presentation/screens/pension/pension_product_screen.dart';
-import '../../presentation/screens/stock/stock_holding_item_screen.dart';
-import '../../presentation/screens/stock/stock_item_screen.dart';
-import '../../presentation/screens/stock/stock_screen.dart';
 import '../../presentation/responsive/responsive_scaffold.dart';
-
-// import '../../responsive/features/dashboard/dashboard_screen.dart';
-// import '../../responsive/features/all_menu/all_menu_screen.dart';
-// import '../../responsive/features/guide/asset_management_guide_screen.dart';
-// import '../../responsive/features/account/account_screen.dart';
-// import '../../responsive/features/account/account_name_screen.dart';
-// import '../../responsive/features/bank/bank_screen.dart';
-// import '../../responsive/features/investment/investment_screen.dart';
-// import '../../responsive/features/monthly_bank/monthly_bank_balance_screen.dart';
-// import '../../responsive/features/monthly_pension/monthly_pension_balance_screen.dart';
-// import '../../responsive/features/monthly_stock/monthly_stock_balance_screen.dart';
-
-// import '../../responsive/features/pension/pension_screen.dart';
-// import '../../responsive/features/pension/pension_product_screen.dart';
-// import '../../responsive/features/pension/pension_holding_product_screen.dart';
-
-// import '../../responsive/features/stock/stock_screen.dart';
-// import '../../responsive/features/stock/stock_item_screen.dart';
-// import '../../responsive/features/stock/stock_holding_item_screen.dart';
-
-// import '../../responsive/scaffold/app_responsive_scaffold.dart';
+import '../../presentation/screens/bank/bank_screen.dart';
+import '../../presentation/screens/bank/monthy_data/monthly_bank_balance_screen.dart';
+import '../../presentation/screens/dashboard_screen.dart';
+import '../../presentation/screens/stock/monthly_data/monthly_stock_balance_screen.dart';
+import '../../presentation/screens/stock/stock_screen.dart';
 import 'app_router_path.dart';
+import 'branches/pension_branch.dart';
+import 'branches/all_menu_branch.dart';
 
 part 'app_router.g.dart';
 
@@ -58,7 +27,7 @@ GoRouter router(RouterRef ref) {
           return ResponsiveScaffold(navigationShell: navigationShell);
         },
         branches: [
-          // 탭 1: 대시보드
+          // 1. 대시보드
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -68,7 +37,7 @@ GoRouter router(RouterRef ref) {
             ],
           ),
 
-          // 탭 2: 은행
+          // 2. 은행
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -76,20 +45,17 @@ GoRouter router(RouterRef ref) {
                 builder: (context, state) => const BankScreen(),
                 routes: [
                   GoRoute(
-                    path: AppRoutePath.monthlyBankBalanceSub,
-                    builder: (context, state) {
-                      final selectedMonth = state.extra as String?;
-                      return MonthlyBankBalanceScreen(
-                        initialYearMonth: selectedMonth,
-                      );
-                    },
+                    path: AppRoutePath.sub(AppRoutePath.monthlyBankBalance),
+                    builder: (context, state) => MonthlyBankBalanceScreen(
+                      initialYearMonth: state.extra as String?,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
 
-          // 탭 3: 증권
+          // 3. 증권
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -97,92 +63,21 @@ GoRouter router(RouterRef ref) {
                 builder: (context, state) => const StockScreen(),
                 routes: [
                   GoRoute(
-                    path: AppRoutePath.monthlyStockBalanceSub,
-                    builder: (context, state) {
-                      final selectedMonth = state.extra as String?;
-                      return MonthlyStockBalanceScreen(
-                        initialYearMonth: selectedMonth,
-                      );
-                    },
+                    path: AppRoutePath.sub(AppRoutePath.monthlyStockBalance),
+                    builder: (context, state) => MonthlyStockBalanceScreen(
+                      initialYearMonth: state.extra as String?,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
 
-          // 탭 4: 연금
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutePath.pension,
-                builder: (context, state) => const PensionScreen(),
-                routes: [
-                  GoRoute(
-                    path: AppRoutePath.monthlyPensionBalanceSub,
-                    builder: (context, state) {
-                      final selectedMonth = state.extra as String?;
-                      return MonthlyPensionBalanceScreen(
-                        initialYearMonth: selectedMonth,
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
+          // 4. 연금 (별도 모듈)
+          buildPensionBranch(),
 
-          // 탭 5: 전체 메뉴
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutePath.all,
-                builder: (context, state) => const AllMenuScreen(),
-                routes: [
-                  GoRoute(
-                    path: AppRoutePath.assetsGuideSub,
-                    builder: (context, state) => const AssetManagementGuideScreen(),
-                  ),
-                  // GoRoute(
-                  //   path: AppRoutePath.pensionGuideSub,
-                  //   builder: (context, state) => const PensionGuideScreen(),
-                  // ),
-                  // GoRoute(
-                  //   path: AppRoutePath.stockGuideSub,
-                  //   builder: (context, state) => const StockGuideScreen(),
-                  // ),
-                  GoRoute(
-                    path: AppRoutePath.investmentSub,
-                    builder: (context, state) => const InvestmentScreen(),
-                  ),
-                  GoRoute(
-                    path: AppRoutePath.accountSub,
-                    builder: (context, state) => const AccountScreen(),
-                  ),
-                  GoRoute(
-                    path: AppRoutePath.accountNameSub,
-                    builder: (context, state) => const AccountNameScreen(),
-                  ),
-                  GoRoute(
-                    path: AppRoutePath.stockItemSub,
-                    builder: (context, state) => const StockItemScreen(),
-                  ),
-                  GoRoute(
-                    path: AppRoutePath.stockHoldingItemSub,
-                    builder: (context, state) => const StockHoldingItemScreen(),
-                  ),
-                  GoRoute(
-                    path: AppRoutePath.pensionAccountProductSub,
-                    builder:
-                        (context, state) => const PensionHoldingProductScreen(),
-                  ),
-                  GoRoute(
-                    path: AppRoutePath.pensionProductSub,
-                    builder: (context, state) => const PensionProductScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          // 5. 전체 메뉴 (별도 모듈)
+          buildAllMenuBranch(),
         ],
       ),
     ],

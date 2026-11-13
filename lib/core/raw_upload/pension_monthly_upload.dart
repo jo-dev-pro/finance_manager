@@ -120,9 +120,9 @@ class _PensionMonthlyUploadScreenState
         final totalWithdrawal = row.length > 9 ? double.tryParse(row[9]?.toString() ?? '0') ?? 0.0 : 0.0;
         
         // 엑셀에 수동 입력된 매수일이 있다면 우선 사용, 없으면 연금보유상품 마스터에서 조회
-        String? rawPurchaseDate = row.length > 10 ? row[10]?.toString()?.trim() : null;
+        String? rawPurchaseDate = row.length > 10 ? row[10]?.toString().trim() : null;
         if (rawPurchaseDate == null || rawPurchaseDate.isEmpty) {
-          rawPurchaseDate = purchaseDateMap['${accountId}_${productId}'];
+          rawPurchaseDate = purchaseDateMap['${accountId}_$productId'];
         }
 
         // 계좌명 찾기

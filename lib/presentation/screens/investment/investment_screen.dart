@@ -7,7 +7,7 @@ import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/summary_card.dart';
 import '../../../models/investment/investment.dart';
 import '../../../providers/investment/investment_provider.dart';
-import 'widget/investment_dialog.dart';
+import 'widgets/investment_dialog.dart';
 
 class InvestmentScreen extends ConsumerWidget {
   const InvestmentScreen({super.key});

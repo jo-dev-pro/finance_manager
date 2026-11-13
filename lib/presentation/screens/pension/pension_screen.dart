@@ -16,9 +16,10 @@ import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
 import '../../../providers/pension/pension_product_provider.dart';
-import 'widget/pension_account_grid.dart';
-import 'widget/pension_portion_section.dart'; // 💡 연금 비중 섹션 위젯 임포트
-import 'widget/pension_return_rate_chart.dart';
+import 'monthly_data/monthly_pension_balance_screen.dart';
+import 'widgets/pension_account_grid.dart';
+import 'widgets/pension_portion_section.dart';
+import 'widgets/pension_return_rate_chart.dart';
 
 class PensionScreen extends ConsumerStatefulWidget {
   const PensionScreen({super.key});
@@ -70,7 +71,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
       appBar: AppBar(
         title: const Text('연금 자산 현황'),
         elevation: 0,
-        scrolledUnderElevation: 0,     // 스크롤 시 그림자/색상 변화 방지
+        scrolledUnderElevation: 0,
         actions: [
           ElevatedButton.icon(
             onPressed: () {
@@ -122,17 +123,18 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                   months: months,
                   currentMonth: activeCurrentMonth,
                 ),
+                SizedBox(height: 16),
 
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         balancesAsync.when(
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          loading:
+                              () => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
                           error: (err, _) => Text('오류: $err'),
                           data: (balances) {
                             final accountBalances =
@@ -152,9 +154,9 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
 
                             final totalAccountWithdrawalSum = accountBalances
                                 .fold<double>(
-                              0.0,
-                              (sum, item) => sum + item.totalWithdrawal,
-                            );
+                                  0.0,
+                                  (sum, item) => sum + item.totalWithdrawal,
+                                );
 
                             final accountCashSum = accountBalances.fold<double>(
                               0.0,
@@ -170,9 +172,10 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                 (totalBalance + totalAccountWithdrawalSum) -
                                 totalPrincipal;
 
-                            final totalReturnRate = totalPrincipal > 0
-                                ? (totalProfitOrLoss / totalPrincipal) * 100
-                                : 0.0;
+                            final totalReturnRate =
+                                totalPrincipal > 0
+                                    ? (totalProfitOrLoss / totalPrincipal) * 100
+                                    : 0.0;
 
                             final lastProductSum = lastBalances.fold<double>(
                               0.0,
@@ -180,65 +183,85 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             );
                             final lastCashSum = lastAccountBalances
                                 .fold<double>(
-                              0.0,
-                              (sum, item) => sum + item.cashBalance,
-                            );
+                                  0.0,
+                                  (sum, item) => sum + item.cashBalance,
+                                );
                             final lastTotalBalance =
                                 lastProductSum + lastCashSum;
 
-                            return SummaryCard(
-                              title: '연금 자산 전체 금액',
-                              mainAmountText: totalBalance.toWon(),
-                              principalText: totalPrincipal.toWon(),
-                              profitLossWidget: Row(
-                                children: [
-                                  totalProfitOrLoss.toSignedPriceText(
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  totalReturnRate.toSignedPercentText(
-                                    withParentheses: true,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              subInfoWidgets: totalAccountWithdrawalSum > 0
-                                  ? [
-                                      Text(
-                                        '계좌 누적 인출액: ${totalAccountWithdrawalSum.toWon()}',
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                        ),
+                            // 💡 총자산 카드 터치 시 전체 계좌(null)로 summary 화면 이동
+                            return GestureDetector(
+                              onTap: () {
+                                ref
+                                    .read(
+                                      selectedPensionAccountFilterProvider
+                                          .notifier,
+                                    )
+                                    .state = null;
+                                context.push(
+                                  AppRoutePath.monthlyPensionSummary,
+                                  extra: activeCurrentMonth,
+                                );
+                              },
+                              child: SummaryCard(
+                                title: '연금 자산 전체 금액',
+                                mainAmountText: totalBalance.toWon(),
+                                principalText: totalPrincipal.toWon(),
+                                profitLossWidget: Row(
+                                  children: [
+                                    totalProfitOrLoss.toSignedPriceText(
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                    ]
-                                  : null,
-                              diffFromLastMonthWidget: Row(
-                                children: [
-                                  const Text(
-                                    '전월 대비: ',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 13,
                                     ),
-                                  ),
-                                  (totalBalance - lastTotalBalance)
-                                      .toSignedPriceText(
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
+                                    const SizedBox(width: 4),
+                                    totalReturnRate.toSignedPercentText(
+                                      withParentheses: true,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                    positiveColor: const Color(0xFFFF8A80),
-                                    negativeColor: const Color(0xFF82B1FF),
-                                    zeroColor: Colors.white,
-                                  ),
-                                ],
+                                  ],
+                                ),
+                                subInfoWidgets:
+                                    totalAccountWithdrawalSum > 0
+                                        ? [
+                                          Text(
+                                            '계좌 누적 인출액: ${totalAccountWithdrawalSum.toWon()}',
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ]
+                                        : null,
+                                diffFromLastMonthWidget: Row(
+                                  children: [
+                                    const Text(
+                                      '전월 대비: ',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    (totalBalance - lastTotalBalance)
+                                        .toSignedPriceText(
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          positiveColor: const Color(
+                                            0xFFFF8A80,
+                                          ),
+                                          negativeColor: const Color(
+                                            0xFF82B1FF,
+                                          ),
+                                          zeroColor: Colors.white,
+                                        ),
+                                  ],
+                                ),
                               ),
                             );
                           },
@@ -265,7 +288,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             final products = productsAsync.value ?? [];
 
                             final Map<String, List<MonthlyPensionBalance>>
-                                accountGroups = {};
+                            accountGroups = {};
                             for (var item in balances) {
                               accountGroups
                                   .putIfAbsent(item.accountId, () => [])
@@ -280,7 +303,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             }
 
                             final Map<String, List<MonthlyPensionBalance>>
-                                lastAccountGroups = {};
+                            lastAccountGroups = {};
                             for (var item in lastBalances) {
                               lastAccountGroups
                                   .putIfAbsent(item.accountId, () => [])
@@ -321,6 +344,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // 💡 계좌 그리드 카드 터치 시 해당 계좌 ID를 세팅하고 summary 화면으로 이동
                                 PensionAccountGrid(
                                   accountIds: accountIds,
                                   accountGroups: accountGroups,
@@ -331,6 +355,16 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                   accounts: accounts,
                                   accountNames: accountNames,
                                   products: products,
+                                  onAccountTap: (accountId) {
+                                    // 💡 월과 계좌 ID를 Map으로 묶어서 extra로 전달
+                                    context.push(
+                                      AppRoutePath.monthlyPensionSummary,
+                                      extra: {
+                                        'yearMonth': activeCurrentMonth,
+                                        'accountId': accountId,
+                                      },
+                                    );
+                                  },
                                 ),
 
                                 const SectionTitle(
@@ -339,7 +373,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                   bottomSpacing: 12,
                                 ),
 
-                                // 💡 분리한 PensionPortionSection 위젯 호출
                                 PensionPortionSection(
                                   accountIds: accountIds,
                                   accountGroups: accountGroups,

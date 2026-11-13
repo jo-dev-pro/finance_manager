@@ -11,7 +11,7 @@ class MainConstrainedBox extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: 1200),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: child,
         ),
       ),

@@ -3,17 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/utils/number_formatter.dart';
-import '../../../core/widgets/bottom_action_button.dart';
-import '../../../core/widgets/edit_delete_button.dart';
-import '../../../core/widgets/main_constrainedbox.dart';
-import '../../../core/widgets/month_selector_header.dart';
-import '../../../models/monthly_data/monthly_bank_balance.dart';
-import '../../../providers/account/account_name_provider.dart';
-import '../../../providers/account/account_provider.dart';
-import '../../../providers/dashboard/dashboard_provider.dart';
-import '../../../providers/monthly_data/monthly_bank_balance_provider.dart';
-import 'widget/monthly_bank_balance_dialog.dart';
+import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/widgets/bottom_action_button.dart';
+import '../../../../core/widgets/edit_delete_button.dart';
+import '../../../../core/widgets/main_constrainedbox.dart';
+import '../../../../core/widgets/month_selector_header.dart';
+import '../../../../models/monthly_data/monthly_bank_balance.dart';
+import '../../../../providers/account/account_name_provider.dart';
+import '../../../../providers/account/account_provider.dart';
+import '../../../../providers/dashboard/dashboard_provider.dart';
+import '../../../../providers/monthly_data/monthly_bank_balance_provider.dart';
+import 'widgets/monthly_bank_balance_dialog.dart';
 
 class MonthlyBankBalanceScreen extends ConsumerWidget {
   final String? initialYearMonth;
@@ -24,14 +24,14 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
     final selectedMonth = ref.watch(selectedYearMonthProvider);
-    
+
     final targetMonth =
         selectedMonth ??
         initialYearMonth ??
         DateFormat('yyyy-MM').format(DateTime.now());
 
     return Scaffold(
-      appBar: AppBar(title: const Text('월말 잔액 관리')),
+      appBar: AppBar(title: const Text('월말 잔액 관리'), scrolledUnderElevation: 0),
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),
@@ -40,13 +40,14 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
             return const Center(child: Text('등록된 월말 잔액 데이터가 없습니다.'));
           }
 
-          final activeCurrentMonth = (months.contains(targetMonth))
-              ? targetMonth
-              : months.first;
+          final activeCurrentMonth =
+              (months.contains(targetMonth)) ? targetMonth : months.first;
 
           if (selectedMonth == null || !months.contains(selectedMonth)) {
             Future.microtask(() {
-              ref.read(selectedYearMonthProvider.notifier).select(activeCurrentMonth);
+              ref
+                  .read(selectedYearMonthProvider.notifier)
+                  .select(activeCurrentMonth);
             });
           }
 
@@ -59,26 +60,35 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
           return MainConstrainedBox(
             child: Column(
               children: [
-                 MonthSelectorHeader(
+                MonthSelectorHeader(
                   months: months,
                   currentMonth: activeCurrentMonth,
                 ),
 
                 Expanded(
                   child: balancesAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, stack) => Center(child: Text('데이터를 불러오지 못했습니다: $err')),
+                    loading:
+                        () => const Center(child: CircularProgressIndicator()),
+                    error:
+                        (err, stack) =>
+                            Center(child: Text('데이터를 불러오지 못했습니다: $err')),
                     data: (items) {
                       if (items.isEmpty) {
-                        return Center(child: Text('$activeCurrentMonth에 등록된 월말 은행 데이터가 없습니다.'));
+                        return Center(
+                          child: Text(
+                            '$activeCurrentMonth에 등록된 월말 은행 데이터가 없습니다.',
+                          ),
+                        );
                       }
-            
+
                       final accounts = accountsAsync.value ?? [];
                       final accountNames = accountNamesAsync.value ?? [];
-            
+
                       final accountMap = {for (var a in accounts) a.id!: a};
-                      final accountNameMap = {for (var an in accountNames) an.id: an};
-            
+                      final accountNameMap = {
+                        for (var an in accountNames) an.id: an,
+                      };
+
                       return SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
                         child: ListView.builder(
@@ -87,16 +97,22 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                           itemCount: items.length,
                           itemBuilder: (context, index) {
                             final balanceItem = items[index];
-            
-                            final matchedAccount = accountMap[balanceItem.accountId];
-                            final institution = matchedAccount?.financialInstitution ?? '기타 금융기관';
-                            final nameObj = matchedAccount != null
-                                ? accountNameMap[matchedAccount.accountNameId]
-                                : null;
+
+                            final matchedAccount =
+                                accountMap[balanceItem.accountId];
+                            final institution =
+                                matchedAccount?.financialInstitution ??
+                                '기타 금융기관';
+                            final nameObj =
+                                matchedAccount != null
+                                    ? accountNameMap[matchedAccount
+                                        .accountNameId]
+                                    : null;
                             final accountName = nameObj?.accountName ?? '일반계좌';
                             final String? logoUrl = matchedAccount?.logoUrl;
-                            final String? accountNumber = matchedAccount?.accountNumber;
-            
+                            final String? accountNumber =
+                                matchedAccount?.accountNumber;
+
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
                               child: Card(
@@ -111,7 +127,8 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                       CircleAvatar(
                                         backgroundColor: Colors.grey.shade100,
                                         backgroundImage:
-                                            logoUrl != null && logoUrl.isNotEmpty
+                                            logoUrl != null &&
+                                                    logoUrl.isNotEmpty
                                                 ? NetworkImage(logoUrl)
                                                 : null,
                                         child:
@@ -137,26 +154,32 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                                     fontSize: 16,
                                                   ),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                                 const SizedBox(width: 16),
 
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 2,
+                                                      ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.grey.shade200,
                                                     borderRadius:
-                                                        BorderRadius.circular(4),
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
                                                   ),
                                                   child: Text(
                                                     balanceItem.yearMonth,
                                                     style: TextStyle(
                                                       fontSize: 14,
-                                                      color: Colors.grey.shade600,
-                                                      fontWeight: FontWeight.bold,
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                                 ),
@@ -177,7 +200,8 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(width: 8),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
                                         children: [
                                           Text(
                                             balanceItem.balance.toWon(),
@@ -187,11 +211,23 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                             ),
                                           ),
                                           const SizedBox(height: 8),
-                                          
+
                                           // 수정 & 삭제 버튼
                                           EditDeleteButtons(
-                                            onEdit: () => _showEditDialog(context, ref, balanceItem, accountName),
-                                            onDelete: () => _confirmDelete(context, ref, balanceItem, accountName),
+                                            onEdit:
+                                                () => _showEditDialog(
+                                                  context,
+                                                  ref,
+                                                  balanceItem,
+                                                  accountName,
+                                                ),
+                                            onDelete:
+                                                () => _confirmDelete(
+                                                  context,
+                                                  ref,
+                                                  balanceItem,
+                                                  accountName,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -211,7 +247,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
           );
         },
       ),
-       bottomNavigationBar: BottomActionButton(
+      bottomNavigationBar: BottomActionButton(
         label: '은행 월말 잔액 일괄 입력',
         onPressed: () => _showAddBottomSheet(context, targetMonth),
       ),
@@ -228,7 +264,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
       builder: (context) => MonthlyBankBalanceDialog(yearMonth: currentMonth),
     );
   }
-  
+
   void _showEditDialog(
     BuildContext context,
     WidgetRef ref,
@@ -344,32 +380,33 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('삭제 확인'),
-        content: Text('$accountName의 ${item.yearMonth} 월말 데이터를 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('삭제 확인'),
+            content: Text('$accountName의 ${item.yearMonth} 월말 데이터를 삭제하시겠습니까?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('취소'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () async {
+                  if (item.id != null) {
+                    await ref
+                        .read(
+                          monthlyBankBalanceNotifierProvider(
+                            item.yearMonth,
+                          ).notifier,
+                        )
+                        .deleteBalance(item.id!);
+                  }
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                },
+                child: const Text('삭제', style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              if (item.id != null) {
-                await ref
-                    .read(
-                      monthlyBankBalanceNotifierProvider(
-                        item.yearMonth,
-                      ).notifier,
-                    )
-                    .deleteBalance(item.id!);
-              }
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-            },
-            child: const Text('삭제', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
     );
   }
 }

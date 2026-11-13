@@ -64,9 +64,10 @@ class DashboardScreen extends ConsumerWidget {
                   months: months,
                   currentMonth: activeCurrentMonth,
                 ),
+                SizedBox(height: 16),
+                  
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
                     child: Builder(
                       builder: (context) {
                         final summary = summaryAsync.valueOrNull;

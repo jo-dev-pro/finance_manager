@@ -16,9 +16,9 @@ import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 import '../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
 import '../../../providers/stock/stock_item_provider.dart';
-import 'widget/stock_account_grid.dart';
-import 'widget/stock_portion_section.dart';
-import 'widget/stock_return_rate_chart.dart';
+import 'widgets/stock_account_grid.dart';
+import 'widgets/stock_portion_section.dart';
+import 'widgets/stock_return_rate_chart.dart';
 
 class StockScreen extends ConsumerStatefulWidget {
   const StockScreen({super.key});
@@ -70,7 +70,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
       appBar: AppBar(
         title: const Text('주식 자산 현황'),
         elevation: 0,
-        scrolledUnderElevation: 0,     // 스크롤 시 그림자/색상 변화 방지
+        scrolledUnderElevation: 0, // 스크롤 시 그림자/색상 변화 방지
         actions: [
           ElevatedButton.icon(
             onPressed: () {
@@ -122,16 +122,18 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                   months: months,
                   currentMonth: activeCurrentMonth,
                 ),
+                SizedBox(height: 16),
+
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         balancesAsync.when(
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          loading:
+                              () => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
                           error: (err, _) => Text('오류: $err'),
                           data: (balances) {
                             final accountBalances =
@@ -146,7 +148,9 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             final accountExchangeRateMap = {
                               for (var ab in accountBalances)
                                 ab.accountId:
-                                    ((accountMap[ab.accountId]?.isForeignCurrency ?? false) &&
+                                    ((accountMap[ab.accountId]
+                                                    ?.isForeignCurrency ??
+                                                false) &&
                                             ab.exchangeRate > 0)
                                         ? ab.exchangeRate
                                         : 1.0,
@@ -154,7 +158,9 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             final lastAccountExchangeRateMap = {
                               for (var lab in lastAccountBalances)
                                 lab.accountId:
-                                    ((accountMap[lab.accountId]?.isForeignCurrency ?? false) &&
+                                    ((accountMap[lab.accountId]
+                                                    ?.isForeignCurrency ??
+                                                false) &&
                                             lab.exchangeRate > 0)
                                         ? lab.exchangeRate
                                         : 1.0,
@@ -163,13 +169,16 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             // 💡 계좌별 현금성 잔액(예수금) 합산
                             double totalCashBalance = 0;
                             for (var ab in accountBalances) {
-                              final rate = accountExchangeRateMap[ab.accountId] ?? 1.0;
+                              final rate =
+                                  accountExchangeRateMap[ab.accountId] ?? 1.0;
                               totalCashBalance += ab.cashBalance * rate;
                             }
 
                             double lastTotalCashBalance = 0;
                             for (var lab in lastAccountBalances) {
-                              final rate = lastAccountExchangeRateMap[lab.accountId] ?? 1.0;
+                              final rate =
+                                  lastAccountExchangeRateMap[lab.accountId] ??
+                                  1.0;
                               lastTotalCashBalance += lab.cashBalance * rate;
                             }
 
@@ -183,14 +192,15 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                               return sum + (item.balance * rate);
                             });
 
-                            final stockPrincipalSum = balances.fold<double>(0.0, (
-                              sum,
-                              item,
-                            ) {
-                              final rate =
-                                  accountExchangeRateMap[item.accountId] ?? 1.0;
-                              return sum + (item.principal * rate);
-                            });
+                            final stockPrincipalSum = balances.fold<double>(
+                              0.0,
+                              (sum, item) {
+                                final rate =
+                                    accountExchangeRateMap[item.accountId] ??
+                                    1.0;
+                                return sum + (item.principal * rate);
+                              },
+                            );
 
                             final totalPayout = balances.fold<double>(0.0, (
                               sum,
@@ -211,8 +221,12 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             });
 
                             // 💡 최종 자산 및 원금에 예수금 반영 후 정수형 반올림(.roundToDouble())
-                            final totalBalance = (stockBalanceSum + totalCashBalance).roundToDouble();
-                            final totalPrincipal = (stockPrincipalSum + totalCashBalance).roundToDouble();
+                            final totalBalance =
+                                (stockBalanceSum + totalCashBalance)
+                                    .roundToDouble();
+                            final totalPrincipal =
+                                (stockPrincipalSum + totalCashBalance)
+                                    .roundToDouble();
 
                             final totalProfitOrLoss =
                                 (totalBalance + totalPayout + totalWithdrawal) -
@@ -222,20 +236,21 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                     ? (totalProfitOrLoss / totalPrincipal) * 100
                                     : 0.0;
 
-                            final lastStockSum = lastBalancesAsync
-                                .maybeWhen(
-                                  data: (lb) {
-                                    return lb.fold<double>(0.0, (sum, item) {
-                                      final rate =
-                                          lastAccountExchangeRateMap[item
-                                              .accountId] ??
-                                          1.0;
-                                      return sum + (item.balance * rate);
-                                    });
-                                  },
-                                  orElse: () => 0.0,
-                                );
-                            final lastTotalBalance = (lastStockSum + lastTotalCashBalance).roundToDouble();
+                            final lastStockSum = lastBalancesAsync.maybeWhen(
+                              data: (lb) {
+                                return lb.fold<double>(0.0, (sum, item) {
+                                  final rate =
+                                      lastAccountExchangeRateMap[item
+                                          .accountId] ??
+                                      1.0;
+                                  return sum + (item.balance * rate);
+                                });
+                              },
+                              orElse: () => 0.0,
+                            );
+                            final lastTotalBalance =
+                                (lastStockSum + lastTotalCashBalance)
+                                    .roundToDouble();
 
                             return SummaryCard(
                               title: '주식 자산 전체 금액',
@@ -243,15 +258,21 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                               principalText: totalPrincipal.round().toWon(),
                               profitLossWidget: Row(
                                 children: [
-                                  totalProfitOrLoss.round().toSignedPriceText(
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    positiveColor: const Color(0xFFFF8A80),
-                                    negativeColor: const Color(0xFF82B1FF),
-                                    zeroColor: Colors.white,
-                                  ),
+                                  totalProfitOrLoss
+                                      .round()
+                                      .toSignedPriceText(
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        positiveColor: const Color(
+                                          0xFFFF8A80,
+                                        ),
+                                        negativeColor: const Color(
+                                          0xFF82B1FF,
+                                        ),
+                                        zeroColor: Colors.white,
+                                      ),
                                   const SizedBox(width: 4),
                                   totalReturnRate.toSignedPercentText(
                                     withParentheses: true,
@@ -299,8 +320,12 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        positiveColor: const Color(0xFFFF8A80),
-                                        negativeColor: const Color(0xFF82B1FF),
+                                        positiveColor: const Color(
+                                          0xFFFF8A80,
+                                        ),
+                                        negativeColor: const Color(
+                                          0xFF82B1FF,
+                                        ),
                                         zeroColor: Colors.white,
                                       ),
                                 ],
@@ -337,7 +362,9 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             final accountExchangeRateMap = {
                               for (var ab in accountBalances)
                                 ab.accountId:
-                                    ((accountMap[ab.accountId]?.isForeignCurrency ?? false) &&
+                                    ((accountMap[ab.accountId]
+                                                    ?.isForeignCurrency ??
+                                                false) &&
                                             ab.exchangeRate > 0)
                                         ? ab.exchangeRate
                                         : 1.0,
@@ -348,7 +375,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             };
 
                             final Map<String, List<MonthlyStockBalance>>
-                                accountGroups = {};
+                            accountGroups = {};
                             for (var item in balances) {
                               accountGroups
                                   .putIfAbsent(item.accountId, () => [])
@@ -356,19 +383,23 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             }
 
                             final accountIds = accountGroups.keys.toList();
-                            
+
                             // 💡 전체 비중 계산용 총합 (종목 + 예수금 반영 및 반올림)
                             double calcTotalStock = 0;
                             double calcTotalCash = 0;
                             for (var item in balances) {
-                              final rate = accountExchangeRateMap[item.accountId] ?? 1.0;
+                              final rate =
+                                  accountExchangeRateMap[item.accountId] ?? 1.0;
                               calcTotalStock += item.balance * rate;
                             }
                             for (var ab in accountBalances) {
-                              final rate = accountExchangeRateMap[ab.accountId] ?? 1.0;
+                              final rate =
+                                  accountExchangeRateMap[ab.accountId] ?? 1.0;
                               calcTotalCash += ab.cashBalance * rate;
                             }
-                            final overallTotalBalance = (calcTotalStock + calcTotalCash).roundToDouble();
+                            final overallTotalBalance =
+                                (calcTotalStock + calcTotalCash)
+                                    .roundToDouble();
 
                             final Map<String, String> stockMap = {
                               for (var s in stockItems)

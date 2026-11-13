@@ -8,7 +8,7 @@ import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
 import '../../../providers/stock/stock_holding_item_provider.dart';
 import '../../../providers/stock/stock_item_provider.dart';
-import 'widget/stock_holding_item_dialog.dart';
+import 'widgets/stock_holding_item_dialog.dart';
 
 class StockHoldingItemScreen extends ConsumerStatefulWidget {
   const StockHoldingItemScreen({super.key});

@@ -22,18 +22,6 @@ class AllMenuMobileScreen extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push(AppRoutePath.assetsGuide),
             ),
-            ListTile(
-              leading: const Icon(Icons.help_outline, color: Colors.indigo),
-              title: const Text('연금 자산 관리 가이드'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppRoutePath.pensionGuide),
-            ),
-            ListTile(
-              leading: const Icon(Icons.help_outline, color: Colors.indigo),
-              title: const Text('주식 자산 관리 가이드'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppRoutePath.stockGuide),
-            ),
 
             const Divider(height: 32),
 

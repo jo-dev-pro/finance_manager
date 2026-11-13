@@ -8,7 +8,7 @@ import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/pension/pension_holding_product_provider.dart';
 import '../../../../providers/pension/pension_product_provider.dart';
-import 'widget/pension_holding_product_dialog.dart';
+import 'widgets/pension_holding_product_dialog.dart';
 
 class PensionHoldingProductScreen extends ConsumerStatefulWidget {
   const PensionHoldingProductScreen({super.key});

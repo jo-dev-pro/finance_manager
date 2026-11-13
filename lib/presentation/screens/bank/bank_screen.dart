@@ -110,10 +110,10 @@ class BankScreen extends ConsumerWidget {
                   months: months,
                   currentMonth: activeCurrentMonth,
                 ),
+                SizedBox(height: 16),
 
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -157,9 +157,6 @@ class BankScreen extends ConsumerWidget {
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        positiveColor: const Color(0xFFFF8A80),
-                                        negativeColor: const Color(0xFF82B1FF),
-                                        zeroColor: Colors.white,
                                       ),
                                     ],
                                   ),

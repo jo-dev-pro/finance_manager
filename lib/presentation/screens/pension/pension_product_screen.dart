@@ -5,7 +5,7 @@ import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/pension/pension_product.dart';
 import '../../../providers/pension/pension_product_provider.dart';
-import 'widget/pension_product_dialog.dart';
+import 'widgets/pension_product_dialog.dart';
 
 class PensionProductScreen extends ConsumerWidget {
   const PensionProductScreen({super.key});

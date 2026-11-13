@@ -29,18 +29,6 @@ class AllMenuDesktopScreen extends StatelessWidget {
                 onTap: () => context.push(AppRoutePath.assetsGuide),
               ),
               ListTile(
-                leading: const Icon(Icons.help_outline, color: Colors.indigo),
-                title: const Text('연금 자산 관리 가이드'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(AppRoutePath.pensionGuide),
-              ),
-              ListTile(
-                leading: const Icon(Icons.help_outline, color: Colors.indigo),
-                title: const Text('주식 자산 관리 가이드'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(AppRoutePath.stockGuide),
-              ),
-              ListTile(
                 leading: const Icon(
                   Icons.monetization_on_outlined,
                   color: Colors.indigo,
@@ -49,6 +37,7 @@ class AllMenuDesktopScreen extends StatelessWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(AppRoutePath.investment),
               ),
+              
               ListTile(
                 leading: const Icon(
                   Icons.account_balance_outlined,

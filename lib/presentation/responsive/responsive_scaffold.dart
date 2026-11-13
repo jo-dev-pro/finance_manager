@@ -12,14 +12,11 @@ class ResponsiveScaffold extends ConsumerWidget {
 
   void _onDestinationSelected(int index) {
     if (navigationShell.currentIndex == index) {
-      // 💡 만약 이미 현재 머물고 있는 탭을 다시 누른 경우, 
+      // 💡 만약 이미 현재 머물고 있는 탭을 다시 누른 경우,
       // 해당 탭의 스택을 완전히 비우고 최상위(initialLocation)로 강제 이동시킵니다.
-      navigationShell.goBranch(
-        index,
-        initialLocation: true,
-      );
-      
-      // 만약 GoRouter 버전이나 설정에 따라 스택 내부의 서브 라우트까지 
+      navigationShell.goBranch(index, initialLocation: true);
+
+      // 만약 GoRouter 버전이나 설정에 따라 스택 내부의 서브 라우트까지
       // 확실하게 pop 시키고 싶다면 아래처럼 라우터를 직접 활용할 수도 있습니다.
       // context.go(AppRoutePath.getByIndex(index)); // 각 탭의 경로에 맞게 처리
     } else {
@@ -30,8 +27,6 @@ class ResponsiveScaffold extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1. 뒤로가기 종료 상태 감시
-    final canPop = ref.watch(jOnPopInvokedProvider);
 
     final double width = MediaQuery.of(context).size.width;
 
@@ -163,7 +158,7 @@ class ResponsiveScaffold extends ConsumerWidget {
                       )
                       .toList(),
             ),
-            const VerticalDivider(thickness: 1, width: 1),
+            const VerticalDivider(thickness: 1, width: 1, color: Colors.grey),
             Expanded(child: navigationShell),
           ],
         ),
@@ -172,7 +167,7 @@ class ResponsiveScaffold extends ConsumerWidget {
 
     // 2. 최상위 루트 셸에 PopScope를 적용하여 앱 전체 탭에서 공통으로 종료 체크 수행
     return PopScope(
-      canPop: canPop,
+      canPop: false, // 항상 false로 고정하여 시스템 기본 뒤로가기 동작을 차단
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         ref.read(jOnPopInvokedProvider.notifier).handlePopInvoked(context);

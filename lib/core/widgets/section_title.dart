@@ -15,7 +15,7 @@ class SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(top: topSpacing, bottom: bottomSpacing),
+      padding: EdgeInsets.only(top: topSpacing, bottom: bottomSpacing, left: 4.0),
       child: Text(
         title,
         style: const TextStyle(

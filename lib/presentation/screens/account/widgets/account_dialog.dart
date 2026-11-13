@@ -231,7 +231,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
 
               // 계좌구분 선택
               DropdownButtonFormField<String>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: const InputDecoration(
                   labelText: '계좌구분',
                   border: OutlineInputBorder(),

@@ -5,7 +5,7 @@ import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/account/account_name.dart';
 import '../../../providers/account/account_name_provider.dart';
-import 'widget/account_name_dialog.dart';
+import 'widgets/account_name_dialog.dart';
 
 class AccountNameScreen extends ConsumerWidget {
   const AccountNameScreen({super.key});

@@ -5,7 +5,7 @@ import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/stock/stock_item.dart';
 import '../../../providers/stock/stock_item_provider.dart';
-import 'widget/stock_item_dialog.dart';
+import 'widgets/stock_item_dialog.dart';
 
 class StockItemScreen extends ConsumerWidget {
   const StockItemScreen({super.key});

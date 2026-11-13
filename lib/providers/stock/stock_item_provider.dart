@@ -51,8 +51,7 @@ class StockItemNotifier extends _$StockItemNotifier {
 
     final data = item.toJson()..remove('id');
 
-    // otherName 빈 문자열 처리 (null 안전성 추가)
-    final otherNameVal = item.otherName ?? '';
+    final otherNameVal = item.otherName;
     data['otherName'] = otherNameVal.trim().isEmpty ? '' : otherNameVal.trim();
 
     await firestore.collection(stockItemDBName).add(data);

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../models/account/account_name.dart';
-import '../../../../models/monthly_data/monthly_pension_account_balance.dart';
-import '../../../../core/utils/number_formatter.dart';
+import '../../../../../models/account/account_name.dart';
+import '../../../../../models/monthly_data/monthly_pension_account_balance.dart';
+import '../../../../../core/utils/number_formatter.dart';
 
 class MonthlyPensionAccountSummaryList extends ConsumerWidget {
   final List<dynamic> pensionAccounts;
@@ -11,11 +11,7 @@ class MonthlyPensionAccountSummaryList extends ConsumerWidget {
   final Map<String, MonthlyPensionAccountBalance> accountBalanceMap;
   final String? selectedAccountId;
   final String targetMonth;
-  final void Function(
-    String accountId,
-    String accountDisplayName,
-    MonthlyPensionAccountBalance? currentBalance,
-  ) onEditPressed;
+  final Function(String accId, String displayName, MonthlyPensionAccountBalance? currentBal)? onEditPressed;
  
   const MonthlyPensionAccountSummaryList({
     super.key,
@@ -24,7 +20,7 @@ class MonthlyPensionAccountSummaryList extends ConsumerWidget {
     required this.accountBalanceMap,
     required this.selectedAccountId,
     required this.targetMonth,
-    required this.onEditPressed,
+    this.onEditPressed,
   });
 
   @override
@@ -101,14 +97,16 @@ class MonthlyPensionAccountSummaryList extends ConsumerWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 18, color: Colors.indigo),
-                  onPressed: () => onEditPressed(
-                    accId,
-                    '$institution$accName',
-                    accBalanceData,
+                
+                if (onEditPressed != null)
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 18, color: Colors.indigo),
+                    onPressed: () => onEditPressed!(
+                      accId,
+                      '$institution$accName',
+                      accBalanceData,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
