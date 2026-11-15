@@ -13,30 +13,26 @@ class MonthlyPensionBalance with _$MonthlyPensionBalance {
     @JsonKey(name: 'year_month') required String yearMonth,
     @JsonKey(name: 'account_id') required String accountId,
     @JsonKey(name: 'product_id') required String productId,
-    @JsonKey(name: 'account_name') String? accountName, // 💡 콘솔 확인용 계좌명
-    @JsonKey(name: 'product_name') String? productName, // 💡 콘솔 확인용 상품명
-   @Default(0.0) double balance,               // 당월 말 평가액
+    @JsonKey(name: 'account_name') String? accountName, // 콘솔 확인용 계좌명
+    @JsonKey(name: 'product_name') String? productName, // 콘솔 확인용 상품명
+    @Default(0.0) double balance,               // 당월 말 평가액
     
     // 1. 투자 원금 (누적 및 당월분)
     @Default(0.0) double principal,             // 누적 투자 원금
     @JsonKey(name: 'monthly_principal') @Default(0.0) double monthlyPrincipal, // 당월 투자 원금 (납입액)
 
-    // 2. 연금 수령액 (누적 및 당월분)
-    @JsonKey(name: 'total_payout') @Default(0.0) double totalPayout, // 누적 연금 수령액
-    @JsonKey(name: 'monthly_payout') @Default(0.0) double monthlyPayout, // 당월 연금 수령액
+    // 2. 상품별 매도(환매)액 (누적 및 당월분)
+    @JsonKey(name: 'total_sale') @Default(0.0) double totalSale,       // 누적 매도액
+    @JsonKey(name: 'monthly_sale') @Default(0.0) double monthlySale,   // 당월 매도액
 
-    // 3. 중도 환매액 (누적 및 당월분)
-    @JsonKey(name: 'total_withdrawal') @Default(0.0) double totalWithdrawal, // 누적 중도 환매액
-    @JsonKey(name: 'monthly_withdrawal') @Default(0.0) double monthlyWithdrawal, // 당월 중도 환매액
-
-    @JsonKey(name: 'purchase_date') String? purchaseDate, // 최초 매수일 (마스터에서 연동)
+    @JsonKey(name: 'purchase_date') String? purchaseDate, // 최초 매수일
   }) = _MonthlyPensionBalance;
 
   factory MonthlyPensionBalance.fromJson(Map<String, dynamic> json) =>
       _$MonthlyPensionBalanceFromJson(json);
 
- // [총 평가 손익] = (현재 평가액 + 누적 연금 수령액 + 누적 중도 환매액) - 누적 투자 원금
-  double get profitOrLoss => (balance + totalPayout + totalWithdrawal) - principal;
+  // [상품별 평가 손익] = (현재 평가액 + 누적 매도액) - 누적 투자 원금
+  double get profitOrLoss => (balance + totalSale) - principal;
 
   // [누적 수익률 (%)]
   double get returnRate =>
@@ -61,7 +57,7 @@ class MonthlyPensionBalance with _$MonthlyPensionBalance {
       if (days <= 0) return returnRate;
 
       final years = days / 365.0;
-      final totalValue = balance + totalPayout + totalWithdrawal;
+      final totalValue = balance + totalSale;
       final totalRatio = totalValue / principal;
 
       if (totalRatio <= 0) return -100.0;

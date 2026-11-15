@@ -1,35 +1,77 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/number_formatter.dart';
-import '../../../../models/account/account.dart';
 import '../../../../models/monthly_data/monthly_stock_balance.dart';
+import '../../../../providers/account/account_name_provider.dart';
+import '../../../../providers/account/account_provider.dart';
+import '../../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
+import '../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 
-class StockPortionSection extends StatelessWidget {
-  final List<String> accountIds;
-  final Map<String, List<MonthlyStockBalance>> accountGroups;
-  final Map<String, double> accountExchangeRateMap;
-  final Map<String, double> accountCashMap;
-  final List<Account> accounts;
-  final List<dynamic> accountNames;
-  final double overallTotalBalance;
+class StockPortionSection extends ConsumerWidget {
+  final String currentMonth;
   final List<Color> chartColors;
 
   const StockPortionSection({
     super.key,
-    required this.accountIds,
-    required this.accountGroups,
-    required this.accountExchangeRateMap,
-    required this.accountCashMap,
-    required this.accounts,
-    required this.accountNames,
-    required this.overallTotalBalance,
+    required this.currentMonth,
     required this.chartColors,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 💡 필요한 데이터를 위젯 내부에서 직접 구독
+    final balances =
+        ref.watch(monthlyStockBalanceNotifierProvider(currentMonth)).value ??
+            [];
+    final accountBalances = ref
+            .watch(monthlyStockAccountBalanceNotifierProvider(currentMonth))
+            .value ??
+        [];
+    final accounts = ref.watch(accountNotifierProvider).value ?? [];
+    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
+
     final accountNameMap = {for (var an in accountNames) an.id: an};
     final accountMap = {for (var a in accounts) a.id!: a};
+
+    final accountExchangeRateMap = {
+      for (var ab in accountBalances)
+        ab.accountId:
+            ((accountMap[ab.accountId]?.isForeignCurrency ?? false) &&
+                    ab.exchangeRate > 0)
+                ? ab.exchangeRate
+                : 1.0,
+    };
+    final accountCashMap = {
+      for (var ab in accountBalances) ab.accountId: ab.cashBalance,
+    };
+
+    final Map<String, List<MonthlyStockBalance>> accountGroups = {};
+    for (var item in balances) {
+      accountGroups.putIfAbsent(item.accountId, () => []).add(item);
+    }
+    for (var ab in accountBalances) {
+      accountGroups.putIfAbsent(ab.accountId, () => []);
+    }
+
+    if (accountGroups.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final accountIds = accountGroups.keys.toList();
+
+    // 전체 비중 계산용 총합 (종목 + 예수금 환율 반영)
+    double calcTotalStock = 0;
+    double calcTotalCash = 0;
+    for (var item in balances) {
+      final rate = accountExchangeRateMap[item.accountId] ?? 1.0;
+      calcTotalStock += item.balance * rate;
+    }
+    for (var ab in accountBalances) {
+      final rate = accountExchangeRateMap[ab.accountId] ?? 1.0;
+      calcTotalCash += ab.cashBalance * rate;
+    }
+    final overallTotalBalance = (calcTotalStock + calcTotalCash).roundToDouble();
 
     return Card(
       elevation: 1,
@@ -40,7 +82,7 @@ class StockPortionSection extends StatelessWidget {
           children: accountIds.asMap().entries.map((entry) {
             final index = entry.key;
             final accId = entry.value;
-            final items = accountGroups[accId]!;
+            final items = accountGroups[accId] ?? [];
 
             final exchangeRate = accountExchangeRateMap[accId] ?? 1.0;
             final cashBal = (accountCashMap[accId] ?? 0.0) * exchangeRate;
@@ -50,14 +92,16 @@ class StockPortionSection extends StatelessWidget {
             );
             final accountTotal = (rawBal * exchangeRate) + cashBal;
 
-            final ratio = overallTotalBalance > 0
-                ? (accountTotal / overallTotalBalance) * 100
-                : 0.0;
+            final ratio =
+                overallTotalBalance > 0
+                    ? (accountTotal / overallTotalBalance) * 100
+                    : 0.0;
 
             final matchedAcc = accountMap[accId];
-            final matchedAccountName = matchedAcc != null
-                ? accountNameMap[matchedAcc.accountNameId]
-                : null;
+            final matchedAccountName =
+                matchedAcc != null
+                    ? accountNameMap[matchedAcc.accountNameId]
+                    : null;
 
             final institution = matchedAcc?.financialInstitution ?? "기타";
             final accountName = matchedAccountName?.accountName ?? accId;
@@ -87,11 +131,12 @@ class StockPortionSection extends StatelessWidget {
                               width: 18,
                               height: 18,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                Icons.account_balance,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
+                              errorBuilder:
+                                  (_, __, ___) => const Icon(
+                                    Icons.account_balance,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
                             ),
                           )
                         else

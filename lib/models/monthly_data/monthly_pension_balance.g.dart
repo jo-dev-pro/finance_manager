@@ -18,10 +18,8 @@ _$MonthlyPensionBalanceImpl _$$MonthlyPensionBalanceImplFromJson(
   balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
   principal: (json['principal'] as num?)?.toDouble() ?? 0.0,
   monthlyPrincipal: (json['monthly_principal'] as num?)?.toDouble() ?? 0.0,
-  totalPayout: (json['total_payout'] as num?)?.toDouble() ?? 0.0,
-  monthlyPayout: (json['monthly_payout'] as num?)?.toDouble() ?? 0.0,
-  totalWithdrawal: (json['total_withdrawal'] as num?)?.toDouble() ?? 0.0,
-  monthlyWithdrawal: (json['monthly_withdrawal'] as num?)?.toDouble() ?? 0.0,
+  totalSale: (json['total_sale'] as num?)?.toDouble() ?? 0.0,
+  monthlySale: (json['monthly_sale'] as num?)?.toDouble() ?? 0.0,
   purchaseDate: json['purchase_date'] as String?,
 );
 
@@ -37,9 +35,7 @@ Map<String, dynamic> _$$MonthlyPensionBalanceImplToJson(
   'balance': instance.balance,
   'principal': instance.principal,
   'monthly_principal': instance.monthlyPrincipal,
-  'total_payout': instance.totalPayout,
-  'monthly_payout': instance.monthlyPayout,
-  'total_withdrawal': instance.totalWithdrawal,
-  'monthly_withdrawal': instance.monthlyWithdrawal,
+  'total_sale': instance.totalSale,
+  'monthly_sale': instance.monthlySale,
   'purchase_date': instance.purchaseDate,
 };

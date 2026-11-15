@@ -31,24 +31,19 @@ mixin _$MonthlyPensionBalance {
   @JsonKey(name: 'product_id')
   String get productId => throw _privateConstructorUsedError;
   @JsonKey(name: 'account_name')
-  String? get accountName => throw _privateConstructorUsedError; // 💡 콘솔 확인용 계좌명
+  String? get accountName => throw _privateConstructorUsedError; // 콘솔 확인용 계좌명
   @JsonKey(name: 'product_name')
-  String? get productName => throw _privateConstructorUsedError; // 💡 콘솔 확인용 상품명
+  String? get productName => throw _privateConstructorUsedError; // 콘솔 확인용 상품명
   double get balance => throw _privateConstructorUsedError; // 당월 말 평가액
   // 1. 투자 원금 (누적 및 당월분)
   double get principal => throw _privateConstructorUsedError; // 누적 투자 원금
   @JsonKey(name: 'monthly_principal')
   double get monthlyPrincipal => throw _privateConstructorUsedError; // 당월 투자 원금 (납입액)
-  // 2. 연금 수령액 (누적 및 당월분)
-  @JsonKey(name: 'total_payout')
-  double get totalPayout => throw _privateConstructorUsedError; // 누적 연금 수령액
-  @JsonKey(name: 'monthly_payout')
-  double get monthlyPayout => throw _privateConstructorUsedError; // 당월 연금 수령액
-  // 3. 중도 환매액 (누적 및 당월분)
-  @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal => throw _privateConstructorUsedError; // 누적 중도 환매액
-  @JsonKey(name: 'monthly_withdrawal')
-  double get monthlyWithdrawal => throw _privateConstructorUsedError; // 당월 중도 환매액
+  // 2. 상품별 매도(환매)액 (누적 및 당월분)
+  @JsonKey(name: 'total_sale')
+  double get totalSale => throw _privateConstructorUsedError; // 누적 매도액
+  @JsonKey(name: 'monthly_sale')
+  double get monthlySale => throw _privateConstructorUsedError; // 당월 매도액
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate => throw _privateConstructorUsedError;
 
@@ -79,10 +74,8 @@ abstract class $MonthlyPensionBalanceCopyWith<$Res> {
     double balance,
     double principal,
     @JsonKey(name: 'monthly_principal') double monthlyPrincipal,
-    @JsonKey(name: 'total_payout') double totalPayout,
-    @JsonKey(name: 'monthly_payout') double monthlyPayout,
-    @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
-    @JsonKey(name: 'monthly_withdrawal') double monthlyWithdrawal,
+    @JsonKey(name: 'total_sale') double totalSale,
+    @JsonKey(name: 'monthly_sale') double monthlySale,
     @JsonKey(name: 'purchase_date') String? purchaseDate,
   });
 }
@@ -114,10 +107,8 @@ class _$MonthlyPensionBalanceCopyWithImpl<
     Object? balance = null,
     Object? principal = null,
     Object? monthlyPrincipal = null,
-    Object? totalPayout = null,
-    Object? monthlyPayout = null,
-    Object? totalWithdrawal = null,
-    Object? monthlyWithdrawal = null,
+    Object? totalSale = null,
+    Object? monthlySale = null,
     Object? purchaseDate = freezed,
   }) {
     return _then(
@@ -167,25 +158,15 @@ class _$MonthlyPensionBalanceCopyWithImpl<
                     ? _value.monthlyPrincipal
                     : monthlyPrincipal // ignore: cast_nullable_to_non_nullable
                         as double,
-            totalPayout:
-                null == totalPayout
-                    ? _value.totalPayout
-                    : totalPayout // ignore: cast_nullable_to_non_nullable
+            totalSale:
+                null == totalSale
+                    ? _value.totalSale
+                    : totalSale // ignore: cast_nullable_to_non_nullable
                         as double,
-            monthlyPayout:
-                null == monthlyPayout
-                    ? _value.monthlyPayout
-                    : monthlyPayout // ignore: cast_nullable_to_non_nullable
-                        as double,
-            totalWithdrawal:
-                null == totalWithdrawal
-                    ? _value.totalWithdrawal
-                    : totalWithdrawal // ignore: cast_nullable_to_non_nullable
-                        as double,
-            monthlyWithdrawal:
-                null == monthlyWithdrawal
-                    ? _value.monthlyWithdrawal
-                    : monthlyWithdrawal // ignore: cast_nullable_to_non_nullable
+            monthlySale:
+                null == monthlySale
+                    ? _value.monthlySale
+                    : monthlySale // ignore: cast_nullable_to_non_nullable
                         as double,
             purchaseDate:
                 freezed == purchaseDate
@@ -217,10 +198,8 @@ abstract class _$$MonthlyPensionBalanceImplCopyWith<$Res>
     double balance,
     double principal,
     @JsonKey(name: 'monthly_principal') double monthlyPrincipal,
-    @JsonKey(name: 'total_payout') double totalPayout,
-    @JsonKey(name: 'monthly_payout') double monthlyPayout,
-    @JsonKey(name: 'total_withdrawal') double totalWithdrawal,
-    @JsonKey(name: 'monthly_withdrawal') double monthlyWithdrawal,
+    @JsonKey(name: 'total_sale') double totalSale,
+    @JsonKey(name: 'monthly_sale') double monthlySale,
     @JsonKey(name: 'purchase_date') String? purchaseDate,
   });
 }
@@ -249,10 +228,8 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
     Object? balance = null,
     Object? principal = null,
     Object? monthlyPrincipal = null,
-    Object? totalPayout = null,
-    Object? monthlyPayout = null,
-    Object? totalWithdrawal = null,
-    Object? monthlyWithdrawal = null,
+    Object? totalSale = null,
+    Object? monthlySale = null,
     Object? purchaseDate = freezed,
   }) {
     return _then(
@@ -302,25 +279,15 @@ class __$$MonthlyPensionBalanceImplCopyWithImpl<$Res>
                 ? _value.monthlyPrincipal
                 : monthlyPrincipal // ignore: cast_nullable_to_non_nullable
                     as double,
-        totalPayout:
-            null == totalPayout
-                ? _value.totalPayout
-                : totalPayout // ignore: cast_nullable_to_non_nullable
+        totalSale:
+            null == totalSale
+                ? _value.totalSale
+                : totalSale // ignore: cast_nullable_to_non_nullable
                     as double,
-        monthlyPayout:
-            null == monthlyPayout
-                ? _value.monthlyPayout
-                : monthlyPayout // ignore: cast_nullable_to_non_nullable
-                    as double,
-        totalWithdrawal:
-            null == totalWithdrawal
-                ? _value.totalWithdrawal
-                : totalWithdrawal // ignore: cast_nullable_to_non_nullable
-                    as double,
-        monthlyWithdrawal:
-            null == monthlyWithdrawal
-                ? _value.monthlyWithdrawal
-                : monthlyWithdrawal // ignore: cast_nullable_to_non_nullable
+        monthlySale:
+            null == monthlySale
+                ? _value.monthlySale
+                : monthlySale // ignore: cast_nullable_to_non_nullable
                     as double,
         purchaseDate:
             freezed == purchaseDate
@@ -345,10 +312,8 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
     this.balance = 0.0,
     this.principal = 0.0,
     @JsonKey(name: 'monthly_principal') this.monthlyPrincipal = 0.0,
-    @JsonKey(name: 'total_payout') this.totalPayout = 0.0,
-    @JsonKey(name: 'monthly_payout') this.monthlyPayout = 0.0,
-    @JsonKey(name: 'total_withdrawal') this.totalWithdrawal = 0.0,
-    @JsonKey(name: 'monthly_withdrawal') this.monthlyWithdrawal = 0.0,
+    @JsonKey(name: 'total_sale') this.totalSale = 0.0,
+    @JsonKey(name: 'monthly_sale') this.monthlySale = 0.0,
     @JsonKey(name: 'purchase_date') this.purchaseDate,
   }) : super._();
 
@@ -369,11 +334,11 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
   @override
   @JsonKey(name: 'account_name')
   final String? accountName;
-  // 💡 콘솔 확인용 계좌명
+  // 콘솔 확인용 계좌명
   @override
   @JsonKey(name: 'product_name')
   final String? productName;
-  // 💡 콘솔 확인용 상품명
+  // 콘솔 확인용 상품명
   @override
   @JsonKey()
   final double balance;
@@ -387,31 +352,22 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
   @JsonKey(name: 'monthly_principal')
   final double monthlyPrincipal;
   // 당월 투자 원금 (납입액)
-  // 2. 연금 수령액 (누적 및 당월분)
+  // 2. 상품별 매도(환매)액 (누적 및 당월분)
   @override
-  @JsonKey(name: 'total_payout')
-  final double totalPayout;
-  // 누적 연금 수령액
+  @JsonKey(name: 'total_sale')
+  final double totalSale;
+  // 누적 매도액
   @override
-  @JsonKey(name: 'monthly_payout')
-  final double monthlyPayout;
-  // 당월 연금 수령액
-  // 3. 중도 환매액 (누적 및 당월분)
-  @override
-  @JsonKey(name: 'total_withdrawal')
-  final double totalWithdrawal;
-  // 누적 중도 환매액
-  @override
-  @JsonKey(name: 'monthly_withdrawal')
-  final double monthlyWithdrawal;
-  // 당월 중도 환매액
+  @JsonKey(name: 'monthly_sale')
+  final double monthlySale;
+  // 당월 매도액
   @override
   @JsonKey(name: 'purchase_date')
   final String? purchaseDate;
 
   @override
   String toString() {
-    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, productId: $productId, accountName: $accountName, productName: $productName, balance: $balance, principal: $principal, monthlyPrincipal: $monthlyPrincipal, totalPayout: $totalPayout, monthlyPayout: $monthlyPayout, totalWithdrawal: $totalWithdrawal, monthlyWithdrawal: $monthlyWithdrawal, purchaseDate: $purchaseDate)';
+    return 'MonthlyPensionBalance(id: $id, yearMonth: $yearMonth, accountId: $accountId, productId: $productId, accountName: $accountName, productName: $productName, balance: $balance, principal: $principal, monthlyPrincipal: $monthlyPrincipal, totalSale: $totalSale, monthlySale: $monthlySale, purchaseDate: $purchaseDate)';
   }
 
   @override
@@ -435,14 +391,10 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
                 other.principal == principal) &&
             (identical(other.monthlyPrincipal, monthlyPrincipal) ||
                 other.monthlyPrincipal == monthlyPrincipal) &&
-            (identical(other.totalPayout, totalPayout) ||
-                other.totalPayout == totalPayout) &&
-            (identical(other.monthlyPayout, monthlyPayout) ||
-                other.monthlyPayout == monthlyPayout) &&
-            (identical(other.totalWithdrawal, totalWithdrawal) ||
-                other.totalWithdrawal == totalWithdrawal) &&
-            (identical(other.monthlyWithdrawal, monthlyWithdrawal) ||
-                other.monthlyWithdrawal == monthlyWithdrawal) &&
+            (identical(other.totalSale, totalSale) ||
+                other.totalSale == totalSale) &&
+            (identical(other.monthlySale, monthlySale) ||
+                other.monthlySale == monthlySale) &&
             (identical(other.purchaseDate, purchaseDate) ||
                 other.purchaseDate == purchaseDate));
   }
@@ -460,10 +412,8 @@ class _$MonthlyPensionBalanceImpl extends _MonthlyPensionBalance {
     balance,
     principal,
     monthlyPrincipal,
-    totalPayout,
-    monthlyPayout,
-    totalWithdrawal,
-    monthlyWithdrawal,
+    totalSale,
+    monthlySale,
     purchaseDate,
   );
 
@@ -496,10 +446,8 @@ abstract class _MonthlyPensionBalance extends MonthlyPensionBalance {
     final double balance,
     final double principal,
     @JsonKey(name: 'monthly_principal') final double monthlyPrincipal,
-    @JsonKey(name: 'total_payout') final double totalPayout,
-    @JsonKey(name: 'monthly_payout') final double monthlyPayout,
-    @JsonKey(name: 'total_withdrawal') final double totalWithdrawal,
-    @JsonKey(name: 'monthly_withdrawal') final double monthlyWithdrawal,
+    @JsonKey(name: 'total_sale') final double totalSale,
+    @JsonKey(name: 'monthly_sale') final double monthlySale,
     @JsonKey(name: 'purchase_date') final String? purchaseDate,
   }) = _$MonthlyPensionBalanceImpl;
   const _MonthlyPensionBalance._() : super._();
@@ -520,10 +468,10 @@ abstract class _MonthlyPensionBalance extends MonthlyPensionBalance {
   String get productId;
   @override
   @JsonKey(name: 'account_name')
-  String? get accountName; // 💡 콘솔 확인용 계좌명
+  String? get accountName; // 콘솔 확인용 계좌명
   @override
   @JsonKey(name: 'product_name')
-  String? get productName; // 💡 콘솔 확인용 상품명
+  String? get productName; // 콘솔 확인용 상품명
   @override
   double get balance; // 당월 말 평가액
   // 1. 투자 원금 (누적 및 당월분)
@@ -532,20 +480,13 @@ abstract class _MonthlyPensionBalance extends MonthlyPensionBalance {
   @override
   @JsonKey(name: 'monthly_principal')
   double get monthlyPrincipal; // 당월 투자 원금 (납입액)
-  // 2. 연금 수령액 (누적 및 당월분)
+  // 2. 상품별 매도(환매)액 (누적 및 당월분)
   @override
-  @JsonKey(name: 'total_payout')
-  double get totalPayout; // 누적 연금 수령액
+  @JsonKey(name: 'total_sale')
+  double get totalSale; // 누적 매도액
   @override
-  @JsonKey(name: 'monthly_payout')
-  double get monthlyPayout; // 당월 연금 수령액
-  // 3. 중도 환매액 (누적 및 당월분)
-  @override
-  @JsonKey(name: 'total_withdrawal')
-  double get totalWithdrawal; // 누적 중도 환매액
-  @override
-  @JsonKey(name: 'monthly_withdrawal')
-  double get monthlyWithdrawal; // 당월 중도 환매액
+  @JsonKey(name: 'monthly_sale')
+  double get monthlySale; // 당월 매도액
   @override
   @JsonKey(name: 'purchase_date')
   String? get purchaseDate;

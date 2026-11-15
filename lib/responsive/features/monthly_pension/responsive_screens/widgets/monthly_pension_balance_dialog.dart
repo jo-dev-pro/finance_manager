@@ -5,12 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:collection/collection.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
-import '../../../../../models/monthly_data/monthly_pension_account_balance.dart';
 import '../../../../../models/monthly_data/monthly_pension_balance.dart';
+import '../../../../../models/monthly_data/monthly_pension_account_balance.dart';
 import '../../../../../providers/account/account_name_provider.dart';
 import '../../../../../providers/account/account_provider.dart';
-import '../../../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
 import '../../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
+import '../../../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
 import '../../../../../providers/pension/pension_holding_product_provider.dart';
 import '../../../../../providers/pension/pension_product_provider.dart';
 
@@ -34,12 +34,11 @@ class _MonthlyPensionBalanceDialogState
   final Map<String, TextEditingController> _quantityControllers = {};
   final Map<String, TextEditingController> _basePriceControllers = {};
 
-  // 상품별 당월분 입력 컨트롤러들
+  // 상품별 당월분 입력 컨트롤러들 (연금수령 컨트롤러 제거 완료)
   final Map<String, TextEditingController> _monthlyPrincipalControllers = {};
-  final Map<String, TextEditingController> _monthlyPayoutControllers = {};
-  final Map<String, TextEditingController> _monthlyWithdrawalControllers = {};
+  final Map<String, TextEditingController> _monthlySaleControllers = {}; // 당월 매도액 컨트롤러
 
-  // 계좌 공통 입력 컨트롤러 (예수금, 당월 입금액, 당월 인출액)
+  // 계좌 공통 입력 컨트롤러 (예수금, 당월 입금액, 당월 총 인출액)
   final TextEditingController _accountCashBalanceController =
       TextEditingController();
   final TextEditingController _accountMonthlyPrincipalController =
@@ -61,8 +60,7 @@ class _MonthlyPensionBalanceDialogState
     for (var c in _quantityControllers.values) { c.dispose(); }
     for (var c in _basePriceControllers.values) { c.dispose(); }
     for (var c in _monthlyPrincipalControllers.values) { c.dispose(); }
-    for (var c in _monthlyPayoutControllers.values) { c.dispose(); }
-    for (var c in _monthlyWithdrawalControllers.values) { c.dispose(); }
+    for (var c in _monthlySaleControllers.values) { c.dispose(); }
     _accountCashBalanceController.dispose();
     _accountMonthlyPrincipalController.dispose();
     _accountMonthlyWithdrawalController.dispose();
@@ -263,7 +261,7 @@ class _MonthlyPensionBalanceDialogState
                       ),
                       const SizedBox(height: 16),
 
-                      // 상단 계좌 공통 정보 카드 (예수금, 당월 입금액, 당월 인출액)
+                      // 상단 계좌 공통 정보 카드 (예수금, 당월 입금액, 당월 통합 인출액)
                       Card(
                         color: Colors.teal.shade50,
                         shape: RoundedRectangleBorder(
@@ -351,7 +349,7 @@ class _MonthlyPensionBalanceDialogState
                                         ThousandsSeparatorInputFormatter(),
                                       ],
                                       decoration: const InputDecoration(
-                                        labelText: '당월 계좌 인출액',
+                                        labelText: '당월 계좌 인출액 (중도인출·연금지급)',
                                         hintText: '0',
                                         suffixText: '원',
                                         border: OutlineInputBorder(),
@@ -447,10 +445,8 @@ class _MonthlyPensionBalanceDialogState
 
                                 final currentMonthlyPrin =
                                     currentData?.monthlyPrincipal ?? 0.0;
-                                final currentMonthlyPayout =
-                                    currentData?.monthlyPayout ?? 0.0;
-                                final currentMonthlyWithdrawal =
-                                    currentData?.monthlyWithdrawal ?? 0.0;
+                                final currentMonthlySale =
+                                    currentData?.monthlySale ?? 0.0;
 
                                 _balanceControllers[key] =
                                     TextEditingController(
@@ -472,19 +468,11 @@ class _MonthlyPensionBalanceDialogState
                                                   .toCommaString()
                                               : '',
                                     );
-                                _monthlyPayoutControllers[key] =
+                                _monthlySaleControllers[key] =
                                     TextEditingController(
                                       text:
-                                          currentMonthlyPayout > 0
-                                              ? currentMonthlyPayout
-                                                  .toCommaString()
-                                              : '',
-                                    );
-                                _monthlyWithdrawalControllers[key] =
-                                    TextEditingController(
-                                      text:
-                                          currentMonthlyWithdrawal > 0
-                                              ? currentMonthlyWithdrawal
+                                          currentMonthlySale > 0
+                                              ? currentMonthlySale
                                                   .toCommaString()
                                               : '',
                                     );
@@ -500,13 +488,13 @@ class _MonthlyPensionBalanceDialogState
                                           .isNotEmpty ??
                                       false);
 
-                              final hasWithdrawal =
-                                  (_monthlyWithdrawalControllers[key]?.text
+                              final hasSale =
+                                  (_monthlySaleControllers[key]?.text
                                           .trim()
                                           .isNotEmpty ??
                                       false) &&
                                   (double.tryParse(
-                                            _monthlyWithdrawalControllers[key]!
+                                            _monthlySaleControllers[key]!
                                                 .text
                                                 .replaceAll(
                                                   RegExp(r'[^0-9]'),
@@ -581,7 +569,7 @@ class _MonthlyPensionBalanceDialogState
                                             child: TextFormField(
                                               controller:
                                                   _quantityControllers[key],
-                                              enabled: !hasWithdrawal,
+                                              enabled: !hasSale,
                                               keyboardType:
                                                   const TextInputType.numberWithOptions(
                                                     decimal: true,
@@ -591,7 +579,7 @@ class _MonthlyPensionBalanceDialogState
                                                 border:
                                                     const OutlineInputBorder(),
                                                 isDense: true,
-                                                filled: hasWithdrawal,
+                                                filled: hasSale,
                                                 fillColor: Colors.grey.shade100,
                                               ),
                                               onChanged: (_) => setState(() {}),
@@ -602,7 +590,7 @@ class _MonthlyPensionBalanceDialogState
                                             child: TextFormField(
                                               controller:
                                                   _basePriceControllers[key],
-                                              enabled: !hasWithdrawal,
+                                              enabled: !hasSale,
                                               keyboardType:
                                                   const TextInputType.numberWithOptions(
                                                     decimal: true,
@@ -612,7 +600,7 @@ class _MonthlyPensionBalanceDialogState
                                                 border:
                                                     const OutlineInputBorder(),
                                                 isDense: true,
-                                                filled: hasWithdrawal,
+                                                filled: hasSale,
                                                 fillColor: Colors.grey.shade100,
                                               ),
                                               onChanged: (_) => setState(() {}),
@@ -664,7 +652,7 @@ class _MonthlyPensionBalanceDialogState
                                           Expanded(
                                             child: TextFormField(
                                               controller:
-                                                  _monthlyWithdrawalControllers[key],
+                                                  _monthlySaleControllers[key],
                                               enabled: !hasQuantityOrBasePrice,
                                               keyboardType:
                                                   TextInputType.number,
@@ -674,7 +662,7 @@ class _MonthlyPensionBalanceDialogState
                                                 ThousandsSeparatorInputFormatter(),
                                               ],
                                               decoration: InputDecoration(
-                                                labelText: '당월 환매액',
+                                                labelText: '당월 매도액 (환매액)',
                                                 hintText: '0',
                                                 suffixText: '원',
                                                 border:
@@ -689,6 +677,7 @@ class _MonthlyPensionBalanceDialogState
                                         ],
                                       ),
                                       const SizedBox(height: 10),
+                                      // 💡 상품별 입금액(추가원금)만 단독으로 배치
                                       Row(
                                         children: [
                                           Expanded(
@@ -704,27 +693,6 @@ class _MonthlyPensionBalanceDialogState
                                               ],
                                               decoration: const InputDecoration(
                                                 labelText: '당월 입금액 (추가원금)',
-                                                hintText: '0',
-                                                suffixText: '원',
-                                                border: OutlineInputBorder(),
-                                                isDense: true,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller:
-                                                  _monthlyPayoutControllers[key],
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly,
-                                                ThousandsSeparatorInputFormatter(),
-                                              ],
-                                              decoration: const InputDecoration(
-                                                labelText: '당월 연금 수령액',
                                                 hintText: '0',
                                                 suffixText: '원',
                                                 border: OutlineInputBorder(),
@@ -781,7 +749,7 @@ class _MonthlyPensionBalanceDialogState
       monthlyPensionAccountBalanceNotifierProvider(_selectedYearMonth).notifier,
     );
 
-    // 1. 계좌 요약 테이블 저장 (전월 누적원금 + 당월 입금액 연동)
+    // 1. 계좌 요약 테이블 저장
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
     final prevAccountBalances =
         ref
@@ -831,7 +799,7 @@ class _MonthlyPensionBalanceDialogState
     );
     await accountBalanceNotifier.saveBalance(accountBalanceItem);
 
-    // 2. 상품별 월말 데이터 파싱 및 누적금액 계산 후 저장
+    // 2. 상품별 월말 데이터 파싱 및 저장
     final holdingProducts =
         ref.read(pensionHoldingProductNotifierProvider).value ?? [];
 
@@ -858,8 +826,7 @@ class _MonthlyPensionBalanceDialogState
       final basePriceCtrl = _basePriceControllers[key];
       final balCtrl = _balanceControllers[key];
       final monthlyPrinCtrl = _monthlyPrincipalControllers[key];
-      final monthlyPayoutCtrl = _monthlyPayoutControllers[key];
-      final monthlyWithdrawalCtrl = _monthlyWithdrawalControllers[key];
+      final monthlySaleCtrl = _monthlySaleControllers[key];
 
       final qty =
           double.tryParse(qtyCtrl?.text.replaceAll(',', '').trim() ?? '') ??
@@ -884,28 +851,20 @@ class _MonthlyPensionBalanceDialogState
             monthlyPrinCtrl?.text.replaceAll(',', '').trim() ?? '',
           ) ??
           0.0;
-      final monthlyPayoutVal =
+      final monthlySaleVal =
           double.tryParse(
-            monthlyPayoutCtrl?.text.replaceAll(',', '').trim() ?? '',
-          ) ??
-          0.0;
-      final monthlyWithdrawalVal =
-          double.tryParse(
-            monthlyWithdrawalCtrl?.text.replaceAll(',', '').trim() ?? '',
+            monthlySaleCtrl?.text.replaceAll(',', '').trim() ?? '',
           ) ??
           0.0;
 
       final prevPrincipal = prevData?.principal ?? 0.0;
-      final prevTotalPayout = prevData?.totalPayout ?? 0.0;
-      final prevTotalWithdrawalProd = prevData?.totalWithdrawal ?? 0.0;
+      final prevTotalSale = prevData?.totalSale ?? 0.0;
 
       final finalPrincipal = prevPrincipal + monthlyPrinVal;
-      final finalTotalPayout = prevTotalPayout + monthlyPayoutVal;
-      final finalTotalWithdrawalProd =
-          prevTotalWithdrawalProd + monthlyWithdrawalVal;
+      final finalTotalSale = prevTotalSale + monthlySaleVal;
 
       if (finalBalance > 0 ||
-          monthlyWithdrawalVal > 0 ||
+          monthlySaleVal > 0 ||
           monthlyPrinVal > 0 ||
           finalPrincipal > 0) {
         itemsToSave.add(
@@ -916,10 +875,8 @@ class _MonthlyPensionBalanceDialogState
             balance: finalBalance,
             principal: finalPrincipal,
             monthlyPrincipal: monthlyPrinVal,
-            totalPayout: finalTotalPayout,
-            monthlyPayout: monthlyPayoutVal,
-            totalWithdrawal: finalTotalWithdrawalProd,
-            monthlyWithdrawal: monthlyWithdrawalVal,
+            totalSale: finalTotalSale,
+            monthlySale: monthlySaleVal,
           ),
         );
       }

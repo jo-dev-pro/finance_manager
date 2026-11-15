@@ -16,7 +16,9 @@ import '../../../../providers/pension/pension_product_provider.dart';
 import 'widgets/monthly_pension_balance_dialog.dart';
 
 // 💡 월말연금 화면 전용 계좌 필터 Provider (자동 dispose)
-final selectedPensionAccountFilterProvider = StateProvider.autoDispose<String?>((ref) => null);
+final selectedPensionAccountFilterProvider = StateProvider.autoDispose<String?>(
+  (ref) => null,
+);
 
 class MonthlyPensionBalanceScreen extends ConsumerWidget {
   final String? initialYearMonth;
@@ -42,7 +44,11 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('월말연금')),
+      appBar: AppBar(
+        title: const Text('월말연금'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('데이터를 불러오지 못했습니다: $err')),
@@ -74,14 +80,20 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
           final productMap = {for (var p in products) p.id!: p.productName};
 
           // 💡 활성화된 연금 계좌 목록 추출
-          final pensionAccounts = accounts
-              .where((a) => a.accountType.trim() == '연금' && a.status == '활동')
-              .toList();
+          final pensionAccounts =
+              accounts
+                  .where(
+                    (a) => a.accountType.trim() == '연금' && a.status == '활동',
+                  )
+                  .toList();
 
           // 💡 선택된 계좌에 따라 월말 내역 필터링
-          final filteredItems = selectedAccountId == null
-              ? items
-              : items.where((item) => item.accountId == selectedAccountId).toList();
+          final filteredItems =
+              selectedAccountId == null
+                  ? items
+                  : items
+                      .where((item) => item.accountId == selectedAccountId)
+                      .toList();
 
           return MainConstrainedBox(
             child: SingleChildScrollView(
@@ -101,17 +113,29 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
-                              value: months.contains(activeCurrentMonth) ? activeCurrentMonth : months.first,
+                              value:
+                                  months.contains(activeCurrentMonth)
+                                      ? activeCurrentMonth
+                                      : months.first,
                               isExpanded: true,
-                              items: months.map((ym) {
-                                return DropdownMenuItem(
-                                  value: ym,
-                                  child: Text(ym, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                );
-                              }).toList(),
+                              items:
+                                  months.map((ym) {
+                                    return DropdownMenuItem(
+                                      value: ym,
+                                      child: Text(
+                                        ym,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
                               onChanged: (val) {
                                 if (val != null) {
-                                  ref.read(selectedYearMonthProvider.notifier).select(val);
+                                  ref
+                                      .read(selectedYearMonthProvider.notifier)
+                                      .select(val);
                                 }
                               },
                             ),
@@ -135,11 +159,18 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                               items: [
                                 const DropdownMenuItem<String?>(
                                   value: null,
-                                  child: Text('전체 계좌', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                  child: Text(
+                                    '전체 계좌',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
                                 ),
                                 ...pensionAccounts.map((acc) {
                                   final accId = acc.id ?? '';
-                                  final nameObj = accountNameMap[acc.accountNameId];
+                                  final nameObj =
+                                      accountNameMap[acc.accountNameId];
                                   final accName = nameObj?.accountName ?? '계좌';
                                   final institution = acc.financialInstitution;
                                   return DropdownMenuItem<String?>(
@@ -154,7 +185,12 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                 }),
                               ],
                               onChanged: (val) {
-                                ref.read(selectedPensionAccountFilterProvider.notifier).state = val;
+                                ref
+                                    .read(
+                                      selectedPensionAccountFilterProvider
+                                          .notifier,
+                                    )
+                                    .state = val;
                               },
                             ),
                           ),
@@ -173,7 +209,11 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                   if (filteredItems.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Center(child: Text('$activeCurrentMonth에 조건에 해당하는 월말 데이터가 없습니다.')),
+                      child: Center(
+                        child: Text(
+                          '$activeCurrentMonth에 조건에 해당하는 월말 데이터가 없습니다.',
+                        ),
+                      ),
                     )
                   else
                     ListView.builder(
@@ -192,14 +232,9 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                 : null;
                         final accountName = nameObj?.accountName ?? '연금계좌';
 
-                        final bool isCashAsset =
-                            balanceItem.productId ==
-                            '_CASH_ASSET_PRODUCT_ID_';
+                        // 💡 캐시 상품 판별 로직 제거 및 순수 상품명 매핑
                         final String displayName =
-                            isCashAsset
-                                ? '💵 계좌 공통 현금성 자산 (예수금)'
-                                : (productMap[balanceItem.productId] ??
-                                    '알 수 없는 상품');
+                            productMap[balanceItem.productId] ?? '알 수 없는 상품';
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -239,8 +274,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 12),
                                   Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
                                         balanceItem.balance.toWon(),
@@ -251,8 +285,20 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 8),
                                       EditDeleteButtons(
-                                        onEdit: () => _showEditDialog(context, ref, balanceItem, displayName),
-                                        onDelete: () => _confirmDelete(context, ref, balanceItem, displayName),
+                                        onEdit:
+                                            () => _showEditDialog(
+                                              context,
+                                              ref,
+                                              balanceItem,
+                                              displayName,
+                                            ),
+                                        onDelete:
+                                            () => _confirmDelete(
+                                              context,
+                                              ref,
+                                              balanceItem,
+                                              displayName,
+                                            ),
                                       ),
                                     ],
                                   ),

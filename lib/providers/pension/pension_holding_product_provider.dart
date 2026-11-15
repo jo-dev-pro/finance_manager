@@ -47,13 +47,9 @@ class PensionHoldingProductNotifier extends _$PensionHoldingProductNotifier {
       }
 
       if (resolvedProductName == null || resolvedProductName.isEmpty) {
-        if (item.productId == '_CASH_ASSET_PRODUCT_ID_') {
-          resolvedProductName = '💵 계좌 공통 현금성 자산 (예수금)';
-        } else {
-          final matchedProd = products.firstWhereOrNull((p) => p.id == item.productId);
-          if (matchedProd != null) {
-            resolvedProductName = matchedProd.productName;
-          }
+        final matchedProd = products.firstWhereOrNull((p) => p.id == item.productId);
+        if (matchedProd != null) {
+          resolvedProductName = matchedProd.productName;
         }
       }
     } catch (_) {}

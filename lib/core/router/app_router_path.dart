@@ -9,7 +9,9 @@ abstract class AppRoutePath {
 
   // 2. 화면 이동용 Full Path (context.push 등에서 사용)
   static const String monthlyBankBalance = '$bank/monthly';
+
   static const String monthlyStockBalance = '$stock/monthly';
+  static const String monthlyStockSummary = '$stock/summary';
   
   static const String monthlyPensionBalance = '$pension/monthly';
   static const String monthlyPensionSummary = '$pension/summary';

@@ -717,6 +717,78 @@ class _FirestoreDBMigrateScreenState
     }
   }
 
+Future<void> migratePensionDatabaseData(FirebaseFirestore firestore) async {
+  try {
+    print('연금 데이터베이스 마이그레이션 시작...');
+
+    // 상품별 월말 데이터 컬렉션 참조 (monthly_pension_balance)[cite: 16]
+    final snapshot = await firestore.collection('monthly_pension_balance').get();
+
+    WriteBatch batch = firestore.batch();
+    int operationCount = 0;
+    int deletedCount = 0;
+    int updatedCount = 0;
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final productId = data['product_id'] ?? data['productId'];
+
+      // 1. _CASH_ASSET_PRODUCT_ID_ 로 생성된 가상 현금 상품 문서 삭제
+      if (productId == '_CASH_ASSET_PRODUCT_ID_') {
+        batch.delete(doc.reference);
+        deletedCount++;
+        operationCount++;
+      } else {
+        Map<String, dynamic> updates = {};
+
+        // 2. 사용하지 않는 payout 필드 삭제 (snake_case 및 camelCase 대응)
+        updates['monthly_payout'] = FieldValue.delete();
+        updates['total_payout'] = FieldValue.delete();
+        updates['monthlyPayout'] = FieldValue.delete();
+        updates['totalPayout'] = FieldValue.delete();
+
+        // 3. withdrawal 필드 값을 sale 필드로 마이그레이션 및 기존 withdrawal 필드 삭제
+        final monthlyWithdrawalVal = data['monthly_withdrawal'] ?? data['monthlyWithdrawal'];
+        if (monthlyWithdrawalVal != null) {
+          updates['monthly_sale'] = monthlyWithdrawalVal;
+          updates['monthly_withdrawal'] = FieldValue.delete();
+          updates['monthlyWithdrawal'] = FieldValue.delete();
+        }
+
+        final totalWithdrawalVal = data['total_withdrawal'] ?? data['totalWithdrawal'];
+        if (totalWithdrawalVal != null) {
+          updates['total_sale'] = totalWithdrawalVal;
+          updates['total_withdrawal'] = FieldValue.delete();
+          updates['totalWithdrawal'] = FieldValue.delete();
+        }
+
+        batch.update(doc.reference, updates);
+        updatedCount++;
+        operationCount++;
+      }
+
+      // Firestore Batch는 한 번에 최대 500개까지만 처리 가능하므로 400개 단위로 커밋
+      if (operationCount >= 400) {
+        await batch.commit();
+        batch = firestore.batch();
+        operationCount = 0;
+      }
+    }
+
+    // 남은 배치 커밋
+    if (operationCount > 0) {
+      await batch.commit();
+    }
+
+    print('마이그레이션 완료!');
+    print('- 삭제된 캐시 상품 문서 수: $deletedCount개');
+    print('- 필드 변경 및 마이그레이션된 상품 문서 수: $updatedCount개');
+    
+  } catch (e) {
+    print('마이그레이션 중 오류 발생: $e');
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -912,6 +984,32 @@ class _FirestoreDBMigrateScreenState
                         )
                         : const Icon(Icons.upload_file),
                 label: Text(_isLoading ? '처리 중...' : '월말환율 입력 마이그레이션'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton.icon(
+                onPressed:
+                    _isLoading
+                        ? null
+                        : () async {
+                          final firestore = ref.read(firestoreProvider);
+                          await migratePensionDatabaseData(firestore);
+                        },
+                icon:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.upload_file),
+                label: Text(_isLoading ? '처리 중...' : '연금월말잔액 db 필드 마이그레이션'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

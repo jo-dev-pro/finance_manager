@@ -63,7 +63,7 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
     String? resolvedAccountName = balance.accountName;
     String? resolvedProductName = balance.productName;
 
-    try {
+   try {
       final accounts = await ref.read(accountNotifierProvider.future);
       final accountNames = await ref.read(accountNameNotifierProvider.future);
       final products = await ref.read(pensionProductNotifierProvider.future);
@@ -78,13 +78,9 @@ class MonthlyPensionBalanceNotifier extends _$MonthlyPensionBalanceNotifier {
       }
 
       if (resolvedProductName == null || resolvedProductName.isEmpty) {
-        if (balance.productId == '_CASH_ASSET_PRODUCT_ID_') {
-          resolvedProductName = '💵 계좌 공통 현금성 자산 (예수금)';
-        } else {
-          final matchedProd = products.firstWhereOrNull((p) => p.id == balance.productId);
-          if (matchedProd != null) {
-            resolvedProductName = matchedProd.productName;
-          }
+        final matchedProd = products.firstWhereOrNull((p) => p.id == balance.productId);
+        if (matchedProd != null) {
+          resolvedProductName = matchedProd.productName;
         }
       }
     } catch (_) {}

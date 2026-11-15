@@ -9,13 +9,9 @@ import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
 import '../../../core/widgets/section_title.dart';
 import '../../../core/widgets/summary_card.dart';
-import '../../../models/monthly_data/monthly_pension_balance.dart';
-import '../../../providers/account/account_name_provider.dart';
-import '../../../providers/account/account_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
-import '../../../providers/pension/pension_product_provider.dart';
 import 'monthly_data/monthly_pension_balance_screen.dart';
 import 'widgets/pension_account_grid.dart';
 import 'widgets/pension_portion_section.dart';
@@ -63,9 +59,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
   Widget build(BuildContext context) {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
     final selectedMonth = ref.watch(selectedYearMonthProvider);
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final productsAsync = ref.watch(pensionProductNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -123,18 +116,17 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                   months: months,
                   currentMonth: activeCurrentMonth,
                 ),
-                SizedBox(height: 16),
-
+                const SizedBox(height: 16),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // 1. 전체 요약 카드
                         balancesAsync.when(
-                          loading:
-                              () => const Center(
-                                child: CircularProgressIndicator(),
-                              ),
+                          loading: () => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
                           error: (err, _) => Text('오류: $err'),
                           data: (balances) {
                             final accountBalances =
@@ -147,7 +139,9 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                               0.0,
                               (sum, item) => sum + item.balance,
                             );
-                            final productPrincipalSum = balances.fold<double>(
+
+                            // 월말 계좌별 누적 원금(principal) 합산[cite: 9]
+                            final accountPrincipalSum = accountBalances.fold<double>(
                               0.0,
                               (sum, item) => sum + item.principal,
                             );
@@ -165,8 +159,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
 
                             final totalBalance =
                                 productBalanceSum + accountCashSum;
-                            final totalPrincipal =
-                                productPrincipalSum + accountCashSum;
+                            final totalPrincipal = accountPrincipalSum;
 
                             final totalProfitOrLoss =
                                 (totalBalance + totalAccountWithdrawalSum) -
@@ -189,7 +182,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             final lastTotalBalance =
                                 lastProductSum + lastCashSum;
 
-                            // 💡 총자산 카드 터치 시 전체 계좌(null)로 summary 화면 이동
                             return GestureDetector(
                               onTap: () {
                                 ref
@@ -267,138 +259,47 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                           },
                         ),
 
+                        // 2. 계좌 목록 그리드
                         const SectionTitle(
                           '계좌 목록',
                           topSpacing: 24,
                           bottomSpacing: 12,
                         ),
-
-                        balancesAsync.when(
-                          loading: () => const CircularProgressIndicator(),
-                          error: (err, _) => Text('로드 실패: $err'),
-                          data: (balances) {
-                            final accountBalances =
-                                accountBalancesAsync.value ?? [];
-                            final lastBalances = lastBalancesAsync.value ?? [];
-                            final lastAccountBalances =
-                                lastAccountBalancesAsync.value ?? [];
-
-                            final accounts = accountsAsync.value ?? [];
-                            final accountNames = accountNamesAsync.value ?? [];
-                            final products = productsAsync.value ?? [];
-
-                            final Map<String, List<MonthlyPensionBalance>>
-                            accountGroups = {};
-                            for (var item in balances) {
-                              accountGroups
-                                  .putIfAbsent(item.accountId, () => [])
-                                  .add(item);
-                            }
-
-                            for (var accBal in accountBalances) {
-                              accountGroups.putIfAbsent(
-                                accBal.accountId,
-                                () => [],
-                              );
-                            }
-
-                            final Map<String, List<MonthlyPensionBalance>>
-                            lastAccountGroups = {};
-                            for (var item in lastBalances) {
-                              lastAccountGroups
-                                  .putIfAbsent(item.accountId, () => [])
-                                  .add(item);
-                            }
-
-                            if (accountGroups.isEmpty) {
-                              return const Center(
-                                child: Text('등록된 연금 계좌 데이터가 없습니다.'),
-                              );
-                            }
-
-                            final accountIds = accountGroups.keys.toList();
-                            final accountCashMap = {
-                              for (var ab in accountBalances)
-                                ab.accountId: ab.cashBalance,
-                            };
-                            final accountWithdrawalMap = {
-                              for (var ab in accountBalances)
-                                ab.accountId: ab.totalWithdrawal,
-                            };
-                            final lastAccountCashMap = {
-                              for (var lab in lastAccountBalances)
-                                lab.accountId: lab.cashBalance,
-                            };
-
-                            final totalProductSum = balances.fold<double>(
-                              0.0,
-                              (s, i) => s + i.balance,
-                            );
-                            final totalCashSum = accountBalances.fold<double>(
-                              0.0,
-                              (s, i) => s + i.cashBalance,
-                            );
-                            final overallTotalBalance =
-                                totalProductSum + totalCashSum;
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 💡 계좌 그리드 카드 터치 시 해당 계좌 ID를 세팅하고 summary 화면으로 이동
-                                PensionAccountGrid(
-                                  accountIds: accountIds,
-                                  accountGroups: accountGroups,
-                                  accountCashMap: accountCashMap,
-                                  accountWithdrawalMap: accountWithdrawalMap,
-                                  lastAccountGroups: lastAccountGroups,
-                                  lastAccountCashMap: lastAccountCashMap,
-                                  accounts: accounts,
-                                  accountNames: accountNames,
-                                  products: products,
-                                  onAccountTap: (accountId) {
-                                    // 💡 월과 계좌 ID를 Map으로 묶어서 extra로 전달
-                                    context.push(
-                                      AppRoutePath.monthlyPensionSummary,
-                                      extra: {
-                                        'yearMonth': activeCurrentMonth,
-                                        'accountId': accountId,
-                                      },
-                                    );
-                                  },
-                                ),
-
-                                const SectionTitle(
-                                  '계좌별 평가 비중',
-                                  topSpacing: 28,
-                                  bottomSpacing: 12,
-                                ),
-
-                                PensionPortionSection(
-                                  accountIds: accountIds,
-                                  accountGroups: accountGroups,
-                                  accountCashMap: accountCashMap,
-                                  accounts: accounts,
-                                  accountNames: accountNames,
-                                  overallTotalBalance: overallTotalBalance,
-                                  chartColors: _chartColors,
-                                ),
-
-                                const SectionTitle(
-                                  '계좌별 월말 수익률 추이 (%)',
-                                  topSpacing: 28,
-                                  bottomSpacing: 12,
-                                ),
-
-                                PensionReturnRateChart(
-                                  accountIds: accountIds,
-                                  months: months,
-                                  accounts: accounts,
-                                  accountNames: accountNames,
-                                  chartColors: _chartColors,
-                                ),
-                              ],
+                        PensionAccountGrid(
+                          currentMonth: activeCurrentMonth,
+                          lastMonth: lastMonth,
+                          onAccountTap: (accountId) {
+                            context.push(
+                              AppRoutePath.monthlyPensionSummary,
+                              extra: {
+                                'yearMonth': activeCurrentMonth,
+                                'accountId': accountId,
+                              },
                             );
                           },
+                        ),
+
+                        // 3. 계좌별 평가 비중 섹션
+                        const SectionTitle(
+                          '계좌별 평가 비중',
+                          topSpacing: 28,
+                          bottomSpacing: 12,
+                        ),
+                        PensionPortionSection(
+                          currentMonth: activeCurrentMonth,
+                          chartColors: _chartColors,
+                        ),
+
+                        // 4. 계좌별 월말 수익률 추이 차트
+                        const SectionTitle(
+                          '계좌별 월말 수익률 추이 (%)',
+                          topSpacing: 28,
+                          bottomSpacing: 12,
+                        ),
+                        PensionReturnRateChart(
+                          currentMonth: activeCurrentMonth,
+                          months: months,
+                          chartColors: _chartColors,
                         ),
                       ],
                     ),

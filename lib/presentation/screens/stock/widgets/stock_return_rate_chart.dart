@@ -2,29 +2,42 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../models/account/account.dart';
+import '../../../../providers/account/account_name_provider.dart';
+import '../../../../providers/account/account_provider.dart';
+import '../../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
 import '../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 
 class StockReturnRateChart extends ConsumerWidget {
-  final List<String> accountIds;
+  final String currentMonth;
   final List<String> months;
-  final List<Account> accounts;
-  final List<dynamic> accountNames;
   final List<Color> chartColors;
 
   const StockReturnRateChart({
     super.key,
-    required this.accountIds,
+    required this.currentMonth,
     required this.months,
-    required this.accounts,
-    required this.accountNames,
     required this.chartColors,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 💡 위젯 내부에서 프로바이더를 직접 watch하여 데이터 수급
+    // 💡 프로바이더를 통한 데이터 직접 구독
     final allBalances = ref.watch(allMonthlyStockBalancesProvider).value ?? [];
+    final currentBalances =
+        ref.watch(monthlyStockBalanceNotifierProvider(currentMonth)).value ?? [];
+    final currentAccountBalances = ref
+            .watch(monthlyStockAccountBalanceNotifierProvider(currentMonth))
+            .value ??
+        [];
+    final accounts = ref.watch(accountNotifierProvider).value ?? [];
+    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
+
+    // 현재 선택 월 기준 계좌 ID 목록 동적 추출
+    final accountIdSet = <String>{
+      for (var item in currentBalances) item.accountId,
+      for (var ab in currentAccountBalances) ab.accountId,
+    };
+    final accountIds = accountIdSet.toList();
 
     final sortedMonths = months.reversed.toList();
     final accountNameMap = {for (var an in accountNames) an.id: an};
@@ -45,9 +58,10 @@ class StockReturnRateChart extends ConsumerWidget {
                 final idx = entry.key;
                 final accId = entry.value;
                 final matchedAcc = accountMap[accId];
-                final matchedName = matchedAcc != null
-                    ? accountNameMap[matchedAcc.accountNameId]
-                    : null;
+                final matchedName =
+                    matchedAcc != null
+                        ? accountNameMap[matchedAcc.accountNameId]
+                        : null;
                 final name = matchedName?.accountName ?? accId;
                 final logoUrl = matchedAcc?.logoUrl;
                 final color = chartColors[idx % chartColors.length];
@@ -72,11 +86,12 @@ class StockReturnRateChart extends ConsumerWidget {
                           width: 16,
                           height: 16,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.account_balance,
-                            size: 14,
-                            color: Colors.grey,
-                          ),
+                          errorBuilder:
+                              (_, __, ___) => const Icon(
+                                Icons.account_balance,
+                                size: 14,
+                                color: Colors.grey,
+                              ),
                         ),
                       )
                     else
@@ -106,10 +121,12 @@ class StockReturnRateChart extends ConsumerWidget {
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: true,
-                    getDrawingHorizontalLine: (value) =>
-                        FlLine(color: Colors.grey.shade200, strokeWidth: 1),
-                    getDrawingVerticalLine: (value) =>
-                        FlLine(color: Colors.grey.shade100, strokeWidth: 1),
+                    getDrawingHorizontalLine:
+                        (value) =>
+                            FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+                    getDrawingVerticalLine:
+                        (value) =>
+                            FlLine(color: Colors.grey.shade100, strokeWidth: 1),
                   ),
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
@@ -156,9 +173,10 @@ class StockReturnRateChart extends ConsumerWidget {
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 30,
-                        interval: sortedMonths.length > 12
-                            ? (sortedMonths.length / 6).ceil().toDouble()
-                            : 1.0,
+                        interval:
+                            sortedMonths.length > 12
+                                ? (sortedMonths.length / 6).ceil().toDouble()
+                                : 1.0,
                         getTitlesWidget: (val, meta) {
                           int idx = val.toInt();
                           if (idx >= 0 && idx < sortedMonths.length) {
@@ -178,54 +196,60 @@ class StockReturnRateChart extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  lineBarsData: accountIds.asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final accId = entry.value;
+                  lineBarsData:
+                      accountIds.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final accId = entry.value;
 
-                    final spots = sortedMonths.asMap().entries.map((mEntry) {
-                      final mIdx = mEntry.key;
-                      final ym = mEntry.value;
+                        final spots =
+                            sortedMonths.asMap().entries.map((mEntry) {
+                              final mIdx = mEntry.key;
+                              final ym = mEntry.value;
 
-                      final items = allBalances.where(
-                        (b) =>
-                            b.balanceItem.yearMonth == ym &&
-                            b.balanceItem.accountId == accId,
-                      );
-                      final totalBal = items.fold<double>(
-                        0.0,
-                        (s, item) => s + item.balanceItem.balance,
-                      );
-                      final totalPrin = items.fold<double>(
-                        0.0,
-                        (s, item) => s + item.balanceItem.principal,
-                      );
-                      final totalPayout = items.fold<double>(
-                        0.0,
-                        (s, item) => s + item.balanceItem.totalPayout,
-                      );
-                      final totalWithdrawal = items.fold<double>(
-                        0.0,
-                        (s, item) => s + item.balanceItem.totalWithdrawal,
-                      );
+                              final items = allBalances.where(
+                                (b) =>
+                                    b.balanceItem.yearMonth == ym &&
+                                    b.balanceItem.accountId == accId,
+                              );
+                              final totalBal = items.fold<double>(
+                                0.0,
+                                (s, item) => s + item.balanceItem.balance,
+                              );
+                              final totalPrin = items.fold<double>(
+                                0.0,
+                                (s, item) => s + item.balanceItem.principal,
+                              );
+                              final totalPayout = items.fold<double>(
+                                0.0,
+                                (s, item) => s + item.balanceItem.totalPayout,
+                              );
+                              final totalWithdrawal = items.fold<double>(
+                                0.0,
+                                (s, item) =>
+                                    s + item.balanceItem.totalWithdrawal,
+                              );
 
-                      final rate = totalPrin > 0
-                          ? (((totalBal + totalPayout + totalWithdrawal) -
-                                      totalPrin) /
-                                  totalPrin) *
-                              100
-                          : 0.0;
-                      return FlSpot(mIdx.toDouble(), rate);
-                    }).toList();
+                              final rate =
+                                  totalPrin > 0
+                                      ? (((totalBal +
+                                                      totalPayout +
+                                                      totalWithdrawal) -
+                                                  totalPrin) /
+                                              totalPrin) *
+                                          100
+                                      : 0.0;
+                              return FlSpot(mIdx.toDouble(), rate);
+                            }).toList();
 
-                    return LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      color: chartColors[idx % chartColors.length],
-                      barWidth: 3,
-                      dotData: const FlDotData(show: true),
-                      belowBarData: BarAreaData(show: false),
-                    );
-                  }).toList(),
+                        return LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color: chartColors[idx % chartColors.length],
+                          barWidth: 3,
+                          dotData: const FlDotData(show: true),
+                          belowBarData: BarAreaData(show: false),
+                        );
+                      }).toList(),
                 ),
               ),
             ),

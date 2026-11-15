@@ -1,37 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/number_formatter.dart';
-import '../../../../models/account/account.dart';
 import '../../../../models/monthly_data/monthly_pension_balance.dart';
+import '../../../../providers/account/account_name_provider.dart';
+import '../../../../providers/account/account_provider.dart';
+import '../../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
+import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 
-class PensionPortionSection extends StatelessWidget {
-  final List<String> accountIds;
-  final Map<String, List<MonthlyPensionBalance>> accountGroups;
-  final Map<String, double> accountCashMap;
-  final List<Account> accounts;
-  final List<dynamic> accountNames;
-  final double overallTotalBalance;
+class PensionPortionSection extends ConsumerWidget {
+  final String currentMonth;
   final List<Color> chartColors;
 
   const PensionPortionSection({
     super.key,
-    required this.accountIds,
-    required this.accountGroups,
-    required this.accountCashMap,
-    required this.accounts,
-    required this.accountNames,
-    required this.overallTotalBalance,
+    required this.currentMonth,
     required this.chartColors,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final balances =
+        ref.watch(monthlyPensionBalanceNotifierProvider(currentMonth)).value ??
+            [];
+    final accountBalances = ref
+            .watch(monthlyPensionAccountBalanceNotifierProvider(currentMonth))
+            .value ??
+        [];
+    final accounts = ref.watch(accountNotifierProvider).value ?? [];
+    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
+
     final accountNameMap = {for (var an in accountNames) an.id: an};
     final accountMap = {for (var a in accounts) a.id!: a};
 
+    final Map<String, List<MonthlyPensionBalance>> accountGroups = {};
+    for (var item in balances) {
+      accountGroups.putIfAbsent(item.accountId, () => []).add(item);
+    }
+    for (var ab in accountBalances) {
+      accountGroups.putIfAbsent(ab.accountId, () => []);
+    }
+
+    if (accountGroups.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final accountIds = accountGroups.keys.toList();
+    final accountCashMap = {
+      for (var ab in accountBalances) ab.accountId: ab.cashBalance,
+    };
+
+    final totalProductSum = balances.fold<double>(
+      0.0,
+      (s, i) => s + i.balance,
+    );
+    final totalCashSum = accountBalances.fold<double>(
+      0.0,
+      (s, i) => s + i.cashBalance,
+    );
+    final overallTotalBalance = totalProductSum + totalCashSum;
+
     return Card(
-      // elevation: 1,
-      // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

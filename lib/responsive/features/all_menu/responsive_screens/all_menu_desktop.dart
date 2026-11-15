@@ -2,10 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/raw_upload/bank_monthly_upload.dart';
-import '../../../../core/raw_upload/pension_monthly_upload.dart';
 import '../../../../core/migrate/firestore_db_migrate.dart';
-import '../../../../core/raw_upload/stock_holding_item_upload.dart';
 import '../../../../core/router/app_router_path.dart';
 import '../../../scaffold/widgets/common_desktop_container.dart';
 
@@ -85,50 +82,6 @@ class AllMenuDesktopScreen extends StatelessWidget {
                 title: const Text('연금 계좌별 보유상품 관리'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(AppRoutePath.pensionAccountProduct),
-              ),
-              ListTile(
-                leading: const Icon(Icons.savings_outlined, color: Colors.indigo),
-                title: const Text('(Batch)은행 월말자료 업로드'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BankMonthlyUploadScreen(),
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.savings_outlined, color: Colors.indigo),
-                title: const Text('(Batch)연금 월말자료 업로드'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PensionMonthlyUploadScreen(),
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.savings_outlined, color: Colors.indigo),
-                title: const Text('(Batch)주식 보유종목 업로드'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const StockHoldingUploadScreen(),
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.savings_outlined, color: Colors.indigo),
-                title: const Text('Firestore DB 마이그레이션'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const FirestoreDBMigrateScreen(),
-                  ),
-                ),
               ),
             ],
           ),

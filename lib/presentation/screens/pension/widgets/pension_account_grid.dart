@@ -1,39 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/account_card.dart';
-import '../../../../models/account/account.dart';
 import '../../../../models/monthly_data/monthly_pension_balance.dart';
+import '../../../../providers/account/account_name_provider.dart';
+import '../../../../providers/account/account_provider.dart';
+import '../../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
+import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 
-class PensionAccountGrid extends StatelessWidget {
-  final List<String> accountIds;
-  final Map<String, List<MonthlyPensionBalance>> accountGroups;
-  final Map<String, double> accountCashMap;
-  final Map<String, double> accountWithdrawalMap;
-  final Map<String, List<MonthlyPensionBalance>> lastAccountGroups;
-  final Map<String, double> lastAccountCashMap;
-  final List<Account> accounts;
-  final List<dynamic> accountNames;
-  final List<dynamic> products;
+class PensionAccountGrid extends ConsumerWidget {
+  final String currentMonth;
+  final String lastMonth;
   final Function(String accountId)? onAccountTap;
 
   const PensionAccountGrid({
     super.key,
-    required this.accountIds,
-    required this.accountGroups,
-    required this.accountCashMap,
-    required this.accountWithdrawalMap,
-    required this.lastAccountGroups,
-    required this.lastAccountCashMap,
-    required this.accounts,
-    required this.accountNames,
-    required this.products,
+    required this.currentMonth,
+    required this.lastMonth,
     this.onAccountTap,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 💡 필요한 데이터를 위젯 내부에서 직접 Provider로 구독
+    final balancesAsync = ref.watch(
+      monthlyPensionBalanceNotifierProvider(currentMonth),
+    );
+    final lastBalancesAsync = ref.watch(
+      monthlyPensionBalanceNotifierProvider(lastMonth),
+    );
+    final accountBalancesAsync = ref.watch(
+      monthlyPensionAccountBalanceNotifierProvider(currentMonth),
+    );
+    final lastAccountBalancesAsync = ref.watch(
+      monthlyPensionAccountBalanceNotifierProvider(lastMonth),
+    );
+    final accountsAsync = ref.watch(accountNotifierProvider);
+    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+
+    // 데이터 추출
+    final balances = balancesAsync.value ?? [];
+    final lastBalances = lastBalancesAsync.value ?? [];
+    final accountBalances = accountBalancesAsync.value ?? [];
+    final lastAccountBalances = lastAccountBalancesAsync.value ?? [];
+    final accounts = accountsAsync.value ?? [];
+    final accountNames = accountNamesAsync.value ?? [];
+
     final accountNameMap = {for (var an in accountNames) an.id: an};
     final accountMap = {for (var a in accounts) a.id!: a};
+
+    // 데이터 그룹화 및 맵 생성
+    final Map<String, List<MonthlyPensionBalance>> accountGroups = {};
+    for (var item in balances) {
+      accountGroups.putIfAbsent(item.accountId, () => []).add(item);
+    }
+    for (var ab in accountBalances) {
+      accountGroups.putIfAbsent(ab.accountId, () => []);
+    }
+
+    final Map<String, List<MonthlyPensionBalance>> lastAccountGroups = {};
+    for (var item in lastBalances) {
+      lastAccountGroups.putIfAbsent(item.accountId, () => []).add(item);
+    }
+
+    if (accountGroups.isEmpty) {
+      return const Center(child: Text('등록된 연금 계좌 데이터가 없습니다.'));
+    }
+
+    final accountIds = accountGroups.keys.toList();
+    
+    // 💡 월말 계좌 DB의 누적 원금 매핑[cite: 9]
+    final accountPrincipalMap = {
+      for (var ab in accountBalances) ab.accountId: ab.principal,
+    };
+    final accountCashMap = {
+      for (var ab in accountBalances) ab.accountId: ab.cashBalance,
+    };
+    final accountWithdrawalMap = {
+      for (var ab in accountBalances) ab.accountId: ab.totalWithdrawal,
+    };
+    final lastAccountCashMap = {
+      for (var lab in lastAccountBalances) lab.accountId: lab.cashBalance,
+    };
 
     return GridView.builder(
       shrinkWrap: true,
@@ -54,16 +102,13 @@ class PensionAccountGrid extends StatelessWidget {
           0.0,
           (sum, item) => sum + item.balance,
         );
-        final productPrincipalSum = items.fold<double>(
-          0.0,
-          (sum, item) => sum + item.principal,
-        );
 
         final accountWithdrawal = accountWithdrawalMap[accountId] ?? 0.0;
         final cashBalance = accountCashMap[accountId] ?? 0.0;
 
+        // 💡 월말 계좌 DB의 원금(principal) 사용[cite: 9]
+        final totalAccountPrincipal = accountPrincipalMap[accountId] ?? 0.0;
         final totalAccountBalance = productSum + cashBalance;
-        final totalAccountPrincipal = productPrincipalSum + cashBalance;
 
         final totalProfitOrLoss =
             (totalAccountBalance + accountWithdrawal) - totalAccountPrincipal;
@@ -101,7 +146,7 @@ class PensionAccountGrid extends StatelessWidget {
           itemCount: items.length,
           onTap: () {
             if (onAccountTap != null) {
-              onAccountTap!(accountId); // 해당 계좌 ID를 전달하여 summary 화면으로 이동
+              onAccountTap!(accountId);
             }
           },
         );

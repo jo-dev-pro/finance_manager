@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 
-import '../../../presentation/screens/pension/monthly_data/monthly_pension_balance_screen.dart';
 import '../../../presentation/screens/pension/pension_screen.dart';
+import '../../../presentation/screens/pension/monthly_data/monthly_pension_balance_screen.dart';
 import '../../../presentation/screens/pension/summary/monthly_pension_summary_screen.dart';
 import '../app_router_path.dart';
 

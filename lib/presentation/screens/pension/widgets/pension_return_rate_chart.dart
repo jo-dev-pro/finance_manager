@@ -1,38 +1,59 @@
+import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../models/account/account.dart';
+import '../../../../providers/account/account_name_provider.dart';
+import '../../../../providers/account/account_provider.dart';
+import '../../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
 import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 
 class PensionReturnRateChart extends ConsumerWidget {
-  final List<String> accountIds;
+  final String currentMonth;
   final List<String> months;
-  final List<Account> accounts;
-  final List<dynamic> accountNames;
   final List<Color> chartColors;
 
   const PensionReturnRateChart({
     super.key,
-    required this.accountIds,
+    required this.currentMonth,
     required this.months,
-    required this.accounts,
-    required this.accountNames,
     required this.chartColors,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 💡 연금 전용 프로바이더 구독
     final allBalances = ref.watch(allMonthlyPensionBalancesProvider).value ?? [];
+    final currentBalances =
+        ref.watch(monthlyPensionBalanceNotifierProvider(currentMonth)).value ??
+            [];
+    final currentAccountBalances = ref
+            .watch(monthlyPensionAccountBalanceNotifierProvider(currentMonth))
+            .value ??
+        [];
+    final accounts = ref.watch(accountNotifierProvider).value ?? [];
+    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
+
+    // 현재 선택 월 기준 계좌 ID 목록 추출
+    final accountIdSet = <String>{
+      for (var item in currentBalances) item.accountId,
+      for (var ab in currentAccountBalances) ab.accountId,
+    };
+    final accountIds = accountIdSet.toList();
 
     final sortedMonths = months.reversed.toList();
     final accountNameMap = {for (var an in accountNames) an.id: an};
     final accountMap = {for (var a in accounts) a.id!: a};
 
+    // 월별 계좌 데이터 맵 캐싱 (연월 -> 계좌리스트)
+    final monthlyAccountBalanceMap = {
+      for (var ym in sortedMonths)
+        ym: ref
+                .watch(monthlyPensionAccountBalanceNotifierProvider(ym))
+                .value ??
+            [],
+    };
+
     return Card(
-      // elevation: 1,
-      // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -191,18 +212,29 @@ class PensionReturnRateChart extends ConsumerWidget {
                             b.balanceItem.yearMonth == ym &&
                             b.balanceItem.accountId == accId,
                       );
-                      final totalBal = items.fold<double>(
+                      final productBal = items.fold<double>(
                         0.0,
                         (s, item) => s + item.balanceItem.balance,
                       );
-                      final totalPrin = items.fold<double>(
-                        0.0,
-                        (s, item) => s + item.balanceItem.principal,
-                      );
 
-                      final rate = totalPrin > 0
-                          ? ((totalBal - totalPrin) / totalPrin) * 100
-                          : 0.0;
+                      final accBalObj = monthlyAccountBalanceMap[ym]
+                          ?.firstWhereOrNull((ab) => ab.accountId == accId);
+
+                      final cashBal = accBalObj?.cashBalance ?? 0.0;
+                      final withdrawal = accBalObj?.totalWithdrawal ?? 0.0;
+                      // 월말 계좌 기준 원금 우선 사용, 없으면 상품 원금 합산
+                      final totalPrin = accBalObj != null && accBalObj.principal > 0
+                          ? accBalObj.principal
+                          : items.fold<double>(
+                              0.0,
+                              (s, item) => s + item.balanceItem.principal,
+                            );
+
+                      final totalBal = productBal + cashBal;
+                      final profit = (totalBal + withdrawal) - totalPrin;
+
+                      final rate =
+                          totalPrin > 0 ? (profit / totalPrin) * 100 : 0.0;
                       return FlSpot(mIdx.toDouble(), rate);
                     }).toList();
 
