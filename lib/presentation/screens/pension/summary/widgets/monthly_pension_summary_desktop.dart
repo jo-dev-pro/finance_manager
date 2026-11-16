@@ -62,8 +62,8 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
         children: [
           Row(
             children: [
-              SizedBox(
-                width: 200,
+              Expanded(
+                flex: 1,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
@@ -72,22 +72,24 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value: months.contains(activeCurrentMonth)
-                          ? activeCurrentMonth
-                          : months.first,
+                      value:
+                          months.contains(activeCurrentMonth)
+                              ? activeCurrentMonth
+                              : months.first,
                       isExpanded: true,
-                      items: months.map((ym) {
-                        return DropdownMenuItem(
-                          value: ym,
-                          child: Text(
-                            ym,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                      items:
+                          months.map((ym) {
+                            return DropdownMenuItem(
+                              value: ym,
+                              child: Text(
+                                ym,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                       onChanged: (val) {
                         if (val != null) {
                           ref
@@ -100,8 +102,9 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              SizedBox(
-                width: 300,
+
+              Expanded(
+                flex: 2,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
@@ -142,9 +145,7 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                       ],
                       onChanged: (val) {
                         ref
-                            .read(
-                              selectedPensionAccountFilterProvider.notifier,
-                            )
+                            .read(selectedPensionAccountFilterProvider.notifier)
                             .state = val;
                       },
                     ),
@@ -188,9 +189,10 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                           label: '총 손익',
                           value:
                               '${totalProfit >= 0 ? '+' : ''}${totalProfit.toWon()}',
-                          color: totalProfit >= 0
-                              ? Colors.red.shade300
-                              : Colors.blue.shade300,
+                          color:
+                              totalProfit >= 0
+                                  ? Colors.red.shade300
+                                  : Colors.blue.shade300,
                         ),
                       ),
                     ),
@@ -236,10 +238,7 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                   children: [
                     const Text(
                       '전월 대비: ',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                     summaryDiffFromLastMonth.toSignedPriceText(
                       style: const TextStyle(
@@ -276,9 +275,7 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 30),
               child: Center(
-                child: Text(
-                  '$activeCurrentMonth에 등록된 연금 월말 데이터가 없습니다.',
-                ),
+                child: Text('$activeCurrentMonth에 등록된 연금 월말 데이터가 없습니다.'),
               ),
             )
           else
@@ -291,9 +288,10 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                 final matchedAcc = accountMap[balanceItem.accountId];
                 final institution =
                     matchedAcc?.financialInstitution ?? '기타 금융기관';
-                final nameObj = matchedAcc != null
-                    ? accountNameMap[matchedAcc.accountNameId]
-                    : null;
+                final nameObj =
+                    matchedAcc != null
+                        ? accountNameMap[matchedAcc.accountNameId]
+                        : null;
                 final accountName = nameObj?.accountName ?? '연금계좌';
                 final String displayName =
                     productMap[balanceItem.productId] ?? '알 수 없는 상품';
@@ -329,8 +327,7 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 '[$institution]$accountName',
@@ -353,8 +350,7 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                           ),
                           const Divider(height: 20),
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               JText(
                                 '평가액: ${balanceItem.balance.toWon()}',
@@ -381,13 +377,10 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                             decoration: BoxDecoration(
                               color: Colors.grey.shade50,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: Colors.grey.shade200,
-                              ),
+                              border: Border.all(color: Colors.grey.shade200),
                             ),
                             child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 JText(
                                   '당월 매도: ${monthlySale.toWon()}',
@@ -407,13 +400,9 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          const Divider(
-                            height: 20,
-                            color: Colors.black12,
-                          ),
+                          const Divider(height: 20, color: Colors.black12),
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Row(
                                 children: [
