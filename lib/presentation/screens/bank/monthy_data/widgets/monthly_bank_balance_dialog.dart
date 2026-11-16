@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart'; 
 
 import '../../../../../core/utils/number_formatter.dart';
+import '../../../../../core/utils/responsive_extension.dart';
 import '../../../../../models/monthly_data/monthly_bank_balance.dart';
 import '../../../../../models/account/account.dart';
 import '../../../../../providers/account/account_name_provider.dart';
@@ -67,11 +68,9 @@ class _MonthlyBankBalanceDialogState extends ConsumerState<MonthlyBankBalanceDia
       monthlyBankBalanceNotifierProvider(prevYearMonth),
     );
 
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,

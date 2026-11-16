@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/jtext.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/account/account_name.dart';
 import '../../../providers/account/account_name_provider.dart';
@@ -49,7 +50,7 @@ class AccountNameScreen extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min, // 필요한 만큼만 공간 차지
                     children: [
                       Expanded(
-                        child: Text(
+                        child: JText(
                           accountName.accountName,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,

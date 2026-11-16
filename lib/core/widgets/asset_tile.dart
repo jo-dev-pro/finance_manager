@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'jtext.dart';
+
 class AssetTile extends StatelessWidget {
   final IconData icon;
   final Color backgroundColor;
@@ -31,7 +33,7 @@ class AssetTile extends StatelessWidget {
           backgroundColor: backgroundColor,
           child: Icon(icon, color: iconColor),
         ),
-        title: Text(
+        title: JText(
           title,
           style: const TextStyle(
             fontSize: 17,
@@ -39,9 +41,9 @@ class AssetTile extends StatelessWidget {
             color: Colors.black87,
           ),
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: true,
         ),
-        trailing: Text(
+        trailing: JText(
           amountWon,
           style: const TextStyle(
             fontSize: 17,

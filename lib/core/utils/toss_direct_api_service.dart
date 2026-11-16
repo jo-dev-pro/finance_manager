@@ -20,8 +20,9 @@ class TossDirectApiService {
 
   static String? _accessToken;
   static DateTime? _tokenExpiryTime;
+  static Future<String>? _tokenFuture; // 💡 동시 토큰 요청 중복 방지를 위한 락(Completer 역할)
 
-  /// OAuth 2.0 Access Token 발급 및 캐싱
+  /// OAuth 2.0 Access Token 발급 및 캐싱 (동시성 제어 적용)
   static Future<String> _getAccessToken() async {
     final now = DateTime.now();
     if (_accessToken != null &&
@@ -30,6 +31,21 @@ class TossDirectApiService {
       return _accessToken!;
     }
 
+    // 이미 토큰 발급이 진행 중이라면 새롭게 요청하지 않고 기존 진행 중인 Future를 공유
+    if (_tokenFuture != null) {
+      return _tokenFuture!;
+    }
+
+    _tokenFuture = _requestToken();
+    try {
+      return await _tokenFuture!;
+    } finally {
+      _tokenFuture = null; // 완료 후 락 해제
+    }
+  }
+
+  static Future<String> _requestToken() async {
+    final now = DateTime.now();
     final url = Uri.parse('$_baseUrl/oauth2/token');
     final response = await http.post(
       url,
@@ -48,7 +64,7 @@ class TossDirectApiService {
       _tokenExpiryTime = now.add(Duration(seconds: expiresIn - 600));
       return _accessToken!;
     } else {
-      throw Exception('토스 토큰 발급 실패: ${response.statusCode} -${response.body}');
+      throw Exception('토스 토큰 발급 실패: ${response.statusCode} - ${response.body}');
     }
   }
 
@@ -94,7 +110,7 @@ class TossDirectApiService {
         }
       }
     } catch (e) {
-      print('토스 실시간 시세 조회 오류 ($stockCode):$e');
+      print('토스 실시간 시세 조회 오류 ($stockCode): $e');
     }
     return null;
   }
@@ -127,7 +143,7 @@ class TossDirectApiService {
     return null;
   }
 
-  /// 특정 종목 코드와 연월('yyyy-MM')을 받아 해당 월의 말일 종가를 가져옵니다[cite: 18].
+  /// 특정 종목 코드와 연월('yyyy-MM')을 받아 해당 월의 말일 종가를 가져옵니다.
   static Future<double?> getMonthlyClosePrice(
     String stockCode,
     String yearMonth,
@@ -179,7 +195,7 @@ class TossDirectApiService {
     }
   }
 
-  /// 특정 연월('yyyy-MM')의 월말 기준 원·달러 환율 조회[cite: 18]
+  /// 특정 연월('yyyy-MM')의 월말 기준 원·달러 환율 조회
   static Future<double?> getMonthlyExchangeRate(String yearMonth) async {
     try {
       final token = await _getAccessToken();

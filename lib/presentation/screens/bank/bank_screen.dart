@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router_path.dart';
+import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/account_card.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
@@ -180,13 +181,7 @@ class BankScreen extends ConsumerWidget {
                                         const NeverScrollableScrollPhysics(),
                                     gridDelegate:
                                         SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount:
-                                              MediaQuery.of(
-                                                        context,
-                                                      ).size.width >
-                                                      900
-                                                  ? 2
-                                                  : 1,
+                                          crossAxisCount: context.isMobile ? 1 : 2,
                                           crossAxisSpacing: 16,
                                           mainAxisSpacing: 16,
                                           mainAxisExtent: 130,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/router/app_router_path.dart';
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../providers/bank/bank_provider.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../core/utils/number_formatter.dart';
@@ -85,7 +86,7 @@ class _BankMobileScreenState extends ConsumerState<BankMobileScreen> {
             children: [
               // 월 선택 헤더
               Container(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                color: context.primaryColor.withValues(alpha: 0.05),
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

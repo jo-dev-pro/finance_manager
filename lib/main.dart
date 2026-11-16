@@ -14,9 +14,7 @@ void main() async {
   // .env 파일 로드
   try {
     await dotenv.load(fileName: ".env");
-  } catch (e) {
-    print("=== .env 파일 로드 실패: $e ===");
-  }
+  } catch (e) { }
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -42,9 +40,11 @@ class MyApp extends ConsumerWidget {
 
         // 2. Scaffold 및 NavigationRail 배경을 흰색으로 고정
         // scaffoldBackgroundColor: Colors.white,
-        scaffoldBackgroundColor: const Color(0xFFFAFAFA),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFFAFAFA), // 바탕색과 동일하게 맞추어 일체감 부여
+        // scaffoldBackgroundColor: const Color(0xFFFAFAFA),
+        scaffoldBackgroundColor: Colors.grey.shade100,
+        appBarTheme: AppBarTheme(
+          // backgroundColor: Color(0xFFFAFAFA), // 바탕색과 동일하게 맞추어 일체감 부여
+          backgroundColor: Colors.grey.shade100, // 바탕색과 동일하게 맞추어 일체감 부여
           elevation: 0, // 앱바 밑의 그림자 제거 (선택, 토스 스타일)
           iconTheme: IconThemeData(color: Colors.black), // 앱바 아이콘 색상
           titleTextStyle: TextStyle(
@@ -65,28 +65,6 @@ class MyApp extends ConsumerWidget {
       locale: const Locale('ko', 'KR'),
 
       routerConfig: router,
-      builder: (context, child) {
-        // 현재 실행 중인 플랫폼이 모바일(안드로이드 또는 iOS)인지 확인
-        final bool isMobilePlatform =
-            Theme.of(context).platform == TargetPlatform.android ||
-            Theme.of(context).platform == TargetPlatform.iOS;
-
-        return MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(1.0)),
-          child:
-              isMobilePlatform
-                  ? InteractiveViewer(
-                    minScale: 1.0,
-                    maxScale: 3.0,
-                    clipBehavior: Clip.none,
-                    child: child ?? const SizedBox(),
-                  )
-                  : (child ?? const SizedBox()), // PC/웹에서는 기본 스크롤 유지
-        );
-      },
-
     );
   }
 }

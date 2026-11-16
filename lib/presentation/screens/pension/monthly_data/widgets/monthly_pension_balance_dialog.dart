@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:collection/collection.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
+import '../../../../../core/utils/responsive_extension.dart';
 import '../../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../../models/monthly_data/monthly_pension_account_balance.dart';
 import '../../../../../providers/account/account_name_provider.dart';
@@ -103,11 +104,9 @@ class _MonthlyPensionBalanceDialogState
       monthlyPensionAccountBalanceNotifierProvider(prevYearMonth),
     );
 
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+         padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,

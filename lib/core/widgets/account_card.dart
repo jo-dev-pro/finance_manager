@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/number_formatter.dart';
+import 'jtext.dart';
 
 class AccountCard extends StatelessWidget {
   final String? logoUrl;
@@ -73,14 +74,14 @@ class AccountCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (institution.isNotEmpty)
-                          Text(
+                          JText(
                             institution,
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey.shade600,
                             ),
                           ),
-                        Text(
+                        JText(
                           accountName,
                           style: const TextStyle(
                             fontSize: 15,
@@ -88,12 +89,12 @@ class AccountCard extends StatelessWidget {
                             color: Colors.black87,
                           ),
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          overflow: true,
                         ),
                       ],
                     ),
                   ),
-                  Text(
+                  JText(
                     totalBalance.toWon(),
                     style: const TextStyle(
                       fontSize: 18,
@@ -119,7 +120,7 @@ class AccountCard extends StatelessWidget {
                             style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
                           ),
                           const SizedBox(height: 2),
-                          Text(
+                          JText(
                             totalPrincipal!.toWon(),
                             style: const TextStyle(
                               fontSize: 13,
@@ -145,9 +146,6 @@ class AccountCard extends StatelessWidget {
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                 ),
-                                positiveColor: Colors.red.shade700,
-                                negativeColor: Colors.blue.shade700,
-                                zeroColor: Colors.black87,
                               ),
                               const SizedBox(width: 4),
                               returnRate!.toSignedPercentText(
@@ -156,9 +154,6 @@ class AccountCard extends StatelessWidget {
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
-                                positiveColor: Colors.red.shade700,
-                                negativeColor: Colors.blue.shade700,
-                                zeroColor: Colors.black87,
                               ),
                             ],
                           ),
@@ -192,7 +187,7 @@ class AccountCard extends StatelessWidget {
                   if (totalWithdrawal != null)
                     Opacity(
                       opacity: totalWithdrawal! > 0 ? 1.0 : 0.0,
-                      child: Text(
+                      child: JText(
                         totalWithdrawal! > 0 ? '인출액: ${totalWithdrawal!.toWon()}' : '',
                         style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                       ),

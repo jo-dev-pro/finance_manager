@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../core/widgets/bottom_action_button.dart';
 import '../../../../core/widgets/edit_delete_button.dart';
+import '../../../../core/widgets/jtext.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
 import '../../../../core/widgets/month_selector_header.dart';
 import '../../../../models/monthly_data/monthly_bank_balance.dart';
@@ -186,14 +188,14 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                               ],
                                             ),
                                             const SizedBox(height: 4),
-                                            Text(
+                                            JText(
                                               '$institution${accountNumber != null && accountNumber.isNotEmpty ? ' \vert{} $accountNumber' : ''}',
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 color: Colors.grey.shade600,
                                               ),
                                               maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                                              overflow: true,
                                             ),
                                           ],
                                         ),
@@ -203,7 +205,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.end,
                                         children: [
-                                          Text(
+                                          JText(
                                             balanceItem.balance.toWon(),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
@@ -283,10 +285,9 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
-        final bottomInset = MediaQuery.of(sheetContext).viewInsets.bottom;
         return Container(
           width: double.infinity,
-          padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+          padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
           child: SingleChildScrollView(
             child: Form(
               key: formKey,

@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../../../models/account/account.dart';
 import '../../../../../../providers/account/account_provider.dart';
 import '../../../../../../providers/account/account_name_provider.dart';
+import '../../../../../core/utils/responsive_extension.dart';
 
 class AccountDialog extends ConsumerStatefulWidget {
   final Account? initialAccount;
@@ -132,11 +133,10 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
   Widget build(BuildContext context) {
     final existingLogoUrl = widget.initialAccount?.logoUrl;
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,

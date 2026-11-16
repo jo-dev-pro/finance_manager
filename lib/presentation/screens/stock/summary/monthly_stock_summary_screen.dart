@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/widgets/jtext.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
+import '../../../../core/widgets/summary_item.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
@@ -204,7 +206,6 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
           double totalPrincipal = 0;
           double totalCashBalance = 0;
           double totalPayout = 0;
-          double totalMonthlyWithdrawal = 0;
           double totalCumulativeWithdrawal = 0;
           double appliedExchangeRate = 1.0;
 
@@ -219,7 +220,6 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
             final rate = exchangeRateMap[ab.accountId] ?? 1.0;
             totalCashBalance += ab.cashBalance * rate;
             totalPrincipal += ab.principal * rate;
-            totalMonthlyWithdrawal += ab.monthlyWithdrawal * rate;
             totalCumulativeWithdrawal += ab.totalWithdrawal * rate;
             if (ab.exchangeRate > 1.0) {
               appliedExchangeRate = ab.exchangeRate;
@@ -381,7 +381,7 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                   fontSize: 12,
                                 ),
                               ),
-                              Text(
+                              JText(
                                 '원화 환산: ${(grandTotalBalance * appliedExchangeRate).round().toWon()}',
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -396,11 +396,11 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildWhiteSummaryItem(
+                            SummaryItem(
                               label: '총 자산',
                               value: formatCurrency(grandTotalBalance),
                             ),
-                            _buildWhiteSummaryItem(
+                            SummaryItem(
                               label: '총 원금',
                               value: formatCurrency(totalPrincipal),
                             ),
@@ -416,7 +416,7 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 isSingleOverseasAccount
-                                    ? Text(
+                                    ? JText(
                                       '${totalProfit > 0 ? '+' : ''}${totalProfit.toUSD()}',
                                       style: TextStyle(
                                         fontSize: 16,
@@ -434,9 +434,6 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
-                                      positiveColor: const Color(0xFFFF8A80),
-                                      negativeColor: const Color(0xFF82B1FF),
-                                      zeroColor: Colors.white,
                                     ),
                               ],
                             ),
@@ -448,15 +445,15 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildWhiteSummaryItem(
+                            SummaryItem(
                               label: '현금성 잔액(예수금)',
                               value: formatCurrency(totalCashBalance),
                             ),
-                            _buildWhiteSummaryItem(
+                            SummaryItem(
                               label: '누적 배당금',
                               value: formatCurrency(totalPayout),
                             ),
-                            _buildWhiteSummaryItem(
+                            SummaryItem(
                               label: '누적 인출액',
                               value: formatCurrency(totalCumulativeWithdrawal),
                             ),
@@ -476,7 +473,7 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                               ),
                             ),
                             isSingleOverseasAccount
-                                ? Text(
+                                ? JText(
                                   '${summaryDiffFromLastMonth > 0 ? '+' : ''}${summaryDiffFromLastMonth.toUSD()}',
                                   style: TextStyle(
                                     fontSize: 14,
@@ -496,9 +493,6 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                       ),
-                                      positiveColor: const Color(0xFFFF8A80),
-                                      negativeColor: const Color(0xFF82B1FF),
-                                      zeroColor: Colors.white,
                                     ),
                           ],
                         ),
@@ -579,7 +573,7 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Card(
-                            elevation: 1.5,
+                            elevation: 1,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -626,14 +620,14 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
+                                      JText(
                                         '평가액: ${fmtItemMoney(balanceItem.balance)}',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 13,
                                         ),
                                       ),
-                                      Text(
+                                      JText(
                                         '원금: ${fmtItemMoney(balanceItem.principal)}',
                                         style: TextStyle(
                                           fontSize: 13,
@@ -655,7 +649,7 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       isOverseas
-                                          ? Text(
+                                          ? JText(
                                             '${balanceItem.profitOrLoss > 0 ? '+' : ''}${balanceItem.profitOrLoss.toUSD()}',
                                             style: TextStyle(
                                               fontSize: 13,
@@ -673,10 +667,6 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.bold,
                                                 ),
-                                                positiveColor:
-                                                    Colors.red.shade700,
-                                                negativeColor:
-                                                    Colors.blue.shade700,
                                               ),
                                     ],
                                   ),
@@ -685,14 +675,14 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
+                                      JText(
                                         '수량: ${balanceItem.quantity.toCommaString()}주  |  현재가: ${fmtItemMoney(balanceItem.currentPrice)}',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey.shade700,
                                         ),
                                       ),
-                                      Text(
+                                      JText(
                                         '평단가: ${fmtItemMoney(balanceItem.averagePurchasePrice)}',
                                         style: TextStyle(
                                           fontSize: 12,
@@ -720,14 +710,14 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
+                                        JText(
                                           '누적 배당: ${fmtItemMoney(balanceItem.totalPayout)}',
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.teal.shade700,
                                           ),
                                         ),
-                                        Text(
+                                        JText(
                                           '누적 매도: ${fmtItemMoney(balanceItem.totalWithdrawal)}',
                                           style: TextStyle(
                                             fontSize: 12,
@@ -764,14 +754,10 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.bold,
                                                 ),
-                                                positiveColor:
-                                                    Colors.red.shade700,
-                                                negativeColor:
-                                                    Colors.blue.shade700,
                                                 withParentheses: false,
                                               ),
                                           const SizedBox(width: 6),
-                                          Text(
+                                          JText(
                                             '(연환산: ${balanceItem.annualizedReturnRate.toSignedPercent()})',
                                             style: TextStyle(
                                               fontSize: 12,
@@ -790,7 +776,7 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                             ),
                                           ),
                                           isOverseas
-                                              ? Text(
+                                              ? JText(
                                                 '${diffFromLastMonth > 0 ? '+' : ''}${diffFromLastMonth.toUSD()}',
                                                 style: TextStyle(
                                                   fontSize: 12,
@@ -812,10 +798,6 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                                                       fontWeight:
                                                           FontWeight.bold,
                                                     ),
-                                                    positiveColor:
-                                                        Colors.red.shade700,
-                                                    negativeColor:
-                                                        Colors.blue.shade700,
                                                   ),
                                         ],
                                       ),
@@ -834,30 +816,6 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildWhiteSummaryItem({
-    required String label,
-    required String value,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 }

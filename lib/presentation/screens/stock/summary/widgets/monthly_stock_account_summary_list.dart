@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
+import '../../../../../core/widgets/jtext.dart';
 import '../../../../../models/account/account_name.dart';
 import '../../../../../models/monthly_data/monthly_stock_account_balance.dart';
 
@@ -107,7 +108,7 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Text(
+                          JText(
                             '현금성 잔액: $cashStr',
                             style: TextStyle(
                               fontSize: 12,
@@ -123,7 +124,7 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
+                          JText(
                             '당월 인출: $monthlyWithStr',
                             style: TextStyle(
                               fontSize: 12,
@@ -131,7 +132,7 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
+                          JText(
                             '(누적: $totalWithStr)',
                             style: TextStyle(
                               fontSize: 11,

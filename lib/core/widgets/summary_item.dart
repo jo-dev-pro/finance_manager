@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'jtext.dart';
+
+// 연금평가, 주식평가 상단의 카드내 항목별 위젯
 class SummaryItem extends StatelessWidget {
   final String label;
   final String value;
@@ -16,14 +19,14 @@ class SummaryItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontSize: 14, color: Colors.white70)),
         const SizedBox(height: 4),
-        Text(
+        JText(
           value,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
-            color: color ?? Colors.black87,
+            color: color ?? Colors.white,
           ),
         ),
       ],

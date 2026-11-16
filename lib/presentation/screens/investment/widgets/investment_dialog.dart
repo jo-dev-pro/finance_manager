@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/date_helper.dart';
 import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../models/investment/investment.dart';
 import '../../../../providers/investment/investment_provider.dart';
 
@@ -111,11 +112,10 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,

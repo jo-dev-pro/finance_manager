@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../../models/account/account_name.dart';
 import '../../../../../../providers/account/account_name_provider.dart';
+import '../../../../../core/utils/responsive_extension.dart';
 
 class AccountNameDialog extends ConsumerStatefulWidget {
   final AccountName? accountName;
@@ -67,11 +68,10 @@ class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,

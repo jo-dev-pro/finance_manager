@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../core/widgets/account_card.dart';
 import '../../../../models/monthly_data/monthly_stock_balance.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -73,7 +74,7 @@ class StockAccountGrid extends ConsumerWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: MediaQuery.of(context).size.width > 900 ? 2 : 1,
+        crossAxisCount: context.isMobile ? 1 : 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
         mainAxisExtent: 170,

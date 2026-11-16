@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/dashboard/dashboard_provider.dart';
+import '../utils/responsive_extension.dart';
 
 class MonthSelectorHeader extends ConsumerWidget {
   final List<String> months;
@@ -18,9 +19,9 @@ class MonthSelectorHeader extends ConsumerWidget {
     final currentIndex = months.indexOf(currentMonth);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+        color: context.primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

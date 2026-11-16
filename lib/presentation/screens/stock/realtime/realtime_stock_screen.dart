@@ -2,28 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/utils/number_formatter.dart';
-import '../../../core/utils/toss_direct_api_service.dart';
-import '../../../core/utils/upbit_api_service.dart';
-import '../../../core/widgets/main_constrainedbox.dart';
-import '../../../providers/account/account_name_provider.dart';
-import '../../../providers/account/account_provider.dart';
-import '../../../providers/dashboard/dashboard_provider.dart';
-import '../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
-import '../../../providers/monthly_data/monthly_stock_balance_provider.dart';
-import '../../../providers/stock/stock_item_provider.dart';
+import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/utils/toss_direct_api_service.dart';
+import '../../../../core/utils/upbit_api_service.dart';
+import '../../../../core/widgets/jtext.dart';
+import '../../../../core/widgets/main_constrainedbox.dart';
+import '../../../../providers/account/account_name_provider.dart';
+import '../../../../providers/account/account_provider.dart';
+import '../../../../providers/dashboard/dashboard_provider.dart';
+import '../../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
+import '../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
+import '../../../../providers/stock/stock_item_provider.dart';
 
 enum AssetFilterType { all, stock, crypto }
 
-class RealtimeAssetScreen extends ConsumerStatefulWidget {
-  const RealtimeAssetScreen({super.key});
+class RealtimeStockScreen extends ConsumerStatefulWidget {
+  const RealtimeStockScreen({super.key});
 
   @override
-  ConsumerState<RealtimeAssetScreen> createState() =>
+  ConsumerState<RealtimeStockScreen> createState() =>
       _RealtimeAssetScreenState();
 }
 
-class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
+class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
   AssetFilterType _filterType = AssetFilterType.all;
   bool _isLoadingQuotes = false;
   DateTime? _lastUpdatedAt;
@@ -72,6 +73,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
 
       final Map<String, RealtimeQuote> fetchedQuotes = {};
 
+      // 1. 업비트 코인은 일괄 조회 가능하므로 기존대로 처리
       if (upbitMarkets.isNotEmpty) {
         final upbitResult = await UpbitApiService.getRealtimeQuotes(
           upbitMarkets.toSet().toList(),
@@ -79,16 +81,21 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
         fetchedQuotes.addAll(upbitResult);
       }
 
+      // 2. 환율 조회와 토스 주식 시세 조회를 병행 실행
       final rateFuture = TossDirectApiService.getCurrentExchangeRate();
-      final tossFutures = tossCodes.toSet().map((code) async {
+
+      // 💡 토스 주식 종목들은 429 에러(요청 한도 초과) 방지를 위해 순차적(또는 소폭 딜레이)으로 조회
+      final uniqueTossCodes = tossCodes.toSet().toList();
+      for (var code in uniqueTossCodes) {
         final quote = await TossDirectApiService.getRealtimeQuote(code);
         if (quote != null) {
           fetchedQuotes[code] = quote;
         }
-      });
+        // 요청 간격에 30ms ~ 50ms 정도의 딜레이를 주어 API Rate Limit 회피
+        await Future.delayed(const Duration(milliseconds: 40));
+      }
 
-      final results = await Future.wait([rateFuture, ...tossFutures]);
-      final fetchedRate = results.first as double?;
+      final fetchedRate = await rateFuture;
 
       if (mounted) {
         setState(() {
@@ -224,7 +231,6 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
 
           return MainConstrainedBox(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -292,7 +298,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                           style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                         const SizedBox(height: 4),
-                        Text(
+                        JText(
                           totalRealtimeAsset.round().toWon(),
                           style: const TextStyle(
                             color: Colors.white,
@@ -317,7 +323,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 2),
-                                Text(
+                                JText(
                                   totalPrincipal.round().toWon(),
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -345,9 +351,6 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
                                       ),
-                                      positiveColor: const Color(0xFFFF8A80),
-                                      negativeColor: const Color(0xFF82B1FF),
-                                      zeroColor: Colors.white,
                                     ),
                                     const SizedBox(width: 4),
                                     totalReturnRate.toSignedPercentText(
@@ -356,9 +359,6 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
                                       ),
-                                      positiveColor: const Color(0xFFFF8A80),
-                                      negativeColor: const Color(0xFF82B1FF),
-                                      zeroColor: Colors.white,
                                     ),
                                   ],
                                 ),
@@ -386,9 +386,6 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                   ),
-                                  positiveColor: const Color(0xFFFF8A80),
-                                  negativeColor: const Color(0xFF82B1FF),
-                                  zeroColor: Colors.white,
                                 ),
                               ],
                             ),
@@ -406,9 +403,6 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                   ),
-                                  positiveColor: const Color(0xFFFF8A80),
-                                  negativeColor: const Color(0xFF82B1FF),
-                                  zeroColor: Colors.white,
                                 ),
                               ],
                             ),
@@ -533,14 +527,14 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
+                                    JText(
                                       '실시간 평가액: ${fmtMoney(liveBalance)}',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
                                       ),
                                     ),
-                                    Text(
+                                    JText(
                                       '원금: ${fmtMoney(item.principal)}',
                                       style: TextStyle(
                                         fontSize: 13,
@@ -571,7 +565,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                                           ),
                                         ),
                                         isForeign
-                                            ? Text(
+                                            ? JText(
                                                 '${itemProfit > 0 ? '+' : ''}${itemProfit.toUSD()}',
                                                 style: TextStyle(
                                                   fontSize: 12,
@@ -588,10 +582,6 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.bold,
                                                   ),
-                                                  positiveColor:
-                                                      Colors.red.shade700,
-                                                  negativeColor:
-                                                      Colors.blue.shade700,
                                                 ),
                                       ],
                                     ),
@@ -619,8 +609,6 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeAssetScreen> {
                                             fontSize: 12,
                                             fontWeight: FontWeight.bold,
                                           ),
-                                          positiveColor: Colors.red.shade700,
-                                          negativeColor: Colors.blue.shade700,
                                         ),
                                       ],
                                     ),

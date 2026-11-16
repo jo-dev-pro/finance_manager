@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'jtext.dart';
+
+// 각 탭별 상단의 요약 카드
 class SummaryCard extends StatelessWidget {
   final String title;
   final String mainAmountText;
@@ -38,7 +41,7 @@ class SummaryCard extends StatelessWidget {
             style: const TextStyle(color: Colors.white70, fontSize: 15),
           ),
           const SizedBox(height: 6),
-          Text(
+          JText(
             mainAmountText,
             style: const TextStyle(
               color: Colors.white,
@@ -62,7 +65,7 @@ class SummaryCard extends StatelessWidget {
                         style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                       const SizedBox(height: 2),
-                      Text(
+                      JText(
                         principalText!,
                         style: const TextStyle(
                           color: Colors.white,

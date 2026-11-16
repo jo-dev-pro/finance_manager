@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/date_helper.dart';
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../models/pension/pension_holding_product.dart';
 import '../../../../models/pension/pension_product.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -136,11 +137,9 @@ class _PensionHoldingProductDialogState
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
     final productsAsync = ref.watch(pensionProductNotifierProvider);
 
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/widgets/jtext.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
 import '../../../core/widgets/section_title.dart';
@@ -59,15 +60,30 @@ class _StockScreenState extends ConsumerState<StockScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
-          ElevatedButton.icon(
-            onPressed: () {
-              context.push(
-                AppRoutePath.monthlyStockBalance,
-                extra: selectedMonth,
-              );
-            },
-            icon: const Icon(Icons.calendar_month_outlined),
-            label: const Text('월말주식'),
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  context.push(
+                    AppRoutePath.monthlyStockBalance,
+                    extra: selectedMonth,
+                  );
+                },
+                icon: const Icon(Icons.calendar_month_outlined),
+                label: const Text('월말주식'),
+              ),
+              SizedBox(width: 8),
+              
+              ElevatedButton.icon(
+                onPressed: () {
+                  context.push(
+                    AppRoutePath.realtimeStock,
+                  );
+                },
+                icon: const Icon(Icons.candlestick_chart),
+                label: const Text('실시간시세'),
+              ),
+            ],
           ),
           const SizedBox(width: 16),
         ],
@@ -195,9 +211,9 @@ class _StockScreenState extends ConsumerState<StockScreen> {
 
                             final totalProfitOrLoss =
                                 (totalBalance +
-                                        totalPayoutSum +
-                                        totalAccountWithdrawalSum) -
-                                    totalPrincipal;
+                                    totalPayoutSum +
+                                    totalAccountWithdrawalSum) -
+                                totalPrincipal;
 
                             final totalReturnRate =
                                 totalPrincipal > 0
@@ -245,21 +261,12 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                 principalText: totalPrincipal.round().toWon(),
                                 profitLossWidget: Row(
                                   children: [
-                                    totalProfitOrLoss
-                                        .round()
-                                        .toSignedPriceText(
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          positiveColor: const Color(
-                                            0xFFFF8A80,
-                                          ),
-                                          negativeColor: const Color(
-                                            0xFF82B1FF,
-                                          ),
-                                          zeroColor: Colors.white,
-                                        ),
+                                    totalProfitOrLoss.round().toSignedPriceText(
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                     const SizedBox(width: 4),
                                     totalReturnRate.toSignedPercentText(
                                       withParentheses: true,
@@ -267,15 +274,12 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
                                       ),
-                                      positiveColor: const Color(0xFFFF8A80),
-                                      negativeColor: const Color(0xFF82B1FF),
-                                      zeroColor: Colors.white,
                                     ),
                                   ],
                                 ),
                                 subInfoWidgets: [
                                   if (totalPayoutSum > 0)
-                                    Text(
+                                    JText(
                                       '누적 배당: ${totalPayoutSum.round().toWon()}',
                                       style: const TextStyle(
                                         color: Colors.white70,
@@ -283,7 +287,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                       ),
                                     ),
                                   if (totalAccountWithdrawalSum > 0)
-                                    Text(
+                                    JText(
                                       '계좌 누적 인출: ${totalAccountWithdrawalSum.round().toWon()}',
                                       style: const TextStyle(
                                         color: Colors.white70,
@@ -307,13 +311,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
                                           ),
-                                          positiveColor: const Color(
-                                            0xFFFF8A80,
-                                          ),
-                                          negativeColor: const Color(
-                                            0xFF82B1FF,
-                                          ),
-                                          zeroColor: Colors.white,
                                         ),
                                   ],
                                 ),

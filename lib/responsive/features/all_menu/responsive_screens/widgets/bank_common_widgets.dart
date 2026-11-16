@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
+import '../../../../../core/utils/responsive_extension.dart';
 import '../../../../../providers/bank/bank_provider.dart';
 import '../../../../../providers/dashboard/dashboard_provider.dart';
 
@@ -15,7 +16,7 @@ Widget buildMonthSelectorHeader(
   final currentIndex = months.indexOf(currentMonth);
 
   return Container(
-    color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+    color: context.primaryColor.withValues(alpha: 0.05),
     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

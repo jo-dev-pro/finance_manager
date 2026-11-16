@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/widgets/jtext.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
+import '../../../../core/widgets/summary_item.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
@@ -216,7 +218,7 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
 
           return MainConstrainedBox(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              // padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -333,35 +335,34 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildWhiteSummaryItem(
-                              label: '총 자산',
-                              value: grandTotalBalance.toWon(),
-                            ),
-                            _buildWhiteSummaryItem(
-                              label: '총 원금',
-                              value: totalPensionPrincipal.toWon(),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  '총 손익',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
+                            Expanded(
+                              child: Center(
+                                child: SummaryItem(
+                                  label: '총 자산',
+                                  value: grandTotalBalance.toWon(),
                                 ),
-                                const SizedBox(height: 4),
-                                totalProfit.toSignedPriceText(
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  positiveColor: const Color(0xFFFF8A80),
-                                  negativeColor: const Color(0xFF82B1FF),
-                                  zeroColor: Colors.white,
+                              ),
+                            ),
+                            Expanded(
+                              child: Center(
+                                child: SummaryItem(
+                                  label: '총 원금',
+                                  value: totalPensionPrincipal.toWon(),
                                 ),
-                              ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Center(
+                                child: SummaryItem(
+                                  label: '총 손익',
+                                  value:
+                                      '${totalProfit >= 0 ? '+' : ''}${totalProfit.toWon()}',
+                                  color:
+                                      totalProfit >= 0
+                                          ? Colors.red.shade700
+                                          : Colors.blue.shade700,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -371,17 +372,30 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildWhiteSummaryItem(
-                              label: '현금성 잔액(예수금)',
-                              value: totalCashBalance.toWon(),
+                            Expanded(
+                              child: Center(
+                                child: SummaryItem(
+                                  label: '현금잔액',
+                                  value: totalCashBalance.toWon(),
+                                ),
+                              ),
                             ),
-                            _buildWhiteSummaryItem(
-                              label: '당월 인출액',
-                              value: totalMonthlyWithdrawal.toWon(),
+                            Expanded(
+                              child: Center(
+                                child: SummaryItem(
+                                  label: '당월 인출액',
+                                  value: totalMonthlyWithdrawal.toWon(),
+                                ),
+                              ),
                             ),
-                            _buildWhiteSummaryItem(
-                              label: '누적 인출액',
-                              value: totalCumulativeWithdrawal.toWon(),
+
+                            Expanded(
+                              child: Center(
+                                child: SummaryItem(
+                                  label: '누적 인출액',
+                                  value: totalCumulativeWithdrawal.toWon(),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -395,17 +409,14 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                               '전월 대비: ',
                               style: TextStyle(
                                 color: Colors.white70,
-                                fontSize: 13,
+                                fontSize: 14,
                               ),
                             ),
                             summaryDiffFromLastMonth.toSignedPriceText(
                               style: const TextStyle(
-                                fontSize: 14,
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
                               ),
-                              positiveColor: const Color(0xFFFF8A80),
-                              negativeColor: const Color(0xFF82B1FF),
-                              zeroColor: Colors.white,
                             ),
                           ],
                         ),
@@ -461,8 +472,7 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                         final accountName = nameObj?.accountName ?? '연금계좌';
 
                         final String displayName =
-                            productMap[balanceItem.productId] ??
-                            '알 수 없는 상품';
+                            productMap[balanceItem.productId] ?? '알 수 없는 상품';
 
                         // 전월 동일 계좌/상품 평가액 조회 및 전월 대비 계산
                         final lastBalanceItem = lastItems.firstWhereOrNull(
@@ -528,14 +538,14 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
+                                      JText(
                                         '평가액: ${balanceItem.balance.toWon()}',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 13,
                                         ),
                                       ),
-                                      Text(
+                                      JText(
                                         '원금: ${balanceItem.principal.toWon()}',
                                         style: TextStyle(
                                           fontSize: 13,
@@ -563,14 +573,14 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
+                                        JText(
                                           '당월 매도: ${monthlySale.toWon()}',
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.teal.shade700,
                                           ),
                                         ),
-                                        Text(
+                                        JText(
                                           '누적 매도: ${totalSale.toWon()}',
                                           style: TextStyle(
                                             fontSize: 12,
@@ -606,12 +616,10 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                                               fontSize: 13,
                                               fontWeight: FontWeight.bold,
                                             ),
-                                            positiveColor: Colors.red.shade700,
-                                            negativeColor: Colors.blue.shade700,
                                             withParentheses: false,
                                           ),
                                           const SizedBox(width: 6),
-                                          Text(
+                                          JText(
                                             '(연환산: ${balanceItem.annualizedReturnRate.toSignedPercent()})',
                                             style: TextStyle(
                                               fontSize: 12,
@@ -634,8 +642,6 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold,
                                             ),
-                                            positiveColor: Colors.red.shade700,
-                                            negativeColor: Colors.blue.shade700,
                                           ),
                                         ],
                                       ),
@@ -654,33 +660,6 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildWhiteSummaryItem({
-    required String label,
-    required String value,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 }

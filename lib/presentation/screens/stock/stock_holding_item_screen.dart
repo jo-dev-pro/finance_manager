@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/stock/stock_holding_item.dart';
@@ -73,9 +74,7 @@ class _StockHoldingItemScreenState
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).primaryColor.withValues(alpha: 0.1),
+                      color: context.primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(

@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../core/widgets/bottom_action_button.dart';
 import '../../../../core/widgets/edit_delete_button.dart';
+import '../../../../core/widgets/jtext.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
+import '../../../../core/widgets/section_title.dart';
 import '../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
@@ -97,7 +100,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
 
           return MainConstrainedBox(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -106,7 +108,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey.shade400),
                             borderRadius: BorderRadius.circular(8),
@@ -146,7 +148,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                       Expanded(
                         flex: 2,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey.shade400),
                             borderRadius: BorderRadius.circular(8),
@@ -199,11 +201,8 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 20),
-
-                  const Text(
-                    '등록된 월말 입력 내역',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+     
+                  const SectionTitle('등록된 월말 입력 내역'),
                   const SizedBox(height: 8),
 
                   if (filteredItems.isEmpty)
@@ -239,7 +238,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Card(
-                            elevation: 1.5,
+                            elevation: 1,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -276,7 +275,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text(
+                                      JText(
                                         balanceItem.balance.toWon(),
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
@@ -352,10 +351,9 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
-        final bottomInset = MediaQuery.of(sheetContext).viewInsets.bottom;
         return Container(
           width: double.infinity,
-          padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+          padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
           child: SingleChildScrollView(
             child: Form(
               key: formKey,

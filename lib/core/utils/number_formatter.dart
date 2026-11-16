@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../widgets/jtext.dart';
+
 // ==========================================
 // 1. [TextInputFormatter] 천 단위 콤마 입력 포맷터
 // ==========================================
@@ -160,7 +162,7 @@ extension NumberFormatter on num {
     final String formattedNumber =
         showPlusSign ? toSignedCommaString() : toCommaString();
 
-    return Text(
+    return JText(
       '$formattedNumber$suffix',
       style: (style ?? const TextStyle()).copyWith(
         color: textColor,
@@ -194,7 +196,7 @@ extension NumberFormatter on num {
     final String displayText =
         withParentheses ? '($formattedPercent)' : formattedPercent;
 
-    return Text(
+    return JText(
       displayText,
       style: (style ?? const TextStyle()).copyWith(
         color: textColor,

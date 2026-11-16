@@ -52,7 +52,7 @@ class AccountScreen extends ConsumerWidget {
                       ElevatedButton.icon(
                         onPressed: () => _showAccountDialog(context, ref, null),
                         icon: const Icon(Icons.add),
-                        label: const Text('첫 계좌 등록하기'),
+                        label: const Text('계좌등록'),
                       ),
                     ],
                   ),

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/widgets/jtext.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
 import '../../../core/widgets/section_title.dart';
@@ -220,7 +221,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                 subInfoWidgets:
                                     totalAccountWithdrawalSum > 0
                                         ? [
-                                          Text(
+                                          JText(
                                             '계좌 누적 인출액: ${totalAccountWithdrawalSum.toWon()}',
                                             style: const TextStyle(
                                               color: Colors.white70,
@@ -244,13 +245,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
                                           ),
-                                          positiveColor: const Color(
-                                            0xFFFF8A80,
-                                          ),
-                                          negativeColor: const Color(
-                                            0xFF82B1FF,
-                                          ),
-                                          zeroColor: Colors.white,
                                         ),
                                   ],
                                 ),
@@ -260,11 +254,8 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         ),
 
                         // 2. 계좌 목록 그리드
-                        const SectionTitle(
-                          '계좌 목록',
-                          topSpacing: 24,
-                          bottomSpacing: 12,
-                        ),
+                        const SectionTitle('계좌 목록'),
+                        
                         PensionAccountGrid(
                           currentMonth: activeCurrentMonth,
                           lastMonth: lastMonth,
@@ -282,8 +273,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         // 3. 계좌별 평가 비중 섹션
                         const SectionTitle(
                           '계좌별 평가 비중',
-                          topSpacing: 28,
-                          bottomSpacing: 12,
                         ),
                         PensionPortionSection(
                           currentMonth: activeCurrentMonth,
@@ -293,8 +282,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         // 4. 계좌별 월말 수익률 추이 차트
                         const SectionTitle(
                           '계좌별 월말 수익률 추이 (%)',
-                          topSpacing: 28,
-                          bottomSpacing: 12,
                         ),
                         PensionReturnRateChart(
                           currentMonth: activeCurrentMonth,

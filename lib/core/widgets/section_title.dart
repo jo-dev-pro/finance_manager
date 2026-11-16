@@ -8,7 +8,7 @@ class SectionTitle extends StatelessWidget {
   const SectionTitle(
     this.title, {
     super.key,
-    this.topSpacing = 24.0,
+    this.topSpacing = 12.0,
     this.bottomSpacing = 12.0,
   });
 
@@ -19,7 +19,7 @@ class SectionTitle extends StatelessWidget {
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 20,
+          fontSize: 16,
           fontWeight: FontWeight.bold,
         ),
       ),

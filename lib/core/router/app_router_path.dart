@@ -12,6 +12,7 @@ abstract class AppRoutePath {
 
   static const String monthlyStockBalance = '$stock/monthly';
   static const String monthlyStockSummary = '$stock/summary';
+  static const String realtimeStock = '$stock/realtime';
   
   static const String monthlyPensionBalance = '$pension/monthly';
   static const String monthlyPensionSummary = '$pension/summary';

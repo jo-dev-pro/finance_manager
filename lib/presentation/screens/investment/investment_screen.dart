@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/jtext.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/summary_card.dart';
 import '../../../models/investment/investment.dart';
@@ -19,6 +20,8 @@ class InvestmentScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('투자 내역 관리'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
@@ -40,12 +43,12 @@ class InvestmentScreen extends ConsumerWidget {
           return MainConstrainedBox(
             child: Column(
               children: [
+                  const SizedBox(height: 16),
                 SummaryCard(
                   title: '총 투자금액',
                   mainAmountText: totalAmount.toWon(),
-                  margin: const EdgeInsets.all(16),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
                 Expanded(
                   child:
@@ -62,7 +65,7 @@ class InvestmentScreen extends ConsumerWidget {
                           )
                           : ListView.builder(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
+                              // horizontal: 16,
                               vertical: 8,
                             ),
                             itemCount: investments.length,
@@ -99,8 +102,8 @@ class InvestmentScreen extends ConsumerWidget {
                                           ],
                                         ),
                                       ),
-                                      Text(
-                                        '${item.amount.toCommaString()} 원',
+                                      JText(
+                                        item.amount.toWon(),
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,

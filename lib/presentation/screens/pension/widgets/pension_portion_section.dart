@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/widgets/jtext.dart';
 import '../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
@@ -137,7 +138,7 @@ class PensionPortionSection extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Text(
+                  JText(
                     '${accountTotal.toWon()} (${ratio.toStringAsFixed(1)}%)',
                     style: const TextStyle(
                       fontSize: 14,

@@ -1,42 +1,33 @@
-// responsive_scaffold.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // 💡 안드로이드 실기기 앱 종료를 위한 시스템 네비게이터
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/providers/onpop_invoked_provider.dart';
+import '../../core/utils/responsive_extension.dart'; // 💡 위에서 만든 확장 함수 임포트
 
-class ResponsiveScaffold extends ConsumerWidget {
+class ResponsiveScaffold extends ConsumerStatefulWidget {
   const ResponsiveScaffold({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
-  void _onDestinationSelected(int index) {
-    if (navigationShell.currentIndex == index) {
-      // 💡 만약 이미 현재 머물고 있는 탭을 다시 누른 경우,
-      // 해당 탭의 스택을 완전히 비우고 최상위(initialLocation)로 강제 이동시킵니다.
-      navigationShell.goBranch(index, initialLocation: true);
+  @override
+  ConsumerState<ResponsiveScaffold> createState() => _ResponsiveScaffoldState();
+}
 
-      // 만약 GoRouter 버전이나 설정에 따라 스택 내부의 서브 라우트까지
-      // 확실하게 pop 시키고 싶다면 아래처럼 라우터를 직접 활용할 수도 있습니다.
-      // context.go(AppRoutePath.getByIndex(index)); // 각 탭의 경로에 맞게 처리
+class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
+  DateTime? _lastPressedAt; // 💡 마지막으로 뒤로가기 누른 시간 체크용 변수
+
+  void _onDestinationSelected(int index) {
+    if (widget.navigationShell.currentIndex == index) {
+      widget.navigationShell.goBranch(index, initialLocation: true);
     } else {
-      // 다른 탭으로 이동할 때
-      navigationShell.goBranch(index, initialLocation: true);
+      widget.navigationShell.goBranch(index, initialLocation: true);
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-
-    final double width = MediaQuery.of(context).size.width;
-
-    final bool isMobile = width < 600;
-    final bool isTablet = width >= 600 && width < 1000;
-
-    // 공통 테마 색상 정의 (웹 NavigationRail과 완벽히 동일하게 일치)
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final unselectedColor = Theme.of(context).colorScheme.onSurfaceVariant;
-    final indicatorBgColor = primaryColor.withValues(alpha: 0.2);
+  Widget build(BuildContext context) {
+    final indicatorBgColor = context.primaryColor.withValues(alpha: 0.2);
 
     final destinations = const [
       NavigationDestination(
@@ -68,20 +59,19 @@ class ResponsiveScaffold extends ConsumerWidget {
 
     Widget scaffoldContent;
 
-    if (isMobile) {
+    if (context.isMobile) {
       scaffoldContent = Scaffold(
-        body: navigationShell,
+        body: widget.navigationShell,
         bottomNavigationBar: NavigationBarTheme(
-          // 모바일 NavigationBar의 색상 및 라벨 스타일을 웹(NavigationRail)과 일치시킴
           data: NavigationBarThemeData(
-            backgroundColor: const Color(0xFFFAFAFA),
+            backgroundColor: context.backgroundColor,
             indicatorColor: indicatorBgColor,
             iconTheme: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {
-                return IconThemeData(color: primaryColor, size: 24);
+                return IconThemeData(color: context.primaryColor, size: 24);
               }
               return IconThemeData(
-                color: unselectedColor.withValues(alpha: 0.7),
+                color: context.unselectedColor.withValues(alpha: 0.7),
                 size: 22,
               );
             }),
@@ -90,18 +80,18 @@ class ResponsiveScaffold extends ConsumerWidget {
                 return TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: primaryColor,
+                  color: context.primaryColor,
                 );
               }
               return TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.normal,
-                color: unselectedColor,
+                color: context.unselectedColor,
               );
             }),
           ),
           child: NavigationBar(
-            selectedIndex: navigationShell.currentIndex,
+            selectedIndex: widget.navigationShell.currentIndex,
             onDestinationSelected: _onDestinationSelected,
             destinations: destinations,
           ),
@@ -112,18 +102,18 @@ class ResponsiveScaffold extends ConsumerWidget {
         body: Row(
           children: [
             NavigationRail(
-              backgroundColor: const Color(0xFFFAFAFA),
-              minWidth: isTablet ? 120 : 150,
+              backgroundColor: context.backgroundColor,
+              minWidth: context.isMobile ? 120 : 150,
               labelType: NavigationRailLabelType.all,
-              selectedIndex: navigationShell.currentIndex,
+              selectedIndex: widget.navigationShell.currentIndex,
               onDestinationSelected: _onDestinationSelected,
               indicatorColor: indicatorBgColor,
               leading: ClipRRect(
-                borderRadius: BorderRadius.circular(8), // 원하는 둥글기 정도
+                borderRadius: BorderRadius.circular(8),
                 child: Container(
                   width: 120,
                   height: 120,
-                  color: const Color(0xFFFAFAFA), // 배경색
+                  color: context.backgroundColor,
                   child: Image.asset(
                     'assets/logos/finance.png',
                     width: 120,
@@ -132,20 +122,23 @@ class ResponsiveScaffold extends ConsumerWidget {
                   ),
                 ),
               ),
-              selectedIconTheme: IconThemeData(color: primaryColor, size: 24),
+              selectedIconTheme: IconThemeData(
+                color: context.primaryColor,
+                size: 24,
+              ),
               unselectedIconTheme: IconThemeData(
-                color: unselectedColor.withValues(alpha: 0.7),
+                color: context.unselectedColor.withValues(alpha: 0.7),
                 size: 22,
               ),
               selectedLabelTextStyle: TextStyle(
-                fontSize: isTablet ? 11 : 14,
+                fontSize: context.isMobile ? 11 : 14,
                 fontWeight: FontWeight.bold,
-                color: primaryColor,
+                color: context.primaryColor,
               ),
               unselectedLabelTextStyle: TextStyle(
-                fontSize: isTablet ? 11 : 13,
+                fontSize: context.isMobile ? 11 : 13,
                 fontWeight: FontWeight.normal,
-                color: unselectedColor,
+                color: context.unselectedColor,
               ),
               destinations:
                   destinations
@@ -159,18 +152,38 @@ class ResponsiveScaffold extends ConsumerWidget {
                       .toList(),
             ),
             const VerticalDivider(thickness: 1, width: 1, color: Colors.grey),
-            Expanded(child: navigationShell),
+            Expanded(child: widget.navigationShell),
           ],
         ),
       );
     }
 
-    // 2. 최상위 루트 셸에 PopScope를 적용하여 앱 전체 탭에서 공통으로 종료 체크 수행
+    // 💡 PopScope를 통해 모바일 물리 뒤로가기 버튼 인터셉트 및 2초 내 2회 터치 시 종료 구현
     return PopScope(
-      canPop: false, // 항상 false로 고정하여 시스템 기본 뒤로가기 동작을 차단
-      onPopInvokedWithResult: (didPop, result) {
+      canPop: false, // 기본 시스템 뒤로가기 동작 원천 차단
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        ref.read(jOnPopInvokedProvider.notifier).handlePopInvoked(context);
+
+        final now = DateTime.now();
+        const duration = Duration(seconds: 2);
+
+        // 첫 번째 누르거나 2초가 지난 경우
+        if (_lastPressedAt == null ||
+            now.difference(_lastPressedAt!) > duration) {
+          _lastPressedAt = now;
+
+          ScaffoldMessenger.of(context).removeCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("'뒤로' 버튼을 한 번 더 누르면 앱이 종료됩니다."),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+
+        // 2초 내에 두 번 누른 경우 실제 모바일 앱 종료
+        await SystemNavigator.pop();
       },
       child: scaffoldContent,
     );

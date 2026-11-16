@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../models/stock/stock_holding_item.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
@@ -90,12 +91,10 @@ class _StockHoldingItemDialogState
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
     final stockItemsAsync = ref.watch(stockItemNotifierProvider);
 
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     // 💡 바텀시트 레이아웃 안정성 개선 (SafeArea 및 가변 높이 대응)
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+       padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:collection/collection.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
+import '../../../../../core/utils/responsive_extension.dart';
 import '../../../../../core/utils/toss_direct_api_service.dart';
 import '../../../../../models/monthly_data/monthly_stock_balance.dart';
 import '../../../../../models/monthly_data/monthly_stock_account_balance.dart';
@@ -215,11 +216,9 @@ class _MonthlyStockBalanceDialogState
       monthlyStockAccountBalanceNotifierProvider(prevYearMonth),
     );
 
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,

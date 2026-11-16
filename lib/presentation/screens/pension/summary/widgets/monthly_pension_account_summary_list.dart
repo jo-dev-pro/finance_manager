@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/widgets/jtext.dart';
 import '../../../../../models/account/account_name.dart';
 import '../../../../../models/monthly_data/monthly_pension_account_balance.dart';
 import '../../../../../core/utils/number_formatter.dart';
@@ -76,19 +77,19 @@ class MonthlyPensionAccountSummaryList extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Text(
+                          JText(
                             '현금성 잔액: ${cash.toWon()}',
                             style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                           ),
                           const SizedBox(width: 8),
                           Text('|', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
                           const SizedBox(width: 8),
-                          Text(
+                          JText(
                             '당월 인출: ${monthlyWith.toWon()}',
                             style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                           ),
                           const SizedBox(width: 8),
-                          Text(
+                          JText(
                             '(누적: ${totalWith.toWon()})',
                             style: TextStyle(fontSize: 11, color: Colors.indigo.shade600, fontWeight: FontWeight.bold),
                           ),
