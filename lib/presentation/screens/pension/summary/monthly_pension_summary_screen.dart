@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
-import '../../../../core/widgets/jtext.dart';
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
-import '../../../../core/widgets/summary_item.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
@@ -14,7 +13,8 @@ import '../../../../providers/monthly_data/monthly_pension_account_balance_provi
 import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../../providers/pension/pension_product_provider.dart';
 import '../monthly_data/monthly_pension_balance_screen.dart';
-import 'widgets/monthly_pension_account_summary_list.dart';
+import 'widgets/monthly_pension_summary_mobile.dart';
+import 'widgets/monthly_pension_summary_desktop.dart';
 
 class MonthlyPensionSummaryScreen extends ConsumerWidget {
   final Object? extra;
@@ -94,7 +94,6 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
 
           final lastMonth = _getLastYearMonth(activeCurrentMonth);
 
-          // 당월 및 전월 데이터 구독
           final items =
               ref
                   .watch(
@@ -149,7 +148,6 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
           final currentDropdownValue =
               isValidAccountId ? selectedAccountId : null;
 
-          // 당월 필터링 데이터
           final filteredAccountBalances =
               currentDropdownValue == null
                   ? accountBalances
@@ -164,7 +162,6 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                       .where((item) => item.accountId == currentDropdownValue)
                       .toList();
 
-          // 전월 필터링 데이터 (상단 요약 카드 전월 대비 계산용)
           final lastFilteredAccountBalances =
               currentDropdownValue == null
                   ? lastAccountBalances
@@ -179,7 +176,6 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                       .where((item) => item.accountId == currentDropdownValue)
                       .toList();
 
-          // 당월 집계
           double totalPensionBalance = 0;
           double totalPensionPrincipal = 0;
           double totalCashBalance = 0;
@@ -202,7 +198,6 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
               (grandTotalBalance + totalCumulativeWithdrawal) -
               totalPensionPrincipal;
 
-          // 전월 총 자산 집계 및 전월 대비 계산
           final lastTotalPensionBalance = lastFilteredPensionItems.fold<double>(
             0.0,
             (sum, item) => sum + item.balance,
@@ -217,446 +212,45 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
               grandTotalBalance - lastGrandTotalBalance;
 
           return MainConstrainedBox(
-            child: SingleChildScrollView(
-              // padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 연월 및 계좌 드롭다운 필터
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade400),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value:
-                                  months.contains(activeCurrentMonth)
-                                      ? activeCurrentMonth
-                                      : months.first,
-                              isExpanded: true,
-                              items:
-                                  months.map((ym) {
-                                    return DropdownMenuItem(
-                                      value: ym,
-                                      child: Text(
-                                        ym,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  ref
-                                      .read(selectedYearMonthProvider.notifier)
-                                      .select(val);
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade400),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String?>(
-                              value: currentDropdownValue,
-                              isExpanded: true,
-                              hint: const Text('전체 계좌'),
-                              items: [
-                                const DropdownMenuItem<String?>(
-                                  value: null,
-                                  child: Text(
-                                    '전체 계좌',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                ...pensionAccounts.map((account) {
-                                  final accId = account.id ?? '';
-                                  final nameObj =
-                                      accountNameMap[account.accountNameId];
-                                  final accName = nameObj?.accountName ?? '계좌';
-                                  final institution =
-                                      account.financialInstitution;
-                                  return DropdownMenuItem<String?>(
-                                    value: accId,
-                                    child: Text(
-                                      '$institution$accName',
-                                      style: const TextStyle(fontSize: 14),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  );
-                                }),
-                              ],
-                              onChanged: (val) {
-                                ref
-                                    .read(
-                                      selectedPensionAccountFilterProvider
-                                          .notifier,
-                                    )
-                                    .state = val;
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 1. 상단 요약 카드 (SummaryCard 디자인 통일 + 전월 대비 추가)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.indigo.shade600,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Expanded(
-                              child: Center(
-                                child: SummaryItem(
-                                  label: '총 자산',
-                                  value: grandTotalBalance.toWon(),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Center(
-                                child: SummaryItem(
-                                  label: '총 원금',
-                                  value: totalPensionPrincipal.toWon(),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Center(
-                                child: SummaryItem(
-                                  label: '총 손익',
-                                  value:
-                                      '${totalProfit >= 0 ? '+' : ''}${totalProfit.toWon()}',
-                                  color:
-                                      totalProfit >= 0
-                                          ? Colors.red.shade700
-                                          : Colors.blue.shade700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        const Divider(color: Colors.white24, height: 1),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Expanded(
-                              child: Center(
-                                child: SummaryItem(
-                                  label: '현금잔액',
-                                  value: totalCashBalance.toWon(),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Center(
-                                child: SummaryItem(
-                                  label: '당월 인출액',
-                                  value: totalMonthlyWithdrawal.toWon(),
-                                ),
-                              ),
-                            ),
-
-                            Expanded(
-                              child: Center(
-                                child: SummaryItem(
-                                  label: '누적 인출액',
-                                  value: totalCumulativeWithdrawal.toWon(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        const Divider(color: Colors.white24, height: 1),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            const Text(
-                              '전월 대비: ',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
-                            ),
-                            summaryDiffFromLastMonth.toSignedPriceText(
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                  const Text(
-                    '계좌별 현금 및 자금 요약',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  MonthlyPensionAccountSummaryList(
+            child: context.isMobile
+                ? MonthlyPensionSummaryMobile(
+                    months: months,
+                    activeCurrentMonth: activeCurrentMonth,
                     pensionAccounts: pensionAccounts,
                     accountNameMap: accountNameMap,
                     accountBalanceMap: accountBalanceMap,
-                    selectedAccountId: currentDropdownValue,
-                    targetMonth: activeCurrentMonth,
-                    onEditPressed: null,
+                    currentDropdownValue: currentDropdownValue,
+                    grandTotalBalance: grandTotalBalance,
+                    totalPensionPrincipal: totalPensionPrincipal,
+                    totalProfit: totalProfit,
+                    totalCashBalance: totalCashBalance,
+                    totalMonthlyWithdrawal: totalMonthlyWithdrawal,
+                    totalCumulativeWithdrawal: totalCumulativeWithdrawal,
+                    summaryDiffFromLastMonth: summaryDiffFromLastMonth,
+                    filteredPensionItems: filteredPensionItems,
+                    accountMap: accountMap,
+                    productMap: productMap,
+                    lastItems: lastItems,
+                  )
+                : MonthlyPensionSummaryDesktop(
+                    months: months,
+                    activeCurrentMonth: activeCurrentMonth,
+                    pensionAccounts: pensionAccounts,
+                    accountNameMap: accountNameMap,
+                    accountBalanceMap: accountBalanceMap,
+                    currentDropdownValue: currentDropdownValue,
+                    grandTotalBalance: grandTotalBalance,
+                    totalPensionPrincipal: totalPensionPrincipal,
+                    totalProfit: totalProfit,
+                    totalCashBalance: totalCashBalance,
+                    totalMonthlyWithdrawal: totalMonthlyWithdrawal,
+                    totalCumulativeWithdrawal: totalCumulativeWithdrawal,
+                    summaryDiffFromLastMonth: summaryDiffFromLastMonth,
+                    filteredPensionItems: filteredPensionItems,
+                    accountMap: accountMap,
+                    productMap: productMap,
+                    lastItems: lastItems,
                   ),
-
-                  const SizedBox(height: 20),
-                  const Text(
-                    '보유 상품별 월말 내역',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  if (filteredPensionItems.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      child: Center(
-                        child: Text(
-                          '$activeCurrentMonth에 등록된 연금 월말 데이터가 없습니다.',
-                        ),
-                      ),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: filteredPensionItems.length,
-                      itemBuilder: (context, index) {
-                        final balanceItem = filteredPensionItems[index];
-
-                        final matchedAcc = accountMap[balanceItem.accountId];
-                        final institution =
-                            matchedAcc?.financialInstitution ?? '기타 금융기관';
-                        final nameObj =
-                            matchedAcc != null
-                                ? accountNameMap[matchedAcc.accountNameId]
-                                : null;
-                        final accountName = nameObj?.accountName ?? '연금계좌';
-
-                        final String displayName =
-                            productMap[balanceItem.productId] ?? '알 수 없는 상품';
-
-                        // 전월 동일 계좌/상품 평가액 조회 및 전월 대비 계산
-                        final lastBalanceItem = lastItems.firstWhereOrNull(
-                          (item) =>
-                              item.accountId == balanceItem.accountId &&
-                              item.productId == balanceItem.productId,
-                        );
-                        final lastBalance = lastBalanceItem?.balance ?? 0.0;
-                        final diffFromLastMonth =
-                            balanceItem.balance - lastBalance;
-
-                        final double returnRate = balanceItem.returnRate;
-                        final double monthlySale = balanceItem.monthlySale;
-                        final double totalSale = balanceItem.totalSale;
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            elevation: 1.5,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    displayName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '[$institution]$accountName',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      if (balanceItem.purchaseDate != null &&
-                                          balanceItem.purchaseDate!.isNotEmpty)
-                                        Text(
-                                          '매수일: ${balanceItem.purchaseDate}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.indigo.shade600,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const Divider(height: 16),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      JText(
-                                        '평가액: ${balanceItem.balance.toWon()}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      JText(
-                                        '원금: ${balanceItem.principal.toWon()}',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey.shade700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-
-                                  // 당월/누적 매도액 영역
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade50,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: Colors.grey.shade200,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        JText(
-                                          '당월 매도: ${monthlySale.toWon()}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.teal.shade700,
-                                          ),
-                                        ),
-                                        JText(
-                                          '누적 매도: ${totalSale.toWon()}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.teal.shade900,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const Divider(
-                                    height: 16,
-                                    color: Colors.black12,
-                                  ),
-
-                                  // 수익률 및 전월 대비 영역
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            '수익률: ',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              color: Colors.grey.shade700,
-                                            ),
-                                          ),
-                                          returnRate.toSignedPercentText(
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            withParentheses: false,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          JText(
-                                            '(연환산: ${balanceItem.annualizedReturnRate.toSignedPercent()})',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            '전월 대비: ',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                          diffFromLastMonth.toSignedPriceText(
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                ],
-              ),
-            ),
           );
         },
       ),
