@@ -56,7 +56,6 @@ class MonthlyPensionSummaryMobile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -153,6 +152,7 @@ class MonthlyPensionSummaryMobile extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
+
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -161,75 +161,47 @@ class MonthlyPensionSummaryMobile extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: SummaryItem(
-                          label: '총 자산',
-                          value: grandTotalBalance.toWon(),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: SummaryItem(
-                          label: '총 원금',
-                          value: totalPensionPrincipal.toWon(),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: SummaryItem(
-                          label: '총 손익',
-                          value:
-                              '${totalProfit >= 0 ? '+' : ''}${totalProfit.toWon()}',
-                          color: totalProfit >= 0
-                              ? Colors.red.shade300
-                              : Colors.blue.shade300,
-                        ),
-                      ),
-                    ),
-                  ],
+                SummaryItem(
+                  label: '총 자산',
+                  value: grandTotalBalance.toWon(),
+                ),
+                SummaryItem(
+                  label: '총 원금',
+                  value: totalPensionPrincipal.toWon(),
+                ),
+                SummaryItem(
+                  label: '총 손익',
+                  value:
+                      '${totalProfit >= 0 ? '+' : ''}${totalProfit.toWon()}',
+                  color: totalProfit >= 0
+                      ? Colors.red.shade300
+                      : Colors.blue.shade300,
                 ),
                 const SizedBox(height: 14),
+
                 const Divider(color: Colors.white24, height: 1),
                 const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: SummaryItem(
-                          label: '현금잔액',
-                          value: totalCashBalance.toWon(),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: SummaryItem(
-                          label: '당월 인출',
-                          value: totalMonthlyWithdrawal.toWon(),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: SummaryItem(
-                          label: '누적 인출',
-                          value: totalCumulativeWithdrawal.toWon(),
-                        ),
-                      ),
-                    ),
-                  ],
+
+                SummaryItem(
+                  label: '현금잔액',
+                  value: totalCashBalance.toWon(),
+                ),
+                SummaryItem(
+                  label: '당월 인출',
+                  value: totalMonthlyWithdrawal.toWon(),
+                ),
+                SummaryItem(
+                  label: '누적 인출',
+                  value: totalCumulativeWithdrawal.toWon(),
                 ),
                 const SizedBox(height: 14),
+
                 const Divider(color: Colors.white24, height: 1),
                 const SizedBox(height: 10),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [

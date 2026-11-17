@@ -201,7 +201,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 20),
-     
+
                   const SectionTitle('등록된 월말 입력 내역'),
                   const SizedBox(height: 8),
 
@@ -235,6 +235,8 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                         final String displayName =
                             productMap[balanceItem.productId] ?? '알 수 없는 상품';
 
+                        final logoUrl = matchedAcc?.logoUrl; 
+
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Card(
@@ -258,20 +260,53 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                             fontSize: 15,
                                           ),
                                         ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          '[$institution]$accountName',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                        const SizedBox(height: 4),
+
+                                        Row(
+                                          children: [
+                                            if (logoUrl != null &&
+                                                logoUrl.isNotEmpty) ...[
+                                              Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: ClipOval(
+                                                  child: Image.network(
+                                                    logoUrl,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder:
+                                                        (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) => const Icon(
+                                                          Icons.account_balance,
+                                                          size: 15,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                            ],
+
+                                            Text(
+                                              accountName,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ),
                                   const SizedBox(width: 12),
+
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [

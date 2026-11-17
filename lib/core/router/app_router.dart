@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../presentation/responsive/responsive_scaffold.dart';
-import '../../presentation/screens/dashboard_screen.dart';
+import '../../presentation/screens/dashboard/dashboard_screen.dart';
 import 'app_router_path.dart';
 import 'branches/stock_branch.dart';
 import 'branches/pension_branch.dart';

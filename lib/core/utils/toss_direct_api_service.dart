@@ -20,7 +20,7 @@ class TossDirectApiService {
 
   static String? _accessToken;
   static DateTime? _tokenExpiryTime;
-  static Future<String>? _tokenFuture; // 💡 동시 토큰 요청 중복 방지를 위한 락(Completer 역할)
+  static Future<String>? _tokenFuture; // 동시 토큰 요청 중복 방지 락
 
   /// OAuth 2.0 Access Token 발급 및 캐싱 (동시성 제어 적용)
   static Future<String> _getAccessToken() async {
@@ -31,7 +31,6 @@ class TossDirectApiService {
       return _accessToken!;
     }
 
-    // 이미 토큰 발급이 진행 중이라면 새롭게 요청하지 않고 기존 진행 중인 Future를 공유
     if (_tokenFuture != null) {
       return _tokenFuture!;
     }
@@ -40,7 +39,7 @@ class TossDirectApiService {
     try {
       return await _tokenFuture!;
     } finally {
-      _tokenFuture = null; // 완료 후 락 해제
+      _tokenFuture = null;
     }
   }
 
@@ -68,11 +67,19 @@ class TossDirectApiService {
     }
   }
 
-  /// 특정 종목 코드의 실시간 현재가 및 전일 대비 변동액 조회
-  static Future<RealtimeQuote?> getRealtimeQuote(String stockCode) async {
+  /// 💡 [추가됨] 복수 토스 종목 코드의 실시간 현재가 및 전일 대비 변동액 일괄 조회
+  static Future getRealtimeQuotes(
+    List<String> stockCodes,
+  ) async {
+    final Map<String, RealtimeQuote> result = {};
+    if (stockCodes.isEmpty) return result;
+
     try {
       final token = await _getAccessToken();
-      final url = Uri.parse('$_baseUrl/api/v1/prices?symbols=$stockCode');
+      // 콤마로 연결하여 한 번에 요청 (예: ?symbols=005930,000660)
+      final joinedSymbols = stockCodes.toSet().join(',');
+      final url = Uri.parse('$_baseUrl/api/v1/prices?symbols=$joinedSymbols');
+      
       final response = await http.get(
         url,
         headers: {
@@ -87,8 +94,9 @@ class TossDirectApiService {
             ? data['result'] as List
             : (data is List ? data : []);
 
-        if (list.isNotEmpty) {
-          final item = list.first;
+        for (var item in list) {
+          // 응답 객체에서 심볼 및 가격 정보 추출 (API 응답 필드 구조에 유연하게 대응)
+          final symbol = (item['symbol'] ?? item['code'] ?? '').toString();
           final current = double.tryParse(
                 (item['lastPrice'] ?? item['closePrice'] ?? item['price'] ?? 0)
                     .toString(),
@@ -104,15 +112,26 @@ class TossDirectApiService {
           final change = explicitChange ??
               (prevClose != null && prevClose > 0 ? current - prevClose : 0.0);
 
-          if (current > 0) {
-            return RealtimeQuote(currentPrice: current, changePrice: change);
+          if (symbol.isNotEmpty && current > 0) {
+            result[symbol] = RealtimeQuote(
+              currentPrice: current,
+              changePrice: change,
+            );
           }
         }
+      } else {
+        print('토스 실시간 일괄 시세 조회 실패: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('토스 실시간 시세 조회 오류 ($stockCode): $e');
+      print('토스 실시간 일괄 시세 조회 오류: $e');
     }
-    return null;
+    return result;
+  }
+
+  /// 기존 단건 조회 (하위 호환 또는 개별 조회가 필요할 때 유지)
+  static Future<RealtimeQuote?> getRealtimeQuote(String stockCode) async {
+    final quotes = await getRealtimeQuotes([stockCode]);
+    return quotes[stockCode];
   }
 
   /// 실시간 원·달러 환율 조회

@@ -17,7 +17,7 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
   final List<String> months;
   final String activeCurrentMonth;
   final List<Account> pensionAccounts;
-  final Map<String?, AccountName?> accountNameMap;
+  final Map<String?, AccountName?> accountNameMap; 
   final Map<String, MonthlyPensionAccountBalance> accountBalanceMap;
   final String? currentDropdownValue;
   final double grandTotalBalance;
@@ -56,14 +56,12 @@ class MonthlyPensionSummaryDesktop extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Expanded(
-                flex: 1,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(

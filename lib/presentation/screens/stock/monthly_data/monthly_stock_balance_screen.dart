@@ -240,6 +240,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                             stockCode.isNotEmpty
                                 ? '$stockNameOnly ($stockCode)'
                                 : stockNameOnly;
+                        final logoUrl = matchedAcc?.logoUrl;
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -265,14 +266,41 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                                           ),
                                         ),
                                         const SizedBox(height: 6),
-                                        Text(
-                                          '[$institution]$accountName',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: ClipOval(
+                                                child: Image.network(
+                                                  logoUrl!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder:
+                                                      (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) => const Icon(
+                                                        Icons.account_balance,
+                                                        size: 15,
+                                                      ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              accountName,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
                                         ),
                                         const SizedBox(height: 4),
                                         JText(

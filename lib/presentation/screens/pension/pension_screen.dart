@@ -225,29 +225,18 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                             '계좌 누적 인출액: ${totalAccountWithdrawalSum.toWon()}',
                                             style: const TextStyle(
                                               color: Colors.white70,
-                                              fontSize: 12,
+                                              fontSize: 13,
                                             ),
                                           ),
                                         ]
                                         : null,
-                                diffFromLastMonthWidget: Row(
-                                  children: [
-                                    const Text(
-                                      '전월 대비: ',
-                                      style: TextStyle(
-                                        color: Colors.white70,
+                                diffFromLastMonthWidget: (totalBalance - lastTotalBalance)
+                                    .toSignedPriceText(
+                                      style: const TextStyle(
                                         fontSize: 13,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    (totalBalance - lastTotalBalance)
-                                        .toSignedPriceText(
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                  ],
-                                ),
                               ),
                             );
                           },
@@ -271,18 +260,16 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         ),
 
                         // 3. 계좌별 평가 비중 섹션
-                        const SectionTitle(
-                          '계좌별 평가 비중',
-                        ),
+                        const SectionTitle('계좌별 평가 비중'),
+
                         PensionPortionSection(
                           currentMonth: activeCurrentMonth,
                           chartColors: _chartColors,
                         ),
 
                         // 4. 계좌별 월말 수익률 추이 차트
-                        const SectionTitle(
-                          '계좌별 월말 수익률 추이 (%)',
-                        ),
+                        const SectionTitle('계좌별 월말 수익률 추이 (%)' ),
+                        
                         PensionReturnRateChart(
                           currentMonth: activeCurrentMonth,
                           months: months,

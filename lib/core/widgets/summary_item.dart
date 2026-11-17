@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../utils/responsive_extension.dart';
 import 'jtext.dart';
 
 // 연금평가, 주식평가 상단의 카드내 항목별 위젯
@@ -17,19 +18,49 @@ class SummaryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(fontSize: 14, color: Colors.white70)),
-        const SizedBox(height: 4),
-        JText(
-          value,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: color ?? Colors.white,
-          ),
-        ),
-      ],
-    );
+    return context.isMobile
+        ? Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 14, color: Colors.white70),
+              ),
+            ),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  JText(
+                    value,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: color ?? Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        )
+        : Column(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontSize: 14, color: Colors.white70),
+            ),
+            const SizedBox(height: 4),
+            JText(
+              value,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: color ?? Colors.white,
+              ),
+            ),
+          ],
+        );
   }
 }

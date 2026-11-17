@@ -147,19 +147,11 @@ class BankScreen extends ConsumerWidget {
                                 SummaryCard(
                                   title: '은행 계좌 전체 금액',
                                   mainAmountText: totalCurrentBalance.toWon(),
-                                  diffFromLastMonthWidget: Row(
-                                    children: [
-                                      const Text(
-                                        '전월 대비: ',
-                                        style: TextStyle(color: Colors.white70, fontSize: 13),
-                                      ),
-                                      totalDiffFromLastMonth.toSignedPriceText(
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
+                                  diffFromLastMonthWidget: totalDiffFromLastMonth.toSignedPriceText(
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 

@@ -65,7 +65,6 @@ class InvestmentScreen extends ConsumerWidget {
                           )
                           : ListView.builder(
                             padding: const EdgeInsets.symmetric(
-                              // horizontal: 16,
                               vertical: 8,
                             ),
                             itemCount: investments.length,

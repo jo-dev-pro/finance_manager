@@ -73,8 +73,13 @@ class DashboardSummary {
   final double stockBalance;
   final double pensionBalance;
   final double diffFromLastMonth;
+  
+  // 💡 자산별 전월 대비 증감액 필드 추가
+  final double bankDiffFromLastMonth;
+  final double stockDiffFromLastMonth;
+  final double pensionDiffFromLastMonth;
 
-  double get totalValuation => bankBalance + stockBalance;
+  double get totalValuation => bankBalance + stockBalance + pensionBalance; // 연금 포함 여부에 맞게 조정
   double get profitOrLoss => totalValuation - totalInvested;
   double get returnRate =>
       totalInvested > 0 ? (profitOrLoss / totalInvested) * 100 : 0.0;
@@ -86,8 +91,10 @@ class DashboardSummary {
     required this.stockBalance,
     required this.pensionBalance,
     required this.diffFromLastMonth,
+    required this.bankDiffFromLastMonth,
+    required this.stockDiffFromLastMonth,
+    required this.pensionDiffFromLastMonth,
   });
-
   int get totalInvestedInt => totalInvested.round();
   int get bankBalanceInt => bankBalance.round();
   int get stockBalanceInt => stockBalance.round();
@@ -194,13 +201,16 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
     if (availableMonths.isNotEmpty) {
       selectedMonth = availableMonths.first;
     } else {
-      return DashboardSummary(
+     return DashboardSummary(
         yearMonth: '',
         totalInvested: 0,
         bankBalance: 0,
         stockBalance: 0,
         pensionBalance: 0,
         diffFromLastMonth: 0,
+        bankDiffFromLastMonth: 0,
+        stockDiffFromLastMonth: 0,
+        pensionDiffFromLastMonth: 0,
       );
     }
   }
@@ -213,26 +223,22 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
     (sum, doc) => sum + ((doc.data()['amount'] ?? 0) as num).toDouble(),
   );
 
+  // --- 1. 현재 월 자산 계산 ---
   final bankBalances = await ref.watch(
     monthlyBankBalanceNotifierProvider(selectedMonth).future,
   );
-  final bankBalance = bankBalances.fold<double>(
-    0.0,
-    (sum, item) => sum + item.balance,
-  );
+  final bankBalance = bankBalances.fold<double>(0.0, (sum, item) => sum + item.balance);
 
   final stockAssets = await _calculateStockAssets(ref, selectedMonth);
   final stockBalance = stockAssets['stockBalance'] ?? 0.0;
 
-  final pensionSnap =
-      await firestore
-          .collection(monthlyPensionBalanceDBName)
-          .where('year_month', isEqualTo: selectedMonth)
-          .get();
+  final pensionSnap = await firestore
+      .collection(monthlyPensionBalanceDBName)
+      .where('year_month', isEqualTo: selectedMonth)
+      .get();
   final pensionProductBalance = pensionSnap.docs.fold<double>(
     0,
-    (sum, doc) =>
-        sum + ((doc.data()['balance'] ?? 0) as num).toDouble(),
+    (sum, doc) => sum + ((doc.data()['balance'] ?? 0) as num).toDouble(),
   );
 
   final pensionAccountBalances = await ref.watch(
@@ -242,32 +248,26 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
     0.0,
     (sum, item) => sum + item.cashBalance,
   );
-
   final pensionBalance = pensionProductBalance + pensionCashBalance;
-  final totalValuation = bankBalance + stockBalance + pensionBalance;
 
+  // --- 2. 전월 자산 계산 ---
   final lastMonth = _getLastYearMonth(selectedMonth);
   
   final lastBankBalances = await ref.watch(
     monthlyBankBalanceNotifierProvider(lastMonth).future,
   );
-  final lastBankBalance = lastBankBalances.fold<double>(
-    0.0,
-    (sum, item) => sum + item.balance,
-  );
+  final lastBankBalance = lastBankBalances.fold<double>(0.0, (sum, item) => sum + item.balance);
 
   final lastStockAssets = await _calculateStockAssets(ref, lastMonth);
   final lastStockBalance = lastStockAssets['stockBalance'] ?? 0.0;
 
-  final lastPensionSnap =
-      await firestore
-          .collection(monthlyPensionBalanceDBName)
-          .where('year_month', isEqualTo: lastMonth)
-          .get();
+  final lastPensionSnap = await firestore
+      .collection(monthlyPensionBalanceDBName)
+      .where('year_month', isEqualTo: lastMonth)
+      .get();
   final lastPensionProductBalance = lastPensionSnap.docs.fold<double>(
     0,
-    (sum, doc) =>
-        sum + ((doc.data()['balance'] ?? 0) as num).toDouble(),
+    (sum, doc) => sum + ((doc.data()['balance'] ?? 0) as num).toDouble(),
   );
 
   final lastPensionAccountBalances = await ref.watch(
@@ -277,10 +277,15 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
     0.0,
     (sum, item) => sum + item.cashBalance,
   );
-
   final lastPensionBalance = lastPensionProductBalance + lastPensionCashBalance;
-  final lastTotalValuation = lastBankBalance + lastStockBalance + lastPensionBalance;
 
+  // --- 3. 증감액(Diff) 계산 ---
+  final bankDiff = bankBalance - lastBankBalance;
+  final stockDiff = stockBalance - lastStockBalance;
+  final pensionDiff = pensionBalance - lastPensionBalance;
+
+  final totalValuation = bankBalance + stockBalance + pensionBalance;
+  final lastTotalValuation = lastBankBalance + lastStockBalance + lastPensionBalance;
   final diffFromLastMonth = totalValuation - lastTotalValuation;
 
   return DashboardSummary(
@@ -290,5 +295,8 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
     stockBalance: stockBalance,
     pensionBalance: pensionBalance,
     diffFromLastMonth: diffFromLastMonth,
+    bankDiffFromLastMonth: bankDiff,
+    stockDiffFromLastMonth: stockDiff,
+    pensionDiffFromLastMonth: pensionDiff,
   );
 }

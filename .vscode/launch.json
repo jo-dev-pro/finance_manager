@@ -11,6 +11,16 @@
         "--web-browser-flag=--disable-web-security",
         "--web-browser-flag=--user-data-dir=C:/ChromeDevSession"
       ]
+    },
+    {
+      "name": "Flutter Web (일반 크롬)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--web-browser-flag=--user-data-dir=C:/ChromeNormalSession"
+      ]
     }
   ]
 }

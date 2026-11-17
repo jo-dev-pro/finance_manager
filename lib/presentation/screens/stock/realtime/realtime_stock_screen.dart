@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/utils/toss_direct_api_service.dart';
 import '../../../../core/utils/upbit_api_service.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/jtext.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -51,7 +52,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
       final latestMonth = months.first;
       final stockBalances =
           ref.read(monthlyStockBalanceNotifierProvider(latestMonth)).value ??
-              [];
+          [];
       final stockItems = ref.read(stockItemNotifierProvider).value ?? [];
       final stockItemMap = {for (var s in stockItems) s.id!: s};
 
@@ -73,7 +74,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
 
       final Map<String, RealtimeQuote> fetchedQuotes = {};
 
-      // 1. 업비트 코인은 일괄 조회 가능하므로 기존대로 처리
+      // 1. 업비트 시세 일괄 조회
       if (upbitMarkets.isNotEmpty) {
         final upbitResult = await UpbitApiService.getRealtimeQuotes(
           upbitMarkets.toSet().toList(),
@@ -81,19 +82,14 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
         fetchedQuotes.addAll(upbitResult);
       }
 
-      // 2. 환율 조회와 토스 주식 시세 조회를 병행 실행
+      // 2. 환율 및 토스 주식 시세 일괄 조회
       final rateFuture = TossDirectApiService.getCurrentExchangeRate();
 
-      // 💡 토스 주식 종목들은 429 에러(요청 한도 초과) 방지를 위해 순차적(또는 소폭 딜레이)으로 조회
-      final uniqueTossCodes = tossCodes.toSet().toList();
-      for (var code in uniqueTossCodes) {
-        final quote = await TossDirectApiService.getRealtimeQuote(code);
-        if (quote != null) {
-          fetchedQuotes[code] = quote;
-        }
-        // 요청 간격에 30ms ~ 50ms 정도의 딜레이를 주어 API Rate Limit 회피
-        await Future.delayed(const Duration(milliseconds: 40));
-      }
+      // 앞서 만든 일괄 조회 메서드 활용 (실패 시 예외 발생 또는 빈 결과 반환)
+      final tossResult = await TossDirectApiService.getRealtimeQuotes(
+        tossCodes.toSet().toList(),
+      );
+      fetchedQuotes.addAll(tossResult);
 
       final fetchedRate = await rateFuture;
 
@@ -105,6 +101,13 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
           }
           _lastUpdatedAt = DateTime.now();
         });
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.showError(
+          context, 
+          '실시간 시세 조회 중 오류가 발생했습니다: $e',
+        );
       }
     } finally {
       if (mounted) {
@@ -140,13 +143,14 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
             ),
           IconButton(
             onPressed: _isLoadingQuotes ? null : _refreshRealtimeQuotes,
-            icon: _isLoadingQuotes
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh),
+            icon:
+                _isLoadingQuotes
+                    ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Icon(Icons.refresh),
             tooltip: '실시간 시세 새로고침',
           ),
           const SizedBox(width: 8),
@@ -163,22 +167,25 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
           final baseMonth = months.first;
           final baseBalances =
               ref.watch(monthlyStockBalanceNotifierProvider(baseMonth)).value ??
-                  [];
-          final baseAccountBalances = ref
+              [];
+          final baseAccountBalances =
+              ref
                   .watch(monthlyStockAccountBalanceNotifierProvider(baseMonth))
                   .value ??
               [];
 
-          final filteredItems = baseBalances.where((b) {
-            if (b.quantity <= 0) return false;
-            final code = stockItemMap[b.stockItemId]?.stockCode.trim() ?? '';
-            final isCrypto =
-                code.startsWith('KRW-') || code.startsWith('USDT-');
+          final filteredItems =
+              baseBalances.where((b) {
+                if (b.quantity <= 0) return false;
+                final code =
+                    stockItemMap[b.stockItemId]?.stockCode.trim() ?? '';
+                final isCrypto =
+                    code.startsWith('KRW-') || code.startsWith('USDT-');
 
-            if (_filterType == AssetFilterType.stock) return !isCrypto;
-            if (_filterType == AssetFilterType.crypto) return isCrypto;
-            return true;
-          }).toList();
+                if (_filterType == AssetFilterType.stock) return !isCrypto;
+                if (_filterType == AssetFilterType.crypto) return isCrypto;
+                return true;
+              }).toList();
 
           double totalRealtimeAsset = 0;
           double totalPrincipal = 0;
@@ -430,7 +437,8 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                           acc?.financialInstitution ?? '기타 금융기관';
                       final accName =
                           acc != null
-                              ? (accountNameMap[acc.accountNameId]?.accountName ??
+                              ? (accountNameMap[acc.accountNameId]
+                                      ?.accountName ??
                                   '계좌')
                               : '계좌';
                       final isForeign = acc?.isForeignCurrency ?? false;
@@ -438,11 +446,13 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                       final stock = stockItemMap[item.stockItemId];
                       final stockName = stock?.itemName ?? '알 수 없는 종목';
                       final stockCode = stock?.stockCode.trim() ?? '';
-                      final isCrypto = stockCode.startsWith('KRW-') ||
+                      final isCrypto =
+                          stockCode.startsWith('KRW-') ||
                           stockCode.startsWith('USDT-');
 
                       final quote = _quoteMap[stockCode];
-                      final livePrice = quote?.currentPrice ?? item.currentPrice;
+                      final livePrice =
+                          quote?.currentPrice ?? item.currentPrice;
                       final dailyChangeUnit = quote?.changePrice ?? 0.0;
 
                       final liveBalance = item.quantity * livePrice;
@@ -496,9 +506,10 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: isCrypto
-                                            ? Colors.orange.shade50
-                                            : Colors.indigo.shade50,
+                                        color:
+                                            isCrypto
+                                                ? Colors.orange.shade50
+                                                : Colors.indigo.shade50,
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
@@ -506,9 +517,10 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
-                                          color: isCrypto
-                                              ? Colors.orange.shade800
-                                              : Colors.indigo.shade700,
+                                          color:
+                                              isCrypto
+                                                  ? Colors.orange.shade800
+                                                  : Colors.indigo.shade700,
                                         ),
                                       ),
                                     ),
@@ -566,15 +578,16 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                                         ),
                                         isForeign
                                             ? JText(
-                                                '${itemProfit > 0 ? '+' : ''}${itemProfit.toUSD()}',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: itemProfit >= 0
-                                                      ? Colors.red.shade700
-                                                      : Colors.blue.shade700,
-                                                ),
-                                              )
+                                              '${itemProfit > 0 ? '+' : ''}${itemProfit.toUSD()}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color:
+                                                    itemProfit >= 0
+                                                        ? Colors.red.shade700
+                                                        : Colors.blue.shade700,
+                                              ),
+                                            )
                                             : itemProfit
                                                 .round()
                                                 .toSignedPriceText(
@@ -664,19 +677,17 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: amount > 0
-              ? Colors.red.shade700
-              : amount < 0
+          color:
+              amount > 0
+                  ? Colors.red.shade700
+                  : amount < 0
                   ? Colors.blue.shade700
                   : Colors.grey,
         ),
       );
     }
     return amount.round().toSignedPriceText(
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
     );
   }
 }

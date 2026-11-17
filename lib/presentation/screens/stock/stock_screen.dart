@@ -62,6 +62,17 @@ class _StockScreenState extends ConsumerState<StockScreen> {
         actions: [
           Row(
             children: [
+                  IconButton(
+                onPressed: () {
+                  context.push(
+                    AppRoutePath.realtimeStock,
+                  );
+                },
+                icon: const Icon(Icons.candlestick_chart),
+                color: Colors.red,
+              ),
+              SizedBox(width: 8),
+
               ElevatedButton.icon(
                 onPressed: () {
                   context.push(
@@ -72,17 +83,8 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                 icon: const Icon(Icons.calendar_month_outlined),
                 label: const Text('월말주식'),
               ),
-              SizedBox(width: 8),
               
-              ElevatedButton.icon(
-                onPressed: () {
-                  context.push(
-                    AppRoutePath.realtimeStock,
-                  );
-                },
-                icon: const Icon(Icons.candlestick_chart),
-                label: const Text('실시간시세'),
-              ),
+          
             ],
           ),
           const SizedBox(width: 16),
@@ -283,7 +285,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                       '누적 배당: ${totalPayoutSum.round().toWon()}',
                                       style: const TextStyle(
                                         color: Colors.white70,
-                                        fontSize: 12,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   if (totalAccountWithdrawalSum > 0)
@@ -291,40 +293,26 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                       '계좌 누적 인출: ${totalAccountWithdrawalSum.round().toWon()}',
                                       style: const TextStyle(
                                         color: Colors.white70,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                ],
-                                diffFromLastMonthWidget: Row(
-                                  children: [
-                                    const Text(
-                                      '전월 대비: ',
-                                      style: TextStyle(
-                                        color: Colors.white70,
                                         fontSize: 13,
                                       ),
                                     ),
-                                    (totalBalance - lastTotalBalance)
-                                        .round()
-                                        .toSignedPriceText(
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                  ],
-                                ),
+                                ],
+                                diffFromLastMonthWidget: (totalBalance - lastTotalBalance)
+                                    .round()
+                                    .toSignedPriceText(
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                               ),
                             );
                           },
                         ),
 
                         // 2. 주식 계좌 목록 그리드
-                        const SectionTitle(
-                          '주식 계좌 목록',
-                          topSpacing: 24,
-                          bottomSpacing: 12,
-                        ),
+                        const SectionTitle('주식 계좌 목록'),
+
                         StockAccountGrid(
                           currentMonth: activeCurrentMonth,
                           lastMonth: lastMonth,
@@ -340,22 +328,16 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                         ),
 
                         // 3. 계좌별 평가 비중
-                        const SectionTitle(
-                          '계좌별 평가 비중',
-                          topSpacing: 28,
-                          bottomSpacing: 12,
-                        ),
+                        const SectionTitle('계좌별 평가 비중'),
+
                         StockPortionSection(
                           currentMonth: activeCurrentMonth,
                           chartColors: _chartColors,
                         ),
 
                         // 4. 계좌별 월말 수익률 추이
-                        const SectionTitle(
-                          '계좌별 월말 수익률 추이 (%)',
-                          topSpacing: 28,
-                          bottomSpacing: 12,
-                        ),
+                        const SectionTitle('계좌별 월말 수익률 추이 (%)' ),
+
                         StockReturnRateChart(
                           currentMonth: activeCurrentMonth,
                           months: months,
