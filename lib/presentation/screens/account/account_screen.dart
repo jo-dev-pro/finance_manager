@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/account/account.dart';
@@ -166,26 +168,26 @@ class AccountScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, Account account) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('계좌 삭제'),
-        content: Text('"${account.financialInstitution} 계좌"를 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await ref.read(accountNotifierProvider.notifier).deleteAccount(account.id!);
-            },
-            child: const Text('삭제', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+ void _confirmDelete(BuildContext context, WidgetRef ref, Account account) {
+    if (account.id == null) return;
+
+    AppDialog.showDeleteConfirm(
+      context,
+      title: '계좌 삭제',
+      content: '"${account.financialInstitution} 계좌"를 삭제하시겠습니까?',
+      onDelete: () async {
+        try {
+          await ref
+              .read(accountNotifierProvider.notifier)
+              .deleteAccount(account.id!);
+
+          if (!context.mounted) return;
+          AppSnackBar.showInfo(context, '계좌가 삭제되었습니다.');
+        } catch (e) {
+          if (!context.mounted) return;
+          AppSnackBar.showError(context, '삭제 실패: $e');
+        }
+      },
     );
   }
 }

@@ -222,8 +222,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                       itemBuilder: (context, index) {
                         final item = filteredItems[index];
                         final matchedAcc = accountMap[item.accountId];
-                        final institution =
-                            matchedAcc?.financialInstitution ?? '기타 증권사';
                         final nameObj =
                             matchedAcc != null
                                 ? accountNameMap[matchedAcc.accountNameId]

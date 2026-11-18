@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/utils/responsive_extension.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -35,15 +34,11 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    String? initialMonth;
     String? initialAccountId;
 
     if (extra is Map<String, dynamic>) {
-      initialMonth = (extra as Map<String, dynamic>)['yearMonth'] as String?;
       initialAccountId =
           (extra as Map<String, dynamic>)['accountId'] as String?;
-    } else if (extra is String) {
-      initialMonth = extra as String;
     }
 
     if (initialAccountId != null) {
@@ -57,11 +52,6 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
     }
 
     final selectedMonth = ref.watch(selectedYearMonthProvider);
-    final targetMonth =
-        selectedMonth ??
-        initialMonth ??
-        DateFormat('yyyy-MM').format(DateTime.now());
-
     final selectedAccountId = ref.watch(selectedPensionAccountFilterProvider);
 
     final accountsAsync = ref.watch(accountNotifierProvider);

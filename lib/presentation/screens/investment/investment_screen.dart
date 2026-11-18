@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/widgets/app_dialog.dart';      // 💡 공통 삭제 다이얼로그
+import '../../../core/widgets/app_snackbar.dart';  // 💡 공통 스낵바
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/jtext.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
@@ -28,7 +30,7 @@ class InvestmentScreen extends ConsumerWidget {
             color: Colors.grey.shade700,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            onPressed: () => _showAddDialog(context),
+            onPressed: () => _showDialog(context), 
           ),
           const SizedBox(width: 16),
         ],
@@ -43,7 +45,7 @@ class InvestmentScreen extends ConsumerWidget {
           return MainConstrainedBox(
             child: Column(
               children: [
-                  const SizedBox(height: 16),
+                const SizedBox(height: 16),
                 SummaryCard(
                   title: '총 투자금액',
                   mainAmountText: totalAmount.toWon(),
@@ -111,15 +113,15 @@ class InvestmentScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(width: 16),
                                       EditDeleteButtons(
-                                        onEdit:
-                                            () =>
-                                                _showEditDialog(context, item),
-                                        onDelete:
-                                            () => _confirmDelete(
-                                              context,
-                                              ref,
-                                              item,
-                                            ),
+                                        onEdit: () => _showDialog(
+                                          context,
+                                          investment: item, // 💡 수정 모드 호출
+                                        ),
+                                        onDelete: () => _confirmDelete(
+                                          context,
+                                          ref,
+                                          item,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -138,18 +140,8 @@ class InvestmentScreen extends ConsumerWidget {
     );
   }
 
-  void _showAddDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => const InvestmentDialog(),
-    );
-  }
-
-  void _showEditDialog(BuildContext context, Investment investment) {
+  // 💡 추가와 수정을 하나로 통합한 공통 다이얼로그 호출 함수
+  void _showDialog(BuildContext context, {Investment? investment}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -160,35 +152,31 @@ class InvestmentScreen extends ConsumerWidget {
     );
   }
 
+  // 💡 공통 삭제 다이얼로그 + 스낵바 + mounted 가드 적용
   void _confirmDelete(
     BuildContext context,
     WidgetRef ref,
     Investment investment,
   ) {
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('삭제 확인'),
-            content: Text('\'${investment.description}\' 내역을 삭제하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('취소'),
-              ),
-              TextButton(
-                onPressed: () {
-                  if (investment.id != null) {
-                    ref
-                        .read(investmentNotifierProvider.notifier)
-                        .deleteInvestment(investment.id!);
-                  }
-                  Navigator.of(ctx).pop();
-                },
-                child: const Text('삭제', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
+    if (investment.id == null) return;
+
+    AppDialog.showDeleteConfirm(
+      context,
+      title: '삭제 확인',
+      content: '\'${investment.description}\' 내역을 삭제하시겠습니까?',
+      onDelete: () async {
+        try {
+          await ref
+              .read(investmentNotifierProvider.notifier)
+              .deleteInvestment(investment.id!);
+
+          if (!context.mounted) return;
+          AppSnackBar.showInfo(context, '투자 내역이 삭제되었습니다.');
+        } catch (e) {
+          if (!context.mounted) return;
+          AppSnackBar.showError(context, '삭제 실패: $e');
+        }
+      },
     );
   }
 }

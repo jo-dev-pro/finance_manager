@@ -65,57 +65,45 @@ class SummaryCard extends StatelessWidget {
                     children: [
                       if (principalText != null) ...[
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Text(
-                                '총 투자 원금',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
+                            const Text(
+                              '총 투자 원금',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
                               ),
                             ),
-                            Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  JText(
-                                    principalText!,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+                            Flexible(
+                              child: JText(
+                                principalText!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14, // 폰트 크기를 살짝 조절하여 오버플로우 방지
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: true,
                               ),
                             ),
                           ],
                         ),
                       ],
                       if (principalText != null && profitLossWidget != null)
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
 
                       if (profitLossWidget != null) ...[
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Text(
-                                '평가 손익 (수익률)',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
+                            const Text(
+                              '평가 손익 (수익률)',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
                               ),
                             ),
-                            Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [profitLossWidget!],
-                              ),
-                            ),
+                            profitLossWidget!,
                           ],
                         ),
 

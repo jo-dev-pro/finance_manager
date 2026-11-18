@@ -7,6 +7,7 @@ import 'package:collection/collection.dart';
 import '../../../../../core/utils/number_formatter.dart';
 import '../../../../../core/utils/responsive_extension.dart';
 import '../../../../../core/utils/toss_direct_api_service.dart';
+import '../../../../../core/widgets/app_snackbar.dart';
 import '../../../../../models/monthly_data/monthly_stock_balance.dart';
 import '../../../../../models/monthly_data/monthly_stock_account_balance.dart';
 import '../../../../../models/stock/stock_item.dart';
@@ -77,11 +78,11 @@ class _MonthlyStockBalanceDialogState
 
   @override
   void dispose() {
-    for (var c in _quantityControllers.values) c.dispose();
-    for (var c in _priceControllers.values) c.dispose();
-    for (var c in _monthlyPrincipalControllers.values) c.dispose();
-    for (var c in _monthlyPayoutControllers.values) c.dispose();
-    for (var c in _monthlyWithdrawalControllers.values) c.dispose();
+    for (var c in _quantityControllers.values) { c.dispose(); }
+    for (var c in _priceControllers.values) { c.dispose(); }
+    for (var c in _monthlyPrincipalControllers.values) { c.dispose(); }
+    for (var c in _monthlyPayoutControllers.values) { c.dispose(); }
+    for (var c in _monthlyWithdrawalControllers.values) { c.dispose(); }
     _accountCashBalanceController.dispose();
     _accountMonthlyWithdrawalController.dispose();
     _exchangeRateController.dispose();
@@ -108,12 +109,11 @@ class _MonthlyStockBalanceDialogState
         setState(() {
           _exchangeRateController.text = rate.toStringAsFixed(2);
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('월말 환율 조회가 완료되었습니다!')),
-        );
+        AppSnackBar.showInfo(context, '월말 환율 조회가 완료되었습니다!');
       }
     } catch (e) {
-      print('환율 조회 실패: $e');
+      if (!mounted) return;
+      AppSnackBar.showError(context, '환율 조회 실패: $e');
     } finally {
       if (mounted) setState(() => _isExchangeRateLoading = false);
     }
@@ -141,9 +141,13 @@ class _MonthlyStockBalanceDialogState
         setState(() {
           _priceControllers[key]!.text = price.toCommaString();
         });
+        if (mounted) {
+          AppSnackBar.showInfo(context, '${selectedStock.itemName} 시세 조회가 완료되었습니다.');
+        }
       }
     } catch (e) {
-      print('시세 조회 실패: $e');
+      if (!mounted) return;
+      AppSnackBar.showError(context, '시세 조회 실패: $e');
     } finally {
       if (mounted) setState(() => _isLoadingPriceMap[key] = false);
     }
@@ -157,40 +161,45 @@ class _MonthlyStockBalanceDialogState
 
     setState(() => _isAllLoading = true);
 
-    await Future.wait([
-      _fetchExchangeRate(),
-      ...groupedItems.map((group) async {
-        final key = '${group.accountId}_${group.stockItemId}';
-        final stockId = group.stockItemId;
+    try {
+      await Future.wait([
+        _fetchExchangeRate(),
+        ...groupedItems.map((group) async {
+          final key = '${group.accountId}_${group.stockItemId}';
+          final stockId = group.stockItemId;
 
-        try {
-          final selectedStock = stockItems.firstWhere(
-            (s) => s.id == stockId,
-            orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
-          );
+          try {
+            final selectedStock = stockItems.firstWhere(
+              (s) => s.id == stockId,
+              orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
+            );
 
-          String symbol = selectedStock.stockCode.trim();
-          final price = await TossDirectApiService.getMonthlyClosePrice(
-            symbol,
-            _selectedYearMonth,
-          );
+            String symbol = selectedStock.stockCode.trim();
+            final price = await TossDirectApiService.getMonthlyClosePrice(
+              symbol,
+              _selectedYearMonth,
+            );
 
-          if (price != null && _priceControllers.containsKey(key)) {
-            setState(() {
-              _priceControllers[key]!.text = price.toCommaString();
-            });
+            if (price != null && _priceControllers.containsKey(key)) {
+              setState(() {
+                _priceControllers[key]!.text = price.toCommaString();
+              });
+            }
+          } catch (e) {
+            // 개별 종목 실패 시 콘솔 대신 필요에 따라 처리 가능 (여기서는 조용히 넘어가거나 에러 스낵바 연결 가능)
           }
-        } catch (e) {
-          print('종목($stockId) 일괄 조회 실패: $e');
-        }
-      }),
-    ]);
+        }),
+      ]);
 
-    if (mounted) {
-      setState(() => _isAllLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('시세 및 환율 조회가 완료되었습니다!')),
-      );
+      if (mounted) {
+        setState(() => _isAllLoading = false);
+        AppSnackBar.showInfo(context, '시세 및 환율 조회가 완료되었습니다!');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isAllLoading = false);
+        AppSnackBar.showError(context, '시세 일괄 조회 실패: $e');
+      }
     }
   }
 
@@ -858,136 +867,141 @@ class _MonthlyStockBalanceDialogState
       monthlyStockAccountBalanceNotifierProvider(_selectedYearMonth).notifier,
     );
 
-    final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
-    final prevAccountBalances = ref.read(
-          monthlyStockAccountBalanceNotifierProvider(prevYearMonth),
-        ).value ?? [];
-    
-    final prevAccountBalance = prevAccountBalances.firstWhereOrNull(
-      (b) => b.accountId == _selectedAccountId,
-    );
-    final prevTotalWithdrawal = prevAccountBalance?.totalWithdrawal ?? 0.0;
-
-    final accountCashBalance = double.tryParse(
-          _accountCashBalanceController.text.replaceAll(RegExp(r'[^0-9.]'), ''),
-        ) ??
-        0.0;
-    final exchangeRateVal = double.tryParse(_exchangeRateController.text.trim()) ?? 1.0;
-    final currentMonthlyWithdrawal = double.tryParse(
-          _accountMonthlyWithdrawalController.text.replaceAll(RegExp(r'[^0-9]'), ''),
-        ) ??
-        0.0;
-
-    final finalTotalWithdrawal = prevTotalWithdrawal + currentMonthlyWithdrawal;
-
-    final accountBalanceItem = MonthlyStockAccountBalance(
-      yearMonth: _selectedYearMonth,
-      accountId: _selectedAccountId!,
-      cashBalance: accountCashBalance,
-      exchangeRate: exchangeRateVal,
-      monthlyWithdrawal: currentMonthlyWithdrawal,
-      totalWithdrawal: finalTotalWithdrawal,
-    );
-    await accountBalanceNotifier.saveBalance(accountBalanceItem);
-
-    final holdingItems = ref.read(stockHoldingItemNotifierProvider).value ?? [];
-    final Map<String, _GroupedStockItem> groupedMap = {};
-
-    final prevBalances =
-        ref.read(monthlyStockBalanceNotifierProvider(prevYearMonth)).value ?? [];
-    final prevBalanceMap = {
-      for (var b in prevBalances) '${b.accountId}_${b.stockItemId}': b,
-    };
-
-    final matchedHoldings =
-        holdingItems
-            .where((hi) => hi.accountId == _selectedAccountId && hi.isActive)
-            .toList();
-
-    for (var hi in matchedHoldings) {
-      final stockId = hi.stockItemId;
-      final prevData = prevBalanceMap['${hi.accountId}_$stockId'];
-      groupedMap[stockId] = _GroupedStockItem(
-        accountId: hi.accountId,
-        stockItemId: stockId,
-        principal: prevData?.principal ?? 0.0,
-        totalPayout: prevData?.totalPayout ?? 0.0,
-        totalWithdrawal: prevData?.totalWithdrawal ?? 0.0,
-        purchaseDate: hi.initialPurchaseDate,
+    try {
+      final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
+      final prevAccountBalances = ref.read(
+            monthlyStockAccountBalanceNotifierProvider(prevYearMonth),
+          ).value ?? [];
+      
+      final prevAccountBalance = prevAccountBalances.firstWhereOrNull(
+        (b) => b.accountId == _selectedAccountId,
       );
-    }
+      final prevTotalWithdrawal = prevAccountBalance?.totalWithdrawal ?? 0.0;
 
-    final List<MonthlyStockBalance> itemsToSave = [];
+      final accountCashBalance = double.tryParse(
+            _accountCashBalanceController.text.replaceAll(RegExp(r'[^0-9.]'), ''),
+          ) ??
+          0.0;
+      final exchangeRateVal = double.tryParse(_exchangeRateController.text.trim()) ?? 1.0;
+      final currentMonthlyWithdrawal = double.tryParse(
+            _accountMonthlyWithdrawalController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+          ) ??
+          0.0;
 
-    for (var entry in groupedMap.entries) {
-      final stockId = entry.key;
-      final groupItem = entry.value;
-      final key = '${_selectedAccountId}_$stockId';
+      final finalTotalWithdrawal = prevTotalWithdrawal + currentMonthlyWithdrawal;
 
-      final qtyCtrl = _quantityControllers[key];
-      final priceCtrl = _priceControllers[key];
-      final monthlyPrinCtrl = _monthlyPrincipalControllers[key];
-      final monthlyPayoutCtrl = _monthlyPayoutControllers[key];
-      final monthlyWithCtrl = _monthlyWithdrawalControllers[key];
+      final accountBalanceItem = MonthlyStockAccountBalance(
+        yearMonth: _selectedYearMonth,
+        accountId: _selectedAccountId!,
+        cashBalance: accountCashBalance,
+        exchangeRate: exchangeRateVal,
+        monthlyWithdrawal: currentMonthlyWithdrawal,
+        totalWithdrawal: finalTotalWithdrawal,
+      );
+      await accountBalanceNotifier.saveBalance(accountBalanceItem);
 
-      if (qtyCtrl != null &&
-          qtyCtrl.text.isNotEmpty &&
-          priceCtrl != null &&
-          priceCtrl.text.isNotEmpty) {
-        final qtyVal =
-            double.tryParse(qtyCtrl.text.replaceAll(',', '').trim()) ?? 0.0;
-        final priceVal =
-            double.tryParse(priceCtrl.text.replaceAll(',', '').trim()) ?? 0.0;
-        final balanceVal = qtyVal * priceVal;
+      final holdingItems = ref.read(stockHoldingItemNotifierProvider).value ?? [];
+      final Map<String, _GroupedStockItem> groupedMap = {};
 
-        final monthlyPrinVal =
-            double.tryParse(
-              monthlyPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
-            ) ??
-            0.0;
-        
-        final monthlyPayoutVal =
-            double.tryParse(
-              monthlyPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
-            ) ??
-            0.0;
+      final prevBalances =
+          ref.read(monthlyStockBalanceNotifierProvider(prevYearMonth)).value ?? [];
+      final prevBalanceMap = {
+        for (var b in prevBalances) '${b.accountId}_${b.stockItemId}': b,
+      };
 
-        final monthlyWithVal =
-            double.tryParse(
-              monthlyWithCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
-            ) ??
-            0.0;
+      final matchedHoldings =
+          holdingItems
+              .where((hi) => hi.accountId == _selectedAccountId && hi.isActive)
+              .toList();
 
-        final finalPrincipal = groupItem.principal + monthlyPrinVal;
-        final finalTotalPayout = groupItem.totalPayout + monthlyPayoutVal;
-        final finalTotalWithdrawal = groupItem.totalWithdrawal + monthlyWithVal;
-
-        itemsToSave.add(
-          MonthlyStockBalance(
-            yearMonth: _selectedYearMonth,
-            accountId: _selectedAccountId!,
-            stockItemId: stockId,
-            quantity: qtyVal,
-            currentPrice: priceVal,
-            balance: balanceVal,
-            principal: finalPrincipal,
-            monthlyPrincipal: monthlyPrinVal,
-            totalPayout: finalTotalPayout,
-            monthlyPayout: monthlyPayoutVal,
-            totalWithdrawal: finalTotalWithdrawal,
-            monthlyWithdrawal: monthlyWithVal,
-            purchaseDate: groupItem.purchaseDate,
-          ),
+      for (var hi in matchedHoldings) {
+        final stockId = hi.stockItemId;
+        final prevData = prevBalanceMap['${hi.accountId}_$stockId'];
+        groupedMap[stockId] = _GroupedStockItem(
+          accountId: hi.accountId,
+          stockItemId: stockId,
+          principal: prevData?.principal ?? 0.0,
+          totalPayout: prevData?.totalPayout ?? 0.0,
+          totalWithdrawal: prevData?.totalWithdrawal ?? 0.0,
+          purchaseDate: hi.initialPurchaseDate,
         );
       }
-    }
 
-    if (itemsToSave.isNotEmpty) {
-      await stockNotifier.saveBatchBalances(itemsToSave);
-    }
+      final List<MonthlyStockBalance> itemsToSave = [];
 
-    if (mounted) {
+      for (var entry in groupedMap.entries) {
+        final stockId = entry.key;
+        final groupItem = entry.value;
+        final key = '${_selectedAccountId}_$stockId';
+
+        final qtyCtrl = _quantityControllers[key];
+        final priceCtrl = _priceControllers[key];
+        final monthlyPrinCtrl = _monthlyPrincipalControllers[key];
+        final monthlyPayoutCtrl = _monthlyPayoutControllers[key];
+        final monthlyWithCtrl = _monthlyWithdrawalControllers[key];
+
+        if (qtyCtrl != null &&
+            qtyCtrl.text.isNotEmpty &&
+            priceCtrl != null &&
+            priceCtrl.text.isNotEmpty) {
+          final qtyVal =
+              double.tryParse(qtyCtrl.text.replaceAll(',', '').trim()) ?? 0.0;
+          final priceVal =
+              double.tryParse(priceCtrl.text.replaceAll(',', '').trim()) ?? 0.0;
+          final balanceVal = qtyVal * priceVal;
+
+          final monthlyPrinVal =
+              double.tryParse(
+                monthlyPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+              ) ??
+              0.0;
+          
+          final monthlyPayoutVal =
+              double.tryParse(
+                monthlyPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+              ) ??
+              0.0;
+
+          final monthlyWithVal =
+              double.tryParse(
+                monthlyWithCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+              ) ??
+              0.0;
+
+          final finalPrincipal = groupItem.principal + monthlyPrinVal;
+          final finalTotalPayout = groupItem.totalPayout + monthlyPayoutVal;
+          final finalTotalWithdrawal = groupItem.totalWithdrawal + monthlyWithVal;
+
+          itemsToSave.add(
+            MonthlyStockBalance(
+              yearMonth: _selectedYearMonth,
+              accountId: _selectedAccountId!,
+              stockItemId: stockId,
+              quantity: qtyVal,
+              currentPrice: priceVal,
+              balance: balanceVal,
+              principal: finalPrincipal,
+              monthlyPrincipal: monthlyPrinVal,
+              totalPayout: finalTotalPayout,
+              monthlyPayout: monthlyPayoutVal,
+              totalWithdrawal: finalTotalWithdrawal,
+              monthlyWithdrawal: monthlyWithVal,
+              purchaseDate: groupItem.purchaseDate,
+            ),
+          );
+        }
+      }
+
+      if (itemsToSave.isNotEmpty) {
+        await stockNotifier.saveBatchBalances(itemsToSave);
+      }
+
+      if (!mounted) return;
       Navigator.pop(context);
+      AppSnackBar.showInfo(context, '주식 월말 평가액이 성공적으로 저장되었습니다.');
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackBar.showError(context, '저장 실패: $e');
     }
   }
 }

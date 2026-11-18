@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_extension.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../models/stock/stock_item.dart';
 import '../../../../providers/stock/stock_item_provider.dart';
 
@@ -63,7 +64,7 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
         id: widget.initialData?.id,
         stockCode: _codeController.text.trim(),
         itemName: _nameController.text.trim(),
-        yahooName: _selectedYahooName, // 💡 야후 연동용 yahooName 저장
+        yahooName: _selectedYahooName,
         otherName: _otherNameController.text.trim().isEmpty ? '' : _otherNameController.text.trim(),
       );
 
@@ -74,13 +75,15 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
         await notifier.addStockItem(stockItem);
       }
 
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      AppSnackBar.showInfo(
+        context,
+        _isEditing ? '종목 정보가 수정되었습니다.' : '신규 종목이 등록되었습니다.',
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
-      }
+      if (!mounted) return;
+      AppSnackBar.showError(context, '저장 실패: $e');
     }
   }
 

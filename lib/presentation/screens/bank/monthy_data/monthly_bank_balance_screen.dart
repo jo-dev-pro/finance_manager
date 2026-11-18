@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
-import '../../../../core/utils/responsive_extension.dart';
+import '../../../../core/widgets/app_dialog.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/bottom_action_button.dart';
 import '../../../../core/widgets/edit_delete_button.dart';
 import '../../../../core/widgets/jtext.dart';
@@ -33,7 +33,11 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
         DateFormat('yyyy-MM').format(DateTime.now());
 
     return Scaffold(
-      appBar: AppBar(title: const Text('월말 잔액 관리'), scrolledUnderElevation: 0),
+      appBar: AppBar(
+        title: const Text('월말 잔액 관리'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),
@@ -66,6 +70,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                   months: months,
                   currentMonth: activeCurrentMonth,
                 ),
+                SizedBox(height: 16),
 
                 Expanded(
                   child: balancesAsync.when(
@@ -92,7 +97,6 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                       };
 
                       return SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
                         child: ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -118,7 +122,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
                               child: Card(
-                                elevation: 1.5,
+                                elevation: 1,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -219,7 +223,6 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                             onEdit:
                                                 () => _showEditDialog(
                                                   context,
-                                                  ref,
                                                   balanceItem,
                                                   accountName,
                                                 ),
@@ -269,107 +272,21 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
 
   void _showEditDialog(
     BuildContext context,
-    WidgetRef ref,
     MonthlyBankBalance balanceItem,
     String accountName,
   ) {
-    final controller = TextEditingController(
-      text: balanceItem.balance.toCommaString(),
-    );
-    final formKey = GlobalKey<FormState>();
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (sheetContext) {
-        return Container(
-          width: double.infinity,
-          padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
-          child: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '$accountName (${balanceItem.yearMonth}) 금액 수정',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(sheetContext),
-                      ),
-                    ],
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      ThousandsSeparatorInputFormatter(),
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: '금액 (원)',
-                      suffixText: '원',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) {
-                        return '금액을 입력해 주세요.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (!(formKey.currentState?.validate() ?? false)) {
-                          return;
-                        }
-
-                        final cleanText = controller.text.replaceAll(
-                          RegExp(r'[^0-9]'),
-                          '',
-                        );
-                        final newBalance = double.tryParse(cleanText) ?? 0.0;
-
-                        final updatedItem = balanceItem.copyWith(
-                          balance: newBalance,
-                        );
-                        await ref
-                            .read(
-                              monthlyBankBalanceNotifierProvider(
-                                balanceItem.yearMonth,
-                              ).notifier,
-                            )
-                            .saveBalance(updatedItem);
-
-                        if (sheetContext.mounted) Navigator.pop(sheetContext);
-                      },
-                      child: const Text('저장하기', style: TextStyle(fontSize: 16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      builder:
+          (context) => MonthlyBankBalanceDialog(
+            yearMonth: balanceItem.yearMonth,
+            editItem: balanceItem, // 💡 수정 모드 활성화
+            accountNameText: accountName,
           ),
-        );
-      },
     );
   }
 
@@ -379,35 +296,27 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
     MonthlyBankBalance item,
     String accountName,
   ) {
-    showDialog(
-      context: context,
-      builder:
-          (dialogContext) => AlertDialog(
-            title: const Text('삭제 확인'),
-            content: Text('$accountName의 ${item.yearMonth} 월말 데이터를 삭제하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('취소'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () async {
-                  if (item.id != null) {
-                    await ref
-                        .read(
-                          monthlyBankBalanceNotifierProvider(
-                            item.yearMonth,
-                          ).notifier,
-                        )
-                        .deleteBalance(item.id!);
-                  }
-                  if (dialogContext.mounted) Navigator.pop(dialogContext);
-                },
-                child: const Text('삭제', style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
+    AppDialog.showDeleteConfirm(
+      context,
+      title: '삭제 확인',
+      content: '$accountName의 ${item.yearMonth} 월말 데이터를 삭제하시겠습니까?',
+      onDelete: () async {
+        if (item.id != null) {
+          try {
+            await ref
+                .read(
+                  monthlyBankBalanceNotifierProvider(item.yearMonth).notifier,
+                )
+                .deleteBalance(item.id!);
+
+            if (!context.mounted) return;
+            AppSnackBar.showInfo(context, '월말 데이터가 삭제되었습니다.');
+          } catch (e) {
+            if (!context.mounted) return;
+            AppSnackBar.showError(context, '삭제 실패: $e');
+          }
+        }
+      },
     );
   }
 }

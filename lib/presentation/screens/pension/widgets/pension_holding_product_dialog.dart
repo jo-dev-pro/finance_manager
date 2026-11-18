@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/date_helper.dart';
 import '../../../../core/utils/responsive_extension.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../models/pension/pension_holding_product.dart';
 import '../../../../models/pension/pension_product.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -92,16 +93,13 @@ class _PensionHoldingProductDialogState
   Future<void> _submit(List<PensionProduct> products) async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedAccountId == null || _selectedProductId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('계좌와 상품을 모두 선택해 주세요.')));
+      AppSnackBar.showError(context, '계좌와 상품을 모두 선택해 주세요.');
       return;
     }
 
     final isCash = _checkIsCashAsset(products);
 
     try {
-      // 💡 현금성 자산일 경우 매수일은 null로 저장
       final dateText = _dateController.text.trim();
       final finalPurchaseDate =
           isCash ? null : (dateText.isNotEmpty ? dateText : null);
@@ -121,13 +119,15 @@ class _PensionHoldingProductDialogState
         await notifier.addPensionHoldingProduct(item);
       }
 
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      AppSnackBar.showInfo(
+        context,
+        _isEditing ? '계좌별 보유상품 내역이 수정되었습니다.' : '계좌별 연금 상품이 등록되었습니다.',
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
-      }
+      if (!mounted) return;
+      AppSnackBar.showError(context, '저장 실패: $e');
     }
   }
 

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/date_helper.dart';
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/utils/responsive_extension.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../models/investment/investment.dart';
 import '../../../../providers/investment/investment_provider.dart';
 
@@ -90,7 +91,7 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
         id: widget.initialData?.id,
         description: description,
         amount: amount,
-        createdAt: _selectedDateStr, // 수정된 String 날짜 전달
+        createdAt: _selectedDateStr,
       );
 
       final notifier = ref.read(investmentNotifierProvider.notifier);
@@ -100,13 +101,20 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
         await notifier.addInvestment(investment);
       }
 
-      if (mounted) Navigator.of(context).pop();
+      // 💡 비동기 작업 후 안전성 체크 및 팝업 닫기
+      if (!mounted) return;
+      Navigator.of(context).pop();
+
+      // 💡 공통 스낵바를 통한 성공 메시지 출력
+      AppSnackBar.showInfo(
+        context, 
+        _isEditing ? '투자 내역이 수정되었습니다.' : '투자 내역이 등록되었습니다.',
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
-      }
+      if (!mounted) return;
+      
+      // 💡 공통 에러 스낵바 출력
+      AppSnackBar.showError(context, '저장 실패: $e');
     } 
   }
 

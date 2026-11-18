@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
 import '../../../../../core/utils/responsive_extension.dart';
+import '../../../../../core/widgets/app_snackbar.dart';
 import '../../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../../models/monthly_data/monthly_pension_account_balance.dart';
 import '../../../../../providers/account/account_name_provider.dart';
@@ -748,145 +749,150 @@ class _MonthlyPensionBalanceDialogState
       monthlyPensionAccountBalanceNotifierProvider(_selectedYearMonth).notifier,
     );
 
-    // 1. 계좌 요약 테이블 저장
-    final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
-    final prevAccountBalances =
-        ref
-            .read(monthlyPensionAccountBalanceNotifierProvider(prevYearMonth))
-            .value ??
-        [];
+    try {
+      // 1. 계좌 요약 테이블 저장
+      final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
+      final prevAccountBalances =
+          ref
+              .read(monthlyPensionAccountBalanceNotifierProvider(prevYearMonth))
+              .value ??
+          [];
 
-    final prevAccountBalance = prevAccountBalances.firstWhereOrNull(
-      (b) => b.accountId == _selectedAccountId,
-    );
-    final prevAccountPrincipal = prevAccountBalance?.principal ?? 0.0;
-    final prevTotalWithdrawal = prevAccountBalance?.totalWithdrawal ?? 0.0;
+      final prevAccountBalance = prevAccountBalances.firstWhereOrNull(
+        (b) => b.accountId == _selectedAccountId,
+      );
+      final prevAccountPrincipal = prevAccountBalance?.principal ?? 0.0;
+      final prevTotalWithdrawal = prevAccountBalance?.totalWithdrawal ?? 0.0;
 
-    final accountCashBalance =
-        double.tryParse(
-          _accountCashBalanceController.text.replaceAll(RegExp(r'[^0-9]'), ''),
-        ) ??
-        0.0;
-    final currentMonthlyPrincipal =
-        double.tryParse(
-          _accountMonthlyPrincipalController.text.replaceAll(
-            RegExp(r'[^0-9]'),
-            '',
-          ),
-        ) ??
-        0.0;
-    final currentMonthlyWithdrawal =
-        double.tryParse(
-          _accountMonthlyWithdrawalController.text.replaceAll(
-            RegExp(r'[^0-9]'),
-            '',
-          ),
-        ) ??
-        0.0;
-
-    final finalAccountPrincipal = prevAccountPrincipal + currentMonthlyPrincipal;
-    final finalTotalWithdrawal = prevTotalWithdrawal + currentMonthlyWithdrawal;
-
-    final accountBalanceItem = MonthlyPensionAccountBalance(
-      yearMonth: _selectedYearMonth,
-      accountId: _selectedAccountId!,
-      cashBalance: accountCashBalance,
-      principal: finalAccountPrincipal,
-      monthlyPrincipal: currentMonthlyPrincipal,
-      monthlyWithdrawal: currentMonthlyWithdrawal,
-      totalWithdrawal: finalTotalWithdrawal,
-    );
-    await accountBalanceNotifier.saveBalance(accountBalanceItem);
-
-    // 2. 상품별 월말 데이터 파싱 및 저장
-    final holdingProducts =
-        ref.read(pensionHoldingProductNotifierProvider).value ?? [];
-
-    final prevBalances =
-        ref.read(monthlyPensionBalanceNotifierProvider(prevYearMonth)).value ??
-        [];
-    final prevBalanceMap = {
-      for (var b in prevBalances) '${b.accountId}_${b.productId}': b,
-    };
-
-    final matchedHoldings =
-        holdingProducts
-            .where((hp) => hp.accountId == _selectedAccountId && hp.isActive)
-            .toList();
-
-    final List<MonthlyPensionBalance> itemsToSave = [];
-
-    for (var hp in matchedHoldings) {
-      final prodId = hp.productId;
-      final key = '${_selectedAccountId}_$prodId';
-      final prevData = prevBalanceMap[key];
-
-      final qtyCtrl = _quantityControllers[key];
-      final basePriceCtrl = _basePriceControllers[key];
-      final balCtrl = _balanceControllers[key];
-      final monthlyPrinCtrl = _monthlyPrincipalControllers[key];
-      final monthlySaleCtrl = _monthlySaleControllers[key];
-
-      final qty =
-          double.tryParse(qtyCtrl?.text.replaceAll(',', '').trim() ?? '') ??
-          0.0;
-      final basePrice =
+      final accountCashBalance =
           double.tryParse(
-            basePriceCtrl?.text.replaceAll(',', '').trim() ?? '',
+            _accountCashBalanceController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+          ) ??
+          0.0;
+      final currentMonthlyPrincipal =
+          double.tryParse(
+            _accountMonthlyPrincipalController.text.replaceAll(
+              RegExp(r'[^0-9]'),
+              '',
+            ),
+          ) ??
+          0.0;
+      final currentMonthlyWithdrawal =
+          double.tryParse(
+            _accountMonthlyWithdrawalController.text.replaceAll(
+              RegExp(r'[^0-9]'),
+              '',
+            ),
           ) ??
           0.0;
 
-      double finalBalance = 0.0;
-      if (qty > 0 && basePrice > 0) {
-        finalBalance = (qty * basePrice) / 1000.0;
-      } else {
-        finalBalance =
-            double.tryParse(balCtrl?.text.replaceAll(',', '').trim() ?? '') ??
-            (prevData?.balance ?? 0.0);
+      final finalAccountPrincipal = prevAccountPrincipal + currentMonthlyPrincipal;
+      final finalTotalWithdrawal = prevTotalWithdrawal + currentMonthlyWithdrawal;
+
+      final accountBalanceItem = MonthlyPensionAccountBalance(
+        yearMonth: _selectedYearMonth,
+        accountId: _selectedAccountId!,
+        cashBalance: accountCashBalance,
+        principal: finalAccountPrincipal,
+        monthlyPrincipal: currentMonthlyPrincipal,
+        monthlyWithdrawal: currentMonthlyWithdrawal,
+        totalWithdrawal: finalTotalWithdrawal,
+      );
+      await accountBalanceNotifier.saveBalance(accountBalanceItem);
+
+      // 2. 상품별 월말 데이터 파싱 및 저장
+      final holdingProducts =
+          ref.read(pensionHoldingProductNotifierProvider).value ?? [];
+
+      final prevBalances =
+          ref.read(monthlyPensionBalanceNotifierProvider(prevYearMonth)).value ??
+          [];
+      final prevBalanceMap = {
+        for (var b in prevBalances) '${b.accountId}_${b.productId}': b,
+      };
+
+      final matchedHoldings =
+          holdingProducts
+              .where((hp) => hp.accountId == _selectedAccountId && hp.isActive)
+              .toList();
+
+      final List<MonthlyPensionBalance> itemsToSave = [];
+
+      for (var hp in matchedHoldings) {
+        final prodId = hp.productId;
+        final key = '${_selectedAccountId}_$prodId';
+        final prevData = prevBalanceMap[key];
+
+        final qtyCtrl = _quantityControllers[key];
+        final basePriceCtrl = _basePriceControllers[key];
+        final balCtrl = _balanceControllers[key];
+        final monthlyPrinCtrl = _monthlyPrincipalControllers[key];
+        final monthlySaleCtrl = _monthlySaleControllers[key];
+
+        final qty =
+            double.tryParse(qtyCtrl?.text.replaceAll(',', '').trim() ?? '') ??
+            0.0;
+        final basePrice =
+            double.tryParse(
+              basePriceCtrl?.text.replaceAll(',', '').trim() ?? '',
+            ) ??
+            0.0;
+
+        double finalBalance = 0.0;
+        if (qty > 0 && basePrice > 0) {
+          finalBalance = (qty * basePrice) / 1000.0;
+        } else {
+          finalBalance =
+              double.tryParse(balCtrl?.text.replaceAll(',', '').trim() ?? '') ??
+              (prevData?.balance ?? 0.0);
+        }
+
+        final monthlyPrinVal =
+            double.tryParse(
+              monthlyPrinCtrl?.text.replaceAll(',', '').trim() ?? '',
+            ) ??
+            0.0;
+        final monthlySaleVal =
+            double.tryParse(
+              monthlySaleCtrl?.text.replaceAll(',', '').trim() ?? '',
+            ) ??
+            0.0;
+
+        final prevPrincipal = prevData?.principal ?? 0.0;
+        final prevTotalSale = prevData?.totalSale ?? 0.0;
+
+        final finalPrincipal = prevPrincipal + monthlyPrinVal;
+        final finalTotalSale = prevTotalSale + monthlySaleVal;
+
+        if (finalBalance > 0 ||
+            monthlySaleVal > 0 ||
+            monthlyPrinVal > 0 ||
+            finalPrincipal > 0) {
+          itemsToSave.add(
+            MonthlyPensionBalance(
+              yearMonth: _selectedYearMonth,
+              accountId: _selectedAccountId!,
+              productId: prodId,
+              balance: finalBalance,
+              principal: finalPrincipal,
+              monthlyPrincipal: monthlyPrinVal,
+              totalSale: finalTotalSale,
+              monthlySale: monthlySaleVal,
+            ),
+          );
+        }
       }
 
-      final monthlyPrinVal =
-          double.tryParse(
-            monthlyPrinCtrl?.text.replaceAll(',', '').trim() ?? '',
-          ) ??
-          0.0;
-      final monthlySaleVal =
-          double.tryParse(
-            monthlySaleCtrl?.text.replaceAll(',', '').trim() ?? '',
-          ) ??
-          0.0;
-
-      final prevPrincipal = prevData?.principal ?? 0.0;
-      final prevTotalSale = prevData?.totalSale ?? 0.0;
-
-      final finalPrincipal = prevPrincipal + monthlyPrinVal;
-      final finalTotalSale = prevTotalSale + monthlySaleVal;
-
-      if (finalBalance > 0 ||
-          monthlySaleVal > 0 ||
-          monthlyPrinVal > 0 ||
-          finalPrincipal > 0) {
-        itemsToSave.add(
-          MonthlyPensionBalance(
-            yearMonth: _selectedYearMonth,
-            accountId: _selectedAccountId!,
-            productId: prodId,
-            balance: finalBalance,
-            principal: finalPrincipal,
-            monthlyPrincipal: monthlyPrinVal,
-            totalSale: finalTotalSale,
-            monthlySale: monthlySaleVal,
-          ),
-        );
+      if (itemsToSave.isNotEmpty) {
+        await pensionNotifier.saveBatchBalances(itemsToSave);
       }
-    }
 
-    if (itemsToSave.isNotEmpty) {
-      await pensionNotifier.saveBatchBalances(itemsToSave);
-    }
-
-    if (mounted) {
+      if (!mounted) return;
       Navigator.pop(context);
+      AppSnackBar.showInfo(context, '연금 월말 평가액이 성공적으로 저장되었습니다.');
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackBar.showError(context, '저장 실패: $e');
     }
   }
 }

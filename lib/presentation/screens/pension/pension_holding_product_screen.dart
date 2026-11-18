@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/responsive_extension.dart';
+import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/pension/pension_holding_product.dart';
@@ -42,7 +44,7 @@ class _PensionHoldingProductScreenState
             color: Colors.grey.shade700,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            onPressed: () => _showAddDialog(context),
+            onPressed: () => _showDialog(context),
           ),
           const SizedBox(width: 16),
         ],
@@ -269,10 +271,10 @@ class _PensionHoldingProductScreenState
                               const SizedBox(width: 16),
 
                               // 수정 & 삭제 버튼
-                              EditDeleteButtons(
-                                onEdit: () => _showEditDialog(context, item),
-                                onDelete: () => _confirmDelete(context, ref, item),
-                              ),                            
+                            EditDeleteButtons(
+                              onEdit: () => _showDialog(context, item: item),
+                              onDelete: () => _confirmDelete(context, ref, item),
+                            ),                        
                             ],
                           ),
                         ),
@@ -290,18 +292,7 @@ class _PensionHoldingProductScreenState
     );
   }
 
-  void _showAddDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => const PensionHoldingProductDialog(),
-    );
-  }
-
-  void _showEditDialog(BuildContext context, PensionHoldingProduct item) {
+  void _showDialog(BuildContext context, {PensionHoldingProduct? item}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -312,36 +303,30 @@ class _PensionHoldingProductScreenState
     );
   }
 
-  void _confirmDelete(
+ void _confirmDelete(
     BuildContext context,
     WidgetRef ref,
     PensionHoldingProduct item,
   ) {
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('삭제 확인'),
-            content: Text('${item.accountName} 계좌의 ${item.productName} 정보를 삭제하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('취소'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  if (item.id != null) {
-                    await ref
-                        .read(pensionHoldingProductNotifierProvider.notifier)
-                        .deletePensionHoldingProduct(item.id!);
-                  }
-                  if (ctx.mounted) Navigator.of(ctx).pop();
-                },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('삭제'),
-              ),
-            ],
-          ),
+    if (item.id == null) return;
+
+    AppDialog.showDeleteConfirm(
+      context,
+      title: '삭제 확인',
+      content: '계좌별 연금 보유상품 정보를 삭제하시겠습니까?',
+      onDelete: () async {
+        try {
+          await ref
+              .read(pensionHoldingProductNotifierProvider.notifier)
+              .deletePensionHoldingProduct(item.id!);
+
+          if (!context.mounted) return;
+          AppSnackBar.showInfo(context, '보유상품 내역이 삭제되었습니다.');
+        } catch (e) {
+          if (!context.mounted) return;
+          AppSnackBar.showError(context, '삭제 실패: $e');
+        }
+      },
     );
   }
 }

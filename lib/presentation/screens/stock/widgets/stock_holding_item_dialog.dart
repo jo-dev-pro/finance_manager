@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/responsive_extension.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../models/stock/stock_holding_item.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
@@ -51,9 +52,7 @@ class _StockHoldingItemDialogState
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedAccountId == null || _selectedStockItemId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('계좌와 종목을 모두 선택해 주세요.')),
-      );
+      AppSnackBar.showError(context, '계좌와 종목을 모두 선택해 주세요.');
       return;
     }
 
@@ -75,13 +74,15 @@ class _StockHoldingItemDialogState
         await notifier.addStockHoldingItem(item);
       }
 
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      AppSnackBar.showInfo(
+        context,
+        _isEditing ? '보유 종목 내역이 수정되었습니다.' : '계좌별 종목이 등록되었습니다.',
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
-      }
+      if (!mounted) return;
+      AppSnackBar.showError(context, '저장 실패: $e');
     }
   }
 

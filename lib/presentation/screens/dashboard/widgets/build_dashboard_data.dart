@@ -22,7 +22,8 @@ class BuildDashboardData extends StatelessWidget {
     final num bankBalance = (summary.bankBalance as num);
     final num stockBalance = (summary.stockBalance as num);
     final num pensionBalance = (summary.pensionBalance as num);
-    final double diffFromLastMonth = (summary.diffFromLastMonth as num).toDouble();
+    final double diffFromLastMonth =
+        (summary.diffFromLastMonth as num).toDouble();
 
     // 💡 각 자산별 전월 대비 증감액을 명시적 num 타입으로 가져오기
     final num bankDiff = ((summary.bankDiffFromLastMonth ?? 0) as num);
@@ -38,15 +39,19 @@ class BuildDashboardData extends StatelessWidget {
             mainAmountText: totalValuation.toWon(),
             principalText: totalInvested.toWon(),
             profitLossWidget: Row(
+              mainAxisSize:
+                  MainAxisSize.min, // 💡 크기를 최소화하여 우측 정렬이 원활하게 작동하도록 함
+              mainAxisAlignment: MainAxisAlignment.end, // 💡 핵심: 우측으로 정렬
               children: [
                 profitOrLoss.toSignedPriceText(
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
-                ), 
+                ),
                 const SizedBox(width: 4),
                 returnRate.toSignedPercentText(
+                  isDarkCard: true,
                   withParentheses: true,
                   style: const TextStyle(
                     fontSize: 13,
@@ -56,29 +61,60 @@ class BuildDashboardData extends StatelessWidget {
               ],
             ),
             diffFromLastMonthWidget: diffFromLastMonth.toSignedPriceText(
+              isDarkCard: true,
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
             ),
           ),
 
           const SectionTitle('자산별 현황', topSpacing: 24, bottomSpacing: 12),
 
-        GridView.count(
+          GridView.count(
             crossAxisCount: context.isMobile ? 2 : 3,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
-            childAspectRatio: 2.1,
+            childAspectRatio: context.isMobile ? 1.8 : 2.5,
             children: [
-              AssetGridCard(icon: Icons.account_balance, backgroundColor: Colors.blue.shade100, iconColor: Colors.blue.shade800, title: '은행 잔액', amountWon: bankBalance.toWon(), diffWidget: bankDiff.toSignedPriceText(
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                )),
-              AssetGridCard(icon: Icons.show_chart, backgroundColor: Colors.orange.shade100, iconColor: Colors.orange.shade800, title: '증권 평가액', amountWon: stockBalance.toWon(), diffWidget: stockDiff.toSignedPriceText(
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                )),
-              AssetGridCard(icon: Icons.savings, backgroundColor: Colors.green.shade100, iconColor: Colors.green.shade800, title: '연금 평가액', amountWon: pensionBalance.toWon(), diffWidget: pensionDiff.toSignedPriceText(
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                )),
+              AssetGridCard(
+                icon: Icons.account_balance,
+                backgroundColor: Colors.blue.shade100,
+                iconColor: Colors.blue.shade800,
+                title: '은행 잔액',
+                amountWon: bankBalance.toWon(),
+                diffWidget: bankDiff.toSignedPriceText(
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              AssetGridCard(
+                icon: Icons.show_chart,
+                backgroundColor: Colors.orange.shade100,
+                iconColor: Colors.orange.shade800,
+                title: '증권 평가액',
+                amountWon: stockBalance.toWon(),
+                diffWidget: stockDiff.toSignedPriceText(
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              AssetGridCard(
+                icon: Icons.savings,
+                backgroundColor: Colors.green.shade100,
+                iconColor: Colors.green.shade800,
+                title: '연금 평가액',
+                amountWon: pensionBalance.toWon(),
+                diffWidget: pensionDiff.toSignedPriceText(
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ],
           ),
 

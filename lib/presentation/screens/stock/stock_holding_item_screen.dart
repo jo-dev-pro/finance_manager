@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/responsive_extension.dart';
+import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/stock/stock_holding_item.dart';
@@ -40,7 +42,7 @@ class _StockHoldingItemScreenState
             color: Colors.grey.shade700,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            onPressed: () => _showAddBottomSheet(context),
+            onPressed: () => _showDialog(context),
           ),
           const SizedBox(width: 16),
         ],
@@ -218,18 +220,16 @@ class _StockHoldingItemScreenState
                             children: [
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
                                         if (market.isNotEmpty) ...[
                                           Container(
-                                            padding:
-                                                const EdgeInsets.symmetric(
-                                                  horizontal: 6,
-                                                  vertical: 2,
-                                                ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: Colors.blue.shade50,
                                               borderRadius:
@@ -268,8 +268,9 @@ class _StockHoldingItemScreenState
                                                 item.isActive
                                                     ? Colors.green.shade50
                                                     : Colors.grey.shade100,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                             border: Border.all(
                                               color:
                                                   item.isActive
@@ -305,10 +306,10 @@ class _StockHoldingItemScreenState
                                 ),
                               ),
                               const SizedBox(width: 16),
-                      
+
                               // 수정 & 삭제 버튼
                               EditDeleteButtons(
-                                onEdit: () => _showEditDialog(context, item),
+                                onEdit: () => _showDialog(context, item: item),
                                 onDelete: () => _confirmDelete(context, ref, item),
                               ),
                             ],
@@ -326,18 +327,7 @@ class _StockHoldingItemScreenState
     );
   }
 
-  void _showAddBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => const StockHoldingItemDialog(),
-    );
-  }
-
-  void _showEditDialog(BuildContext context, StockHoldingItem item) {
+  void _showDialog(BuildContext context, {StockHoldingItem? item}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -353,30 +343,25 @@ class _StockHoldingItemScreenState
     WidgetRef ref,
     StockHoldingItem item,
   ) {
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('삭제 확인'),
-            content: Text('\'${item.stockItemName}\' 보유 주식 내역을 삭제하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('취소'),
-              ),
-              TextButton(
-                onPressed: () {
-                  if (item.id != null) {
-                    ref
-                        .read(stockHoldingItemNotifierProvider.notifier)
-                        .deleteStockHoldingItem(item.id!);
-                  }
-                  Navigator.of(ctx).pop();
-                },
-                child: const Text('삭제', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
+    if (item.id == null) return;
+
+    AppDialog.showDeleteConfirm(
+      context,
+      title: '삭제 확인',
+      content: '보유 주식 내역을 삭제하시겠습니까?',
+      onDelete: () async {
+        try {
+          await ref
+              .read(stockHoldingItemNotifierProvider.notifier)
+              .deleteStockHoldingItem(item.id!);
+
+          if (!context.mounted) return;
+          AppSnackBar.showInfo(context, '보유 주식 내역이 삭제되었습니다.');
+        } catch (e) {
+          if (!context.mounted) return;
+          AppSnackBar.showError(context, '삭제 실패: $e');
+        }
+      },
     );
   }
 }

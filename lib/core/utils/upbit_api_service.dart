@@ -5,7 +5,6 @@ import 'toss_direct_api_service.dart'; // RealtimeQuote 공통 모델 활용
 class UpbitApiService {
   static const String _baseUrl = 'https://api.upbit.com/v1';
 
-  /// 복수 마켓의 실시간 현재가 및 전일 대비 변동액 일괄 조회
   static Future getRealtimeQuotes(
     List<String> markets,
   ) async {
@@ -31,14 +30,15 @@ class UpbitApiService {
             );
           }
         }
+      } else {
+        throw Exception('업비트 시세 조회 실패: ${response.statusCode}');
       }
     } catch (e) {
-      print('업비트 일괄 시세 조회 오류: $e');
+      rethrow;
     }
     return result;
   }
 
-  /// 단건 현재가 조회 (Ticker)[cite: 19]
   static Future<double?> getCurrentPrice(String market) async {
     try {
       final url = Uri.parse('$_baseUrl/ticker?markets=$market');
@@ -50,13 +50,12 @@ class UpbitApiService {
           return double.tryParse(data[0]['trade_price'].toString());
         }
       }
+      throw Exception('업비트 현재가 조회 실패');
     } catch (e) {
-      print('업비트 현재가 조회 오류 ($market):$e');
+      rethrow;
     }
-    return null;
   }
 
-  /// 특정 월의 말일 종가 조회 (Candles Days 연동)[cite: 19]
   static Future<double?> getMonthlyClosePrice(String market, String yearMonth) async {
     try {
       final parts = yearMonth.split('-');
@@ -77,9 +76,9 @@ class UpbitApiService {
           return double.tryParse(data[0]['trade_price'].toString());
         }
       }
+      throw Exception('업비트 월말 시세 조회 실패');
     } catch (e) {
-      print('업비트 월말 시세 조회 예외 ($market, $yearMonth):$e');
+      rethrow;
     }
-    return null;
   }
 }

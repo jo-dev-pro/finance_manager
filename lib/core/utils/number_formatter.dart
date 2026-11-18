@@ -83,7 +83,7 @@ extension NumberFormatter on num {
   String toWon() {
     return '${toCommaString()}원';
   }
-  
+
   /// 뒤에 '달러($)' 및 앞에 기호 부착 (예: 187.05 -> "$187.05")
   String toUSD() {
     return '\$${toCommaString()}';
@@ -129,9 +129,10 @@ extension NumberFormatter on num {
   String toPercent({int fractionDigits = 1}) {
     if (this == 0) return '0%';
     final formatted = toStringAsFixed(fractionDigits);
-    final clean = formatted.endsWith('.0')
-        ? formatted.substring(0, formatted.length - 2)
-        : formatted;
+    final clean =
+        formatted.endsWith('.0')
+            ? formatted.substring(0, formatted.length - 2)
+            : formatted;
     return '$clean%';
   }
 
@@ -143,13 +144,15 @@ extension NumberFormatter on num {
 
   /// [대시보드/은행/연금 공용] 부호(+/-)에 따라 색상이 적용된 금액 Text 위젯 리턴
   Widget toSignedPriceText({
-    TextStyle? style,
-    Color positiveColor = Colors.red, // 플러스(수익/상승) Red/Orange
-    Color negativeColor = Colors.blue, // 마이너스(손실/하락) Blue
-    Color zeroColor = Colors.grey,
+   TextStyle? style,
+    bool isDarkCard = false, // 💡 어두운 카드 배경인지 여부 (기본값: false = 하얀 바탕)
     String suffix = '원',
     bool showPlusSign = true,
   }) {
+    final Color positiveColor = isDarkCard ? const Color(0xFFFF8A80) : Colors.red.shade700;
+    final Color negativeColor = isDarkCard ? const Color(0xFF82B1FF) : Colors.blue.shade700;
+    final Color zeroColor = Colors.grey;
+
     Color textColor;
     if (this > 0) {
       textColor = positiveColor;
@@ -164,22 +167,23 @@ extension NumberFormatter on num {
 
     return JText(
       '$formattedNumber$suffix',
-      style: (style ?? const TextStyle()).copyWith(
-        color: textColor,
-      ),
+      style: (style ?? const TextStyle()).copyWith(color: textColor),
     );
   }
 
   /// 부호(+/-)에 따라 색상이 적용된 퍼센트 Text 위젯 리턴
   Widget toSignedPercentText({
     TextStyle? style,
-    Color positiveColor = const Color(0xFFFF8A80), // 플러스(수익/상승) Red/Orange
-    Color negativeColor = const Color(0xFF82B1FF), // 마이너스(손실/하락) Blue
-    Color zeroColor = Colors.grey,
+    bool isDarkCard = false, // 💡 어두운 카드 배경인지 여부 추가
     int fractionDigits = 1,
     bool showPlusSign = true,
     bool withParentheses = false,
   }) {
+
+    final Color positiveColor = isDarkCard ? const Color(0xFFFF8A80) : Colors.red.shade700;
+    final Color negativeColor = isDarkCard ? const Color(0xFF82B1FF) : Colors.blue.shade700;
+    final Color zeroColor = Colors.grey;
+    
     Color textColor;
     if (this > 0) {
       textColor = positiveColor;
@@ -189,18 +193,17 @@ extension NumberFormatter on num {
       textColor = zeroColor;
     }
 
-    final String formattedPercent = showPlusSign
-        ? toSignedPercent(fractionDigits: fractionDigits)
-        : toPercent(fractionDigits: fractionDigits);
+    final String formattedPercent =
+        showPlusSign
+            ? toSignedPercent(fractionDigits: fractionDigits)
+            : toPercent(fractionDigits: fractionDigits);
 
     final String displayText =
         withParentheses ? '($formattedPercent)' : formattedPercent;
 
     return JText(
       displayText,
-      style: (style ?? const TextStyle()).copyWith(
-        color: textColor,
-      ),
+      style: (style ?? const TextStyle()).copyWith(color: textColor),
     );
   }
 }

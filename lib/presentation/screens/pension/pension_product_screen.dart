@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/pension/pension_product.dart';
@@ -23,7 +25,7 @@ class PensionProductScreen extends ConsumerWidget {
             color: Colors.grey.shade700,
             padding: EdgeInsets.zero, // 기본 패딩 제거
             constraints: const BoxConstraints(), // 최소 48x48 제약 제거
-            onPressed: () => _showAddDialog(context),
+            onPressed: () => _showDialog(context),
           ),
           SizedBox(width: 16),
         ],
@@ -65,10 +67,10 @@ class PensionProductScreen extends ConsumerWidget {
                       const SizedBox(width: 16),
 
                       // 수정 & 삭제 버튼
-                      EditDeleteButtons(
-                        onEdit: () => _showEditDialog(context, item),
-                        onDelete: () => _confirmDelete(context, ref, item),
-                      ),
+                     EditDeleteButtons(
+                      onEdit: () => _showDialog(context, product: item),
+                      onDelete: () => _confirmDelete(context, ref, item),
+                    ),
                     ],
                   ),
                 );
@@ -82,21 +84,10 @@ class PensionProductScreen extends ConsumerWidget {
     );
   }
 
-  void _showAddDialog(BuildContext context) {
+ void _showDialog(BuildContext context, {PensionProduct? product}) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => PensionProductDialog(),
-    );
-  }
-
-  void _showEditDialog(BuildContext context, PensionProduct product) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // 키보드가 올라올 때 밀려 올라가도록 설정
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -109,30 +100,25 @@ class PensionProductScreen extends ConsumerWidget {
     WidgetRef ref,
     PensionProduct product,
   ) {
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('삭제 확인'),
-            content: Text('\'${product.productName}\' 상품을 삭제하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('취소'),
-              ),
-              TextButton(
-                onPressed: () {
-                  if (product.id != null) {
-                    ref
-                        .read(pensionProductNotifierProvider.notifier)
-                        .deletePensionProduct(product.id!);
-                  }
-                  Navigator.of(ctx).pop();
-                },
-                child: const Text('삭제', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
+    if (product.id == null) return;
+
+    AppDialog.showDeleteConfirm(
+      context,
+      title: '삭제 확인',
+      content: '\'${product.productName}\' 연금상품을 삭제하시겠습니까?',
+      onDelete: () async {
+        try {
+          await ref
+              .read(pensionProductNotifierProvider.notifier)
+              .deletePensionProduct(product.id!);
+
+          if (!context.mounted) return;
+          AppSnackBar.showInfo(context, '연금상품이 삭제되었습니다.');
+        } catch (e) {
+          if (!context.mounted) return;
+          AppSnackBar.showError(context, '삭제 실패: $e');
+        }
+      },
     );
   }
 }

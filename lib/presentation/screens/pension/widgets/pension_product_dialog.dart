@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/responsive_extension.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../models/pension/pension_product.dart';
 import '../../../../providers/pension/pension_product_provider.dart';
 
@@ -51,13 +52,15 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
         await notifier.addPensionProduct(product);
       }
 
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      AppSnackBar.showInfo(
+        context,
+        _isEditing ? '연금상품 정보가 수정되었습니다.' : '신규 연금상품이 등록되었습니다.',
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
-      }
+      if (!mounted) return;
+      AppSnackBar.showError(context, '저장 실패: $e');
     }
   }
 

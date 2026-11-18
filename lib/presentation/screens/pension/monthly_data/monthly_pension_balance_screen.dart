@@ -223,8 +223,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                         final balanceItem = filteredItems[index];
 
                         final matchedAcc = accountMap[balanceItem.accountId];
-                        final institution =
-                            matchedAcc?.financialInstitution ?? '기타 금융기관';
                         final nameObj =
                             matchedAcc != null
                                 ? accountNameMap[matchedAcc.accountNameId]

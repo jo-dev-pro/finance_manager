@@ -59,7 +59,7 @@ class MonthlyPensionSummaryMobile extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Row( 
             children: [
               Expanded(
                 child: Container(
@@ -282,7 +282,7 @@ class MonthlyPensionSummaryMobile extends ConsumerWidget {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Card(
-                    elevation: 1.5,
+                    elevation: 1,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

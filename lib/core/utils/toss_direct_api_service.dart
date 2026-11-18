@@ -68,7 +68,7 @@ class TossDirectApiService {
   }
 
   /// 💡 [추가됨] 복수 토스 종목 코드의 실시간 현재가 및 전일 대비 변동액 일괄 조회
-  static Future getRealtimeQuotes(
+ static Future getRealtimeQuotes(
     List<String> stockCodes,
   ) async {
     final Map<String, RealtimeQuote> result = {};
@@ -76,7 +76,6 @@ class TossDirectApiService {
 
     try {
       final token = await _getAccessToken();
-      // 콤마로 연결하여 한 번에 요청 (예: ?symbols=005930,000660)
       final joinedSymbols = stockCodes.toSet().join(',');
       final url = Uri.parse('$_baseUrl/api/v1/prices?symbols=$joinedSymbols');
       
@@ -95,7 +94,6 @@ class TossDirectApiService {
             : (data is List ? data : []);
 
         for (var item in list) {
-          // 응답 객체에서 심볼 및 가격 정보 추출 (API 응답 필드 구조에 유연하게 대응)
           final symbol = (item['symbol'] ?? item['code'] ?? '').toString();
           final current = double.tryParse(
                 (item['lastPrice'] ?? item['closePrice'] ?? item['price'] ?? 0)
@@ -120,10 +118,10 @@ class TossDirectApiService {
           }
         }
       } else {
-        print('토스 실시간 일괄 시세 조회 실패: ${response.statusCode} - ${response.body}');
+        throw Exception('토스 실시간 일괄 시세 조회 실패: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('토스 실시간 일괄 시세 조회 오류: $e');
+      rethrow; // 💡 상위 호출부로 에러를 던져서 UI에서 스낵바/다이얼로그로 처리
     }
     return result;
   }
@@ -156,10 +154,10 @@ class TossDirectApiService {
           return double.tryParse(rateStr.toString());
         }
       }
+      throw Exception('환율 정보 조회 실패');
     } catch (e) {
-      print('토스 실시간 환율 조회 오류: $e');
+      rethrow;
     }
-    return null;
   }
 
   /// 특정 종목 코드와 연월('yyyy-MM')을 받아 해당 월의 말일 종가를 가져옵니다.
@@ -190,7 +188,9 @@ class TossDirectApiService {
         },
       );
 
-      if (response.statusCode != 200) return null;
+      if (response.statusCode != 200) {
+        throw Exception('월말 시세 조회 실패: ${response.statusCode}');
+      }
 
       final data = jsonDecode(response.body);
       if (data is Map &&
@@ -209,8 +209,7 @@ class TossDirectApiService {
       }
       return null;
     } catch (e) {
-      print('토스증권 월말 시세 조회 예외: $e');
-      return null;
+      rethrow;
     }
   }
 
@@ -240,7 +239,9 @@ class TossDirectApiService {
         },
       );
 
-      if (response.statusCode != 200) return null;
+      if (response.statusCode != 200) {
+        throw Exception('월말 환율 조회 실패: ${response.statusCode}');
+      }
 
       final data = jsonDecode(response.body);
       if (data is Map && data['result'] != null) {
@@ -252,8 +253,7 @@ class TossDirectApiService {
       }
       return null;
     } catch (e) {
-      print('토스증권 월말 환율 조회 예외: $e');
-      return null;
+      rethrow;
     }
   }
 }

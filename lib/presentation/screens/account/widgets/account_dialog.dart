@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/utils/responsive_extension.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../models/account/account.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -85,29 +86,27 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
     }
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      final institution = _institutionController.text.trim();
-      final number = _numberController.text.trim();
-      final sortOrder = int.tryParse(_sortOrderController.text.trim()) ?? 0;
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      final existingAccounts = ref.read(accountNotifierProvider).value ?? [];
+    final institution = _institutionController.text.trim();
+    final number = _numberController.text.trim();
+    final sortOrder = int.tryParse(_sortOrderController.text.trim()) ?? 0;
 
-      final isDuplicate = existingAccounts.any(
-        (acc) =>
-            acc.sortOrder == sortOrder && acc.id != widget.initialAccount?.id,
-      );
+    final existingAccounts = ref.read(accountNotifierProvider).value ?? [];
 
-      if (isDuplicate) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('이미 사용 중인 출력 순서입니다. 다른 번호를 입력해 주세요.'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-        return;
-      }
+    final isDuplicate = existingAccounts.any(
+      (acc) =>
+          acc.sortOrder == sortOrder && acc.id != widget.initialAccount?.id,
+    );
 
+    if (isDuplicate) {
+      if (!mounted) return;
+      AppSnackBar.showError(context, '이미 사용 중인 출력 순서입니다. 다른 번호를 입력해 주세요.');
+      return;
+    }
+
+    try {
       if (_isEditing) {
         final updatedAccount = widget.initialAccount!.copyWith(
           financialInstitution: institution,
@@ -116,9 +115,9 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
           accountName: _selectedAccountName!,
           accountNumber: number.isEmpty ? null : number,
           sortOrder: sortOrder,
-          currency: _selectedCurrency, // 통화 정보 반영
+          currency: _selectedCurrency,
         );
-        ref
+        await ref
             .read(accountNotifierProvider.notifier)
             .updateAccount(updatedAccount, _selectedImage);
       } else {
@@ -129,16 +128,24 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
           accountName: _selectedAccountName!,
           accountNumber: number.isEmpty ? null : number,
           sortOrder: sortOrder,
-          currency: _selectedCurrency, // 통화 정보 반영
+          currency: _selectedCurrency,
         );
-        ref
+        await ref
             .read(accountNotifierProvider.notifier)
             .addAccount(newAccount, _selectedImage);
       }
+
+      if (!mounted) return;
       Navigator.of(context).pop();
+      AppSnackBar.showInfo(
+        context,
+        _isEditing ? '계좌 정보가 수정되었습니다.' : '신규 계좌가 등록되었습니다.',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackBar.showError(context, '저장 실패: $e');
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final existingLogoUrl = widget.initialAccount?.logoUrl;
@@ -249,7 +256,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
 
               // 통화 선택 드롭다운
               DropdownButtonFormField<String>(
-                value: _selectedCurrency,
+                initialValue: _selectedCurrency,
                 decoration: const InputDecoration(
                   labelText: '통화 구분',
                   border: OutlineInputBorder(),
@@ -269,7 +276,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
               accountNamesAsync.when(
                 data: (accountNames) {
                   return DropdownButtonFormField<String>(
-                    value: _selectedAccountNameId,
+                    initialValue: _selectedAccountNameId,
                     decoration: const InputDecoration(
                       labelText: '계좌명 선택',
                       border: OutlineInputBorder(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/responsive_extension.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../models/account/account_name.dart';
 import '../../../../providers/account/account_name_provider.dart';
 
@@ -56,13 +57,15 @@ class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
           .read(accountNameNotifierProvider.notifier)
           .saveAccountName(newAccountName);
 
-      if (mounted) Navigator.pop(context);
+      if (!mounted) return;
+      Navigator.pop(context);
+      AppSnackBar.showInfo(
+        context,
+        _isEditing ? '계좌명이 수정되었습니다.' : '계좌명이 등록되었습니다.',
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
-      }
+      if (!mounted) return;
+      AppSnackBar.showError(context, '저장 실패: $e');
     }
   }
 
