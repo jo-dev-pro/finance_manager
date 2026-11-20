@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/stock/stock_item.dart';
 import '../../../providers/stock/stock_item_provider.dart';
@@ -17,19 +18,16 @@ class StockItemScreen extends ConsumerWidget {
     final stockItemsState = ref.watch(stockItemNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('종목 관리'),
+        appBar: MainAppBar(
+        titleText: '종목 관리',
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
-            color: Colors.grey.shade700,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+          ElevatedButton.icon(
             onPressed: () => _showDialog(context),
+            label: const Text('종목 추가'),
           ),
-          const SizedBox(width: 16),
         ],
       ),
+     
       body: stockItemsState.when(
         data: (items) {
           if (items.isEmpty) {
@@ -42,16 +40,15 @@ class StockItemScreen extends ConsumerWidget {
             );
           }
 
-          return MainConstrainedBox(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-
-                return Card(
+          return ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) { 
+              final item = items[index];
+          
+              return MainConstrainedBox(
+                child: Card(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric( 
                       horizontal: 16,
                       vertical: 8,
                     ),
@@ -77,7 +74,7 @@ class StockItemScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-
+                          
                         // 💡 종목 정보 (itemName, stockCode, otherName 반영)
                         Expanded(
                           child: Column(
@@ -102,7 +99,7 @@ class StockItemScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 16),
-
+                          
                         // 수정 & 삭제 버튼
                         EditDeleteButtons(
                           onEdit: () => _showDialog(context, item: item),
@@ -111,9 +108,9 @@ class StockItemScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),

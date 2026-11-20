@@ -66,7 +66,8 @@ class BuildDashboardData extends StatelessWidget {
             ),
           ),
 
-          const SectionTitle('자산별 현황', topSpacing: 24, bottomSpacing: 12),
+          const SizedBox(height: 12),
+          const SectionTitle('자산별 현황'),
 
           GridView.count(
             crossAxisCount: context.isMobile ? 2 : 3,
@@ -117,8 +118,9 @@ class BuildDashboardData extends StatelessWidget {
               ),
             ],
           ),
-
-          const SectionTitle('자산 비중', topSpacing: 28, bottomSpacing: 12),
+          
+          const SizedBox(height: 12),
+          const SectionTitle('자산 비중'),
           _buildAssetRatioChartCard(summary),
         ],
       ),

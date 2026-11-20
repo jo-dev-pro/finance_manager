@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
-import '../../../../core/utils/responsive_extension.dart';
-import '../../../../core/widgets/bottom_action_button.dart';
 import '../../../../core/widgets/edit_delete_button.dart';
 import '../../../../core/widgets/jtext.dart';
+import '../../../../core/widgets/main_appbar.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
 import '../../../../core/widgets/section_title.dart';
 import '../../../../models/monthly_data/monthly_pension_balance.dart';
@@ -18,7 +16,6 @@ import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart
 import '../../../../providers/pension/pension_product_provider.dart';
 import 'widgets/monthly_pension_balance_dialog.dart';
 
-// 💡 월말연금 화면 전용 계좌 필터 Provider (자동 dispose)
 final selectedPensionAccountFilterProvider = StateProvider.autoDispose<String?>(
   (ref) => null,
 );
@@ -47,10 +44,15 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('월말연금'),
-        elevation: 0,
-        scrolledUnderElevation: 0,
+      appBar: MainAppBar(
+        titleText: '월말연금',
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () => _showDialog(context, yearMonth: targetMonth),
+            icon: const Icon(Icons.playlist_add, size: 18),
+            label: const Text('일괄 입력'),
+          ),
+        ],
       ),
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -82,7 +84,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
           final accountNameMap = {for (var an in accountNames) an.id: an};
           final productMap = {for (var p in products) p.id!: p.productName};
 
-          // 💡 활성화된 연금 계좌 목록 추출
           final pensionAccounts =
               accounts
                   .where(
@@ -90,7 +91,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                   )
                   .toList();
 
-          // 💡 선택된 계좌에 따라 월말 내역 필터링
           final filteredItems =
               selectedAccountId == null
                   ? items
@@ -103,7 +103,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 💡 기준년월 선택 헤더 & 계좌 선택 콤보박스 (가로 Row 배치)
                   Row(
                     children: [
                       Expanded(
@@ -200,10 +199,9 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
 
+                  const SizedBox(height: 12),
                   const SectionTitle('등록된 월말 입력 내역'),
-                  const SizedBox(height: 8),
 
                   if (filteredItems.isEmpty)
                     Padding(
@@ -229,11 +227,10 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                 : null;
                         final accountName = nameObj?.accountName ?? '연금계좌';
 
-                        // 💡 캐시 상품 판별 로직 제거 및 순수 상품명 매핑
                         final String displayName =
                             productMap[balanceItem.productId] ?? '알 수 없는 상품';
 
-                        final logoUrl = matchedAcc?.logoUrl; 
+                        final logoUrl = matchedAcc?.logoUrl;
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -259,7 +256,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                           ),
                                         ),
                                         const SizedBox(height: 4),
-
                                         Row(
                                           children: [
                                             if (logoUrl != null &&
@@ -267,7 +263,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                               Container(
                                                 width: 20,
                                                 height: 20,
-                                                decoration: BoxDecoration(
+                                                decoration: const BoxDecoration(
                                                   shape: BoxShape.circle,
                                                 ),
                                                 child: ClipOval(
@@ -288,7 +284,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                               ),
                                               const SizedBox(width: 4),
                                             ],
-
                                             Text(
                                               accountName,
                                               style: TextStyle(
@@ -304,7 +299,6 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 12),
-
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
@@ -318,11 +312,10 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                       const SizedBox(height: 8),
                                       EditDeleteButtons(
                                         onEdit:
-                                            () => _showEditDialog(
+                                            () => _showDialog(
                                               context,
-                                              ref,
-                                              balanceItem,
-                                              displayName,
+                                              yearMonth: balanceItem.yearMonth,
+                                              editItem: balanceItem,
                                             ),
                                         onDelete:
                                             () => _confirmDelete(
@@ -347,14 +340,14 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
           );
         },
       ),
-      bottomNavigationBar: BottomActionButton(
-        label: '연금 월말 평가액 추가 입력',
-        onPressed: () => _showAddBottomSheet(context, targetMonth),
-      ),
     );
   }
 
-  void _showAddBottomSheet(BuildContext context, String currentMonth) {
+  void _showDialog(
+    BuildContext context, {
+    required String yearMonth,
+    MonthlyPensionBalance? editItem,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -362,112 +355,10 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder:
-          (context) => MonthlyPensionBalanceDialog(yearMonth: currentMonth),
-    );
-  }
-
-  void _showEditDialog(
-    BuildContext context,
-    WidgetRef ref,
-    MonthlyPensionBalance balanceItem,
-    String displayName,
-  ) {
-    final controller = TextEditingController(
-      text: balanceItem.balance.toCommaString(),
-    );
-    final formKey = GlobalKey<FormState>();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) {
-        return Container(
-          width: double.infinity,
-          padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
-          child: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '$displayName (${balanceItem.yearMonth}) 평가액 수정',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(sheetContext),
-                      ),
-                    ],
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      ThousandsSeparatorInputFormatter(),
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: '평가액 (원)',
-                      suffixText: '원',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) {
-                        return '평가액을 입력해 주세요.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (!(formKey.currentState?.validate() ?? false)) {
-                          return;
-                        }
-                        final cleanText = controller.text.replaceAll(
-                          RegExp(r'[^0-9]'),
-                          '',
-                        );
-                        final newBalance = double.tryParse(cleanText) ?? 0.0;
-
-                        final updatedItem = balanceItem.copyWith(
-                          balance: newBalance,
-                        );
-                        await ref
-                            .read(
-                              monthlyPensionBalanceNotifierProvider(
-                                balanceItem.yearMonth,
-                              ).notifier,
-                            )
-                            .saveBalance(updatedItem);
-
-                        if (sheetContext.mounted) Navigator.pop(sheetContext);
-                      },
-                      child: const Text('저장하기', style: TextStyle(fontSize: 16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          (context) => MonthlyPensionBalanceDialog(
+            yearMonth: yearMonth,
+            editItem: editItem,
           ),
-        );
-      },
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/migrate/firestore_db_migrate.dart';
 import '../../core/router/app_router_path.dart';
+import '../../core/widgets/main_appbar.dart';
 import '../../core/widgets/main_constrainedbox.dart';
 
 class AllMenuScreen extends StatelessWidget {
@@ -12,7 +13,8 @@ class AllMenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('전체 메뉴')),
+      appBar: MainAppBar(titleText: '전체 메뉴'),
+      
       body: MainConstrainedBox(
         child: SingleChildScrollView(
           child: Column(
@@ -76,15 +78,6 @@ class AllMenuScreen extends StatelessWidget {
                 onTap: () => context.push(AppRoutePath.stockHoldingItem),
               ),
         
-              // ListTile(
-              //   leading: const Icon(
-              //     Icons.swap_horiz_outlined,
-              //     color: Colors.indigo,
-              //   ),
-              //   title: const Text('주식 거래구분 관리'),
-              //   trailing: const Icon(Icons.chevron_right),
-              //   onTap: () => context.push(AppRoutePath.stockTransactionType),
-              // ),
               ListTile(
                 leading: const Icon(Icons.savings_outlined, color: Colors.indigo),
                 title: const Text('연금 상품명 관리'),

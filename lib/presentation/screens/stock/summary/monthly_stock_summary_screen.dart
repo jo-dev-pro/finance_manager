@@ -5,15 +5,19 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/utils/responsive_extension.dart';
+import '../../../../core/widgets/jtext.dart';
+import '../../../../core/widgets/main_appbar.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
+import '../../../../core/widgets/month_account_selector_header.dart';
+import '../../../../core/widgets/monthly_evaluation_summary_card.dart';
+import '../../../../core/widgets/section_title.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
 import '../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 import '../../../../providers/stock/stock_item_provider.dart';
-import 'widgets/monthly_stock_summary_desktop.dart';
-import 'widgets/monthly_stock_summary_mobile.dart';
+import 'widgets/monthly_stock_account_summary_list.dart';
 
 final selectedStockAccountFilterProvider = StateProvider.autoDispose<String?>(
   (ref) => null,
@@ -27,9 +31,9 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
   String _getLastYearMonth(String currentYearMonth) {
     try {
       final parts = currentYearMonth.split('-');
-      int year = int.parse(parts[0]);
-      int month = int.parse(parts[1]);
-      DateTime lastMonthDate = DateTime(year, month - 1, 1);
+      final int year = int.parse(parts[0]);
+      final int month = int.parse(parts[1]);
+      final DateTime lastMonthDate = DateTime(year, month - 1, 1);
       return DateFormat('yyyy-MM').format(lastMonthDate);
     } catch (_) {
       return currentYearMonth;
@@ -68,7 +72,7 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('주식 월말평가')),
+      appBar: const MainAppBar(titleText: '주식 월말평가'),
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('데이터를 불러오지 못했습니다: $err')),
@@ -151,7 +155,6 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
           final isSingleOverseasAccount =
               selectedAcc?.isForeignCurrency ?? false;
 
-          // 필터링된 당월/전월 데이터
           final filteredAccountBalances =
               currentDropdownValue == null
                   ? accountBalances
@@ -180,7 +183,6 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                       .where((item) => item.accountId == currentDropdownValue)
                       .toList();
 
-          // 당월/전월 환율 맵 (단일 해외계좌 필터 시에는 원래 달러 단위 유지를 위해 1.0 적용)
           final exchangeRateMap = {
             for (var ab in accountBalances)
               ab.accountId:
@@ -230,8 +232,11 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
           final totalProfit =
               (grandTotalBalance + totalPayout + totalCumulativeWithdrawal) -
               totalPrincipal;
+          final totalReturnRate =
+              totalPrincipal > 0
+                  ? (totalProfit / totalPrincipal) * 100
+                  : 0.0;
 
-          // 전월 총 자산 집계
           final lastTotalStockBalance = lastFilteredStockItems.fold<double>(
             0.0,
             (sum, item) =>
@@ -249,54 +254,300 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
           final summaryDiffFromLastMonth =
               grandTotalBalance - lastGrandTotalBalance;
 
-          String formatCurrency(double val) {
-            return isSingleOverseasAccount ? val.toUSD() : val.round().toWon();
-          }
+          final accountFilterItems =
+              stockAccounts.map((account) {
+                final accId = account.id ?? '';
+                final nameObj = accountNameMap[account.accountNameId];
+                final accName = nameObj?.accountName ?? '계좌';
+                return MonthAccountSelectorItem(
+                  value: accId,
+                  label: '${account.financialInstitution}$accName',
+                );
+              }).toList();
 
-         return MainConstrainedBox(
-            child: context.isMobile
-                ? MonthlyStockSummaryMobile(
+          return MainConstrainedBox(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MonthAccountSelectorHeader(
                     months: months,
-                    activeCurrentMonth: activeCurrentMonth,
-                    stockAccounts: stockAccounts,
-                    accountNameMap: accountNameMap,
-                    accountBalanceMap: accountBalanceMap,
-                    currentDropdownValue: currentDropdownValue,
-                    isSingleOverseasAccount: isSingleOverseasAccount,
-                    appliedExchangeRate: appliedExchangeRate,
-                    grandTotalBalance: grandTotalBalance,
-                    totalPrincipal: totalPrincipal,
-                    totalProfit: totalProfit,
-                    totalCashBalance: totalCashBalance,
-                    totalPayout: totalPayout,
-                    totalCumulativeWithdrawal: totalCumulativeWithdrawal,
-                    summaryDiffFromLastMonth: summaryDiffFromLastMonth,
-                    filteredStockItems: filteredStockItems,
-                    accountMap: accountMap,
-                    stockItemMap: stockItemMap,
-                    lastItems: lastItems,
-                  )
-                : MonthlyStockSummaryDesktop(
-                    months: months,
-                    activeCurrentMonth: activeCurrentMonth,
-                    stockAccounts: stockAccounts,
-                    accountNameMap: accountNameMap,
-                    accountBalanceMap: accountBalanceMap,
-                    currentDropdownValue: currentDropdownValue,
-                    isSingleOverseasAccount: isSingleOverseasAccount,
-                    appliedExchangeRate: appliedExchangeRate,
-                    grandTotalBalance: grandTotalBalance,
-                    totalPrincipal: totalPrincipal,
-                    totalProfit: totalProfit,
-                    totalCashBalance: totalCashBalance,
-                    totalPayout: totalPayout,
-                    totalCumulativeWithdrawal: totalCumulativeWithdrawal,
-                    summaryDiffFromLastMonth: summaryDiffFromLastMonth,
-                    filteredStockItems: filteredStockItems,
-                    accountMap: accountMap,
-                    stockItemMap: stockItemMap,
-                    lastItems: lastItems,
+                    currentMonth: activeCurrentMonth,
+                    onMonthChanged:
+                        (val) => ref
+                            .read(selectedYearMonthProvider.notifier)
+                            .select(val),
+                    selectedAccountValue: currentDropdownValue,
+                    accountItems: accountFilterItems,
+                    onAccountChanged:
+                        (val) => ref
+                            .read(selectedStockAccountFilterProvider.notifier)
+                            .state = val,
                   ),
+                  const SizedBox(height: 16),
+
+                  MonthlyEvaluationSummaryCard(
+                    title: '주식 월말평가 총 자산',
+                    badgeText:
+                        (!isSingleOverseasAccount && appliedExchangeRate > 1.0)
+                            ? '적용 환율: ${appliedExchangeRate.toStringAsFixed(2)}원'
+                            : null,
+                    totalBalanceText: grandTotalBalance.toCurrency(
+                      isForeign: isSingleOverseasAccount,
+                    ),
+                    principalText: totalPrincipal.toCurrency(
+                      isForeign: isSingleOverseasAccount,
+                    ),
+                    profitLossRowWidget: Row(
+                      children: [
+                        totalProfit.toSignedCurrencyText(
+                          isForeign: isSingleOverseasAccount,
+                          isDarkCard: true,
+                          style: TextStyle(
+                            fontSize: context.isMobile ? 14 : 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        totalReturnRate.toSignedPercentText(
+                          isDarkCard: true,
+                          withParentheses: true,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    detailMetrics: [
+                      EvaluationMetric(
+                        label: '현금잔액',
+                        value: totalCashBalance.toCurrency(
+                          isForeign: isSingleOverseasAccount,
+                        ),
+                      ),
+                      EvaluationMetric(
+                        label: '누적 배당',
+                        value: totalPayout.toCurrency(
+                          isForeign: isSingleOverseasAccount,
+                        ),
+                      ),
+                      EvaluationMetric(
+                        label: '누적 인출',
+                        value: totalCumulativeWithdrawal.toCurrency(
+                          isForeign: isSingleOverseasAccount,
+                        ),
+                      ),
+                    ],
+                    diffFromLastMonthWidget: summaryDiffFromLastMonth
+                        .toSignedCurrencyText(
+                          isForeign: isSingleOverseasAccount,
+                          isDarkCard: true,
+                          style: TextStyle(
+                            fontSize: context.isMobile ? 13 : 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                  ),
+
+                  const SizedBox(height: 12),
+                  SectionTitle('계좌별 현금 및 자금 요약'),
+
+                  MonthlyStockAccountSummaryList(
+                    stockAccounts: stockAccounts,
+                    accountNameMap: accountNameMap,
+                    accountBalanceMap: accountBalanceMap,
+                    selectedAccountId: currentDropdownValue,
+                    targetMonth: activeCurrentMonth,
+                    onEditPressed: null,
+                  ),
+
+                  const SizedBox(height: 12),
+                  SectionTitle('보유 종목별 월말 내역'),
+
+                  if (filteredStockItems.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          '$activeCurrentMonth에 등록된 주식 월말 데이터가 없습니다.',
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredStockItems.length,
+                      itemBuilder: (context, index) {
+                        final item = filteredStockItems[index];
+                        final matchedAcc = accountMap[item.accountId];
+                        final institution =
+                            matchedAcc?.financialInstitution ?? '기타 금융기관';
+                        final nameObj =
+                            matchedAcc != null
+                                ? accountNameMap[matchedAcc.accountNameId]
+                                : null;
+                        final accountName = nameObj?.accountName ?? '주식계좌';
+                        final isForeign = matchedAcc?.isForeignCurrency ?? false;
+
+                        final stock = stockItemMap[item.stockItemId];
+                        final stockNameOnly = stock?.itemName ?? '알 수 없는 종목';
+                        final stockCode = stock?.stockCode ?? '';
+                        final displayName =
+                            stockCode.isNotEmpty
+                                ? '$stockNameOnly ($stockCode)'
+                                : stockNameOnly;
+
+                        final lastItem = lastItems.firstWhereOrNull(
+                          (prev) =>
+                              prev.accountId == item.accountId &&
+                              prev.stockItemId == item.stockItemId,
+                        );
+                        final lastBalance = lastItem?.balance ?? 0.0;
+                        final diffFromLastMonth = item.balance - lastBalance;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Card(
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    displayName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '[$institution] $accountName',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      JText(
+                                        '${item.quantity.toCommaString()}주 · ${item.currentPrice.toCurrency(isForeign: isForeign)}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Divider(height: 16),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      JText(
+                                        '평가액: ${item.balance.toCurrency(isForeign: isForeign)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      JText(
+                                        '원금: ${item.principal.toCurrency(isForeign: isForeign)}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade50,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.grey.shade200,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        JText(
+                                          '당월 배당: ${item.monthlyPayout.toCurrency(isForeign: isForeign)}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.teal.shade700,
+                                          ),
+                                        ),
+                                        JText(
+                                          '누적 배당: ${item.totalPayout.toCurrency(isForeign: isForeign)}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.teal.shade900,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Divider(height: 16, color: Colors.black12),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      JText(
+                                        '당월 매도: ${item.monthlyWithdrawal.toCurrency(isForeign: isForeign)}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '전월 대비: ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                          diffFromLastMonth
+                                              .toSignedCurrencyText(
+                                                isForeign: isForeign,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
           );
         },
       ),

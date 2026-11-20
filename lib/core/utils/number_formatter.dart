@@ -206,4 +206,47 @@ extension NumberFormatter on num {
       style: (style ?? const TextStyle()).copyWith(color: textColor),
     );
   }
+  
+  /// 외화 여부에 따라 원화(반올림 + 원) 또는 달러($) 문자열 반환
+  String toCurrency({required bool isForeign}) {
+    return isForeign ? toUSD() : round().toWon();
+  }
+
+  /// 외화 여부에 따라 부호(+/-)와 색상이 적용된 금액 Text 위젯 반환
+  Widget toSignedCurrencyText({
+    required bool isForeign,
+    TextStyle? style,
+    bool isDarkCard = false,
+    bool showPlusSign = true,
+  }) {
+    if (!isForeign) {
+      return round().toSignedPriceText(
+        style: style,
+        isDarkCard: isDarkCard,
+        suffix: '원',
+        showPlusSign: showPlusSign,
+      );
+    }
+
+    final Color positiveColor =
+        isDarkCard ? const Color(0xFFFF8A80) : Colors.red.shade700;
+    final Color negativeColor =
+        isDarkCard ? const Color(0xFF82B1FF) : Colors.blue.shade700;
+    final Color zeroColor = Colors.grey;
+
+    final Color textColor =
+        this > 0
+            ? positiveColor
+            : this < 0
+            ? negativeColor
+            : zeroColor;
+
+    final String formattedNumber =
+        showPlusSign ? toSignedCommaString() : toCommaString();
+
+    return JText(
+      '\$$formattedNumber',
+      style: (style ?? const TextStyle()).copyWith(color: textColor),
+    );
+  }
 }

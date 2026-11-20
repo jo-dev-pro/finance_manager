@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/pension/pension_product.dart';
 import '../../../providers/pension/pension_product_provider.dart';
@@ -17,19 +18,17 @@ class PensionProductScreen extends ConsumerWidget {
     final productsState = ref.watch(pensionProductNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('연금상품 관리'),
+        appBar: MainAppBar(
+        titleText: '연금상품 관리',
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
-            color: Colors.grey.shade700,
-            padding: EdgeInsets.zero, // 기본 패딩 제거
-            constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+          ElevatedButton.icon(
             onPressed: () => _showDialog(context),
+            icon: const Icon(Icons.add_circle_outline_rounded),
+            label: const Text('연금상품 등록'),
           ),
-          SizedBox(width: 16),
         ],
       ),
+    
       body: productsState.when(
         data: (products) {
           if (products.isEmpty) {

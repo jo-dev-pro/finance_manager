@@ -6,6 +6,7 @@ import '../../../core/widgets/app_dialog.dart';      // 💡 공통 삭제 다�
 import '../../../core/widgets/app_snackbar.dart';  // 💡 공통 스낵바
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/jtext.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/summary_card.dart';
 import '../../../models/investment/investment.dart';
@@ -20,21 +21,16 @@ class InvestmentScreen extends ConsumerWidget {
     final investmentState = ref.watch(investmentNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('투자 내역 관리'),
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        appBar: MainAppBar(
+        titleText: '투자 내역 관리',
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
-            color: Colors.grey.shade700,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+          ElevatedButton.icon(
             onPressed: () => _showDialog(context), 
+            label: const Text('투자금 추가'),
           ),
-          const SizedBox(width: 16),
         ],
       ),
+      
       body: investmentState.when(
         data: (investments) {
           final totalAmount = investments.fold<double>(

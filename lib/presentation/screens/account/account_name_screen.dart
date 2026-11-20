@@ -5,6 +5,7 @@ import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/jtext.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/account/account_name.dart';
 import '../../../providers/account/account_name_provider.dart';
@@ -18,19 +19,16 @@ class AccountNameScreen extends ConsumerWidget {
     final accountNameAsync = ref.watch(accountNameNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('은행 계좌명 관리'),
+      appBar: MainAppBar(
+        titleText: '계좌명 관리',
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
-            color: Colors.grey.shade700,
-            padding: EdgeInsets.zero, // 기본 패딩 제거
-            constraints: const BoxConstraints(), // 최소 48x48 제약 제거
+          ElevatedButton.icon(
             onPressed: () => _showDialog(context),
+            label: const Text('계좌 추가'),
           ),
-          SizedBox(width: 16),
         ],
       ),
+
       body: accountNameAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('오류가 발생했습니다: $err')),

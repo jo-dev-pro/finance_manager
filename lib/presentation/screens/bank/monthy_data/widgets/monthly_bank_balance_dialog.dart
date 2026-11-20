@@ -7,8 +7,8 @@ import 'package:intl/intl.dart';
 import '../../../../../core/utils/number_formatter.dart';
 import '../../../../../core/utils/responsive_extension.dart';
 import '../../../../../core/widgets/app_snackbar.dart';
-import '../../../../../models/monthly_data/monthly_bank_balance.dart';
 import '../../../../../models/account/account.dart';
+import '../../../../../models/monthly_data/monthly_bank_balance.dart';
 import '../../../../../providers/account/account_name_provider.dart';
 import '../../../../../providers/account/account_provider.dart';
 import '../../../../../providers/dashboard/dashboard_provider.dart';
@@ -16,8 +16,8 @@ import '../../../../../providers/monthly_data/monthly_bank_balance_provider.dart
 
 class MonthlyBankBalanceDialog extends ConsumerStatefulWidget {
   final String yearMonth;
-  final MonthlyBankBalance? editItem; // 💡 단건 수정용 아이템 (선택사항)
-  final String? accountNameText; // 💡 화면 표시용 계좌 이름 (선택사항)
+  final MonthlyBankBalance? editItem;
+  final String? accountNameText;
 
   const MonthlyBankBalanceDialog({
     super.key,
@@ -37,10 +37,12 @@ class _MonthlyBankBalanceDialogState
   final Map<String, TextEditingController> _controllers = {};
   final _formKey = GlobalKey<FormState>();
 
+  bool get _isEditing => widget.editItem != null;
+
   @override
   void initState() {
     super.initState();
-    _selectedYearMonth = widget.yearMonth;
+    _selectedYearMonth = widget.editItem?.yearMonth ?? widget.yearMonth;
   }
 
   @override
@@ -51,7 +53,6 @@ class _MonthlyBankBalanceDialogState
     super.dispose();
   }
 
-  // 📌 이전 달 연월 구하기 메서드 추가
   String _getPreviousYearMonth(String ym) {
     try {
       final parts = ym.split('-');
@@ -69,7 +70,6 @@ class _MonthlyBankBalanceDialogState
     final accountsAsync = ref.watch(accountNotifierProvider);
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
 
-    // 📌 현재 및 이전 달 잔액 프로바이더 감시
     final existingCurrentBalancesAsync = ref.watch(
       monthlyBankBalanceNotifierProvider(_selectedYearMonth),
     );
@@ -91,9 +91,14 @@ class _MonthlyBankBalanceDialogState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '월말 잔액 일괄 입력',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    _isEditing
+                        ? '${widget.accountNameText ?? '은행 계좌'} 월말 잔액 수정'
+                        : '월말 잔액 일괄 입력',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -106,6 +111,7 @@ class _MonthlyBankBalanceDialogState
 
               TextFormField(
                 initialValue: _selectedYearMonth,
+                readOnly: _isEditing,
                 decoration: const InputDecoration(
                   labelText: '기준월 (YYYY-MM)',
                   border: OutlineInputBorder(),
@@ -113,21 +119,25 @@ class _MonthlyBankBalanceDialogState
                   isDense: true,
                 ),
                 onChanged: (val) {
+                  if (_isEditing) return;
                   setState(() {
                     _selectedYearMonth = val.trim();
                   });
                 },
                 validator: (val) {
-                  if (val == null || val.isEmpty) {
+                  if (val == null || val.trim().isEmpty) {
                     return '기준월을 입력해주세요.';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 20),
-              const Text(
-                '은행 계좌별 월말 잔액',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              Text(
+                _isEditing ? '수정할 월말 잔액' : '은행 계좌별 월말 잔액',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
               const SizedBox(height: 10),
               accountsAsync.when(
@@ -141,7 +151,7 @@ class _MonthlyBankBalanceDialogState
                 error: (err, stack) => Text('계좌 목록 불러오기 실패: $err'),
                 data: (accounts) {
                   final bankAccounts =
-                      widget.editItem != null
+                      _isEditing
                           ? accounts
                               .where((a) => a.id == widget.editItem!.accountId)
                               .toList()
@@ -165,7 +175,6 @@ class _MonthlyBankBalanceDialogState
                       existingCurrentBalancesAsync.value ?? [];
                   final prevBalances = existingPrevBalancesAsync.value ?? [];
 
-                  // 📌 계좌별 잔액 맵 생성
                   final currentBalanceMap = {
                     for (var b in currentBalances) b.accountId: b.balance,
                   };
@@ -189,12 +198,15 @@ class _MonthlyBankBalanceDialogState
 
                       final displayName = matchedName?.accountName ?? '계좌';
 
-                      // 📌 컨트롤러 초기화 시 현재값 또는 지난달값 기본 세팅
                       if (!_controllers.containsKey(accId)) {
+                        final isTargetEdit =
+                            _isEditing && widget.editItem!.accountId == accId;
                         final valToSet =
-                            currentBalanceMap[accId] ??
-                            prevBalanceMap[accId] ??
-                            0.0;
+                            isTargetEdit
+                                ? widget.editItem!.balance
+                                : (currentBalanceMap[accId] ??
+                                    prevBalanceMap[accId] ??
+                                    0.0);
                         _controllers[accId] = TextEditingController(
                           text: valToSet > 0 ? valToSet.toCommaString() : '',
                         );
@@ -235,7 +247,7 @@ class _MonthlyBankBalanceDialogState
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () => _saveAllBalances(accountsAsync.value ?? []),
+                  onPressed: () => _saveBalances(accountsAsync.value ?? []),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo.shade600,
                     foregroundColor: Colors.white,
@@ -243,7 +255,10 @@ class _MonthlyBankBalanceDialogState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('전체 저장', style: TextStyle(fontSize: 16)),
+                  child: Text(
+                    _isEditing ? '수정하기' : '전체 저장',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],
@@ -253,7 +268,7 @@ class _MonthlyBankBalanceDialogState
     );
   }
 
-  Future<void> _saveAllBalances(List<dynamic> rawAccounts) async {
+  Future<void> _saveBalances(List<Account> accounts) async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final notifier = ref.read(
@@ -262,14 +277,21 @@ class _MonthlyBankBalanceDialogState
     final accountNotifier = ref.read(accountNotifierProvider.notifier);
     final accountNames = ref.read(accountNameNotifierProvider).value ?? [];
 
-    final bankAccounts =
-        rawAccounts
-            .where((a) => a is Account && a.accountType.toUpperCase() == '은행')
-            .cast<Account>()
-            .toList();
+    final targetAccounts =
+        _isEditing
+            ? accounts
+                .where((a) => a.id == widget.editItem!.accountId)
+                .toList()
+            : accounts
+                .where(
+                  (a) =>
+                      a.accountType.toUpperCase() == '은행' &&
+                      a.status == '활동',
+                )
+                .toList();
 
     try {
-      for (var acc in bankAccounts) {
+      for (var acc in targetAccounts) {
         final accId = acc.id ?? '';
         final controller = _controllers[accId];
 
@@ -277,12 +299,16 @@ class _MonthlyBankBalanceDialogState
           final cleanText = controller.text.replaceAll(RegExp(r'[^0-9]'), '');
           final balanceVal = double.tryParse(cleanText) ?? 0.0;
 
-          final newBalanceItem = MonthlyBankBalance(
+          final isTargetEdit =
+              _isEditing && widget.editItem!.accountId == accId;
+
+          final balanceItem = MonthlyBankBalance(
+            id: isTargetEdit ? widget.editItem!.id : null,
             yearMonth: _selectedYearMonth,
             accountId: accId,
             balance: balanceVal,
           );
-          await notifier.saveBalance(newBalanceItem);
+          await notifier.saveBalance(balanceItem);
 
           final matchedName = accountNames.firstWhereOrNull(
             (an) => an.id.toString() == acc.accountNameId.toString(),
@@ -299,18 +325,14 @@ class _MonthlyBankBalanceDialogState
       ref.invalidate(dashboardSummaryProvider);
       ref.invalidate(availableYearMonthsProvider);
 
-      // 💡 await 작업들이 모두 끝난 후 context 사용 전 필수 가드 체크
       if (!mounted) return;
-
-      // 다이얼로그 닫기
       Navigator.pop(context);
-
-      // 성공 스낵바 호출 (선택사항)
-      AppSnackBar.showInfo(context, '월말 잔액이 성공적으로 저장되었습니다.');
+      AppSnackBar.showInfo(
+        context,
+        _isEditing ? '월말 잔액이 수정되었습니다.' : '월말 잔액이 성공적으로 저장되었습니다.',
+      );
     } catch (e) {
-      // 💡 에러 발생 시 비동기 이후 멈춤 방지
       if (!mounted) return;
-
       AppSnackBar.showError(context, '저장 실패: $e');
     }
   }

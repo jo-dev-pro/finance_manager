@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router_path.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
 import '../../../providers/bank/bank_provider.dart';
@@ -33,10 +34,8 @@ class BankScreen extends ConsumerWidget {
     final selectedMonth = ref.watch(selectedYearMonthProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('은행 자산 현황'),
-        elevation: 0,
-        scrolledUnderElevation: 0, // 스크롤 시 그림자/색상 변화 방지
+      appBar: MainAppBar(
+        titleText: '은행 자산 현황',
         actions: [
           ElevatedButton.icon(
             onPressed: () {
@@ -48,9 +47,9 @@ class BankScreen extends ConsumerWidget {
             icon: const Icon(Icons.calendar_month, size: 18),
             label: const Text('월말은행'),
           ),
-          const SizedBox(width: 16),
         ],
       ),
+      
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error:

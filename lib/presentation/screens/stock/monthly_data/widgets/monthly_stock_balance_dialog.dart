@@ -1,20 +1,20 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:collection/collection.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
 import '../../../../../core/utils/responsive_extension.dart';
 import '../../../../../core/utils/toss_direct_api_service.dart';
 import '../../../../../core/widgets/app_snackbar.dart';
-import '../../../../../models/monthly_data/monthly_stock_balance.dart';
 import '../../../../../models/monthly_data/monthly_stock_account_balance.dart';
+import '../../../../../models/monthly_data/monthly_stock_balance.dart';
 import '../../../../../models/stock/stock_item.dart';
 import '../../../../../providers/account/account_name_provider.dart';
 import '../../../../../providers/account/account_provider.dart';
-import '../../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 import '../../../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
+import '../../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 import '../../../../../providers/stock/stock_holding_item_provider.dart';
 import '../../../../../providers/stock/stock_item_provider.dart';
 
@@ -38,8 +38,13 @@ class _GroupedStockItem {
 
 class MonthlyStockBalanceDialog extends ConsumerStatefulWidget {
   final String yearMonth;
+  final MonthlyStockBalance? editItem;
 
-  const MonthlyStockBalanceDialog({super.key, required this.yearMonth});
+  const MonthlyStockBalanceDialog({
+    super.key,
+    required this.yearMonth,
+    this.editItem,
+  });
 
   @override
   ConsumerState<MonthlyStockBalanceDialog> createState() =>
@@ -70,19 +75,32 @@ class _MonthlyStockBalanceDialogState
 
   final _formKey = GlobalKey<FormState>();
 
+  bool get _isEditing => widget.editItem != null;
+
   @override
   void initState() {
     super.initState();
-    _selectedYearMonth = widget.yearMonth;
+    _selectedYearMonth = widget.editItem?.yearMonth ?? widget.yearMonth;
+    _selectedAccountId = widget.editItem?.accountId;
   }
 
   @override
   void dispose() {
-    for (var c in _quantityControllers.values) { c.dispose(); }
-    for (var c in _priceControllers.values) { c.dispose(); }
-    for (var c in _monthlyPrincipalControllers.values) { c.dispose(); }
-    for (var c in _monthlyPayoutControllers.values) { c.dispose(); }
-    for (var c in _monthlyWithdrawalControllers.values) { c.dispose(); }
+    for (var c in _quantityControllers.values) {
+      c.dispose();
+    }
+    for (var c in _priceControllers.values) {
+      c.dispose();
+    }
+    for (var c in _monthlyPrincipalControllers.values) {
+      c.dispose();
+    }
+    for (var c in _monthlyPayoutControllers.values) {
+      c.dispose();
+    }
+    for (var c in _monthlyWithdrawalControllers.values) {
+      c.dispose();
+    }
     _accountCashBalanceController.dispose();
     _accountMonthlyWithdrawalController.dispose();
     _exchangeRateController.dispose();
@@ -104,7 +122,8 @@ class _MonthlyStockBalanceDialogState
   Future<void> _fetchExchangeRate() async {
     setState(() => _isExchangeRateLoading = true);
     try {
-      final rate = await TossDirectApiService.getMonthlyExchangeRate(_selectedYearMonth);
+      final rate =
+          await TossDirectApiService.getMonthlyExchangeRate(_selectedYearMonth);
       if (rate != null && mounted) {
         setState(() {
           _exchangeRateController.text = rate.toStringAsFixed(2);
@@ -129,7 +148,7 @@ class _MonthlyStockBalanceDialogState
       orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
     );
 
-    String symbol = selectedStock.stockCode.trim();
+    final symbol = selectedStock.stockCode.trim();
     setState(() => _isLoadingPriceMap[key] = true);
 
     try {
@@ -142,7 +161,10 @@ class _MonthlyStockBalanceDialogState
           _priceControllers[key]!.text = price.toCommaString();
         });
         if (mounted) {
-          AppSnackBar.showInfo(context, '${selectedStock.itemName} 시세 조회가 완료되었습니다.');
+          AppSnackBar.showInfo(
+            context,
+            '${selectedStock.itemName} 시세 조회가 완료되었습니다.',
+          );
         }
       }
     } catch (e) {
@@ -174,7 +196,7 @@ class _MonthlyStockBalanceDialogState
               orElse: () => throw Exception('종목을 찾을 수 없습니다.'),
             );
 
-            String symbol = selectedStock.stockCode.trim();
+            final symbol = selectedStock.stockCode.trim();
             final price = await TossDirectApiService.getMonthlyClosePrice(
               symbol,
               _selectedYearMonth,
@@ -185,9 +207,7 @@ class _MonthlyStockBalanceDialogState
                 _priceControllers[key]!.text = price.toCommaString();
               });
             }
-          } catch (e) {
-            // 개별 종목 실패 시 콘솔 대신 필요에 따라 처리 가능 (여기서는 조용히 넘어가거나 에러 스낵바 연결 가능)
-          }
+          } catch (_) {}
         }),
       ]);
 
@@ -238,9 +258,12 @@ class _MonthlyStockBalanceDialogState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '월말 주식 평가액/수량 일괄 입력',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    _isEditing ? '월말 주식 내역 수정' : '월말 주식 평가액/수량 일괄 입력',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -253,6 +276,7 @@ class _MonthlyStockBalanceDialogState
 
               TextFormField(
                 initialValue: _selectedYearMonth,
+                readOnly: _isEditing,
                 decoration: const InputDecoration(
                   labelText: '기준월',
                   hintText: 'YYYY-MM',
@@ -265,12 +289,16 @@ class _MonthlyStockBalanceDialogState
                   ),
                 ),
                 onChanged: (val) {
+                  if (_isEditing) return;
                   setState(() {
                     _selectedYearMonth = val.trim();
                   });
                 },
                 validator:
-                    (val) => val == null || val.isEmpty ? '기준월을 입력해주세요.' : null,
+                    (val) =>
+                        val == null || val.trim().isEmpty
+                            ? '기준월을 입력해주세요.'
+                            : null,
               ),
               const SizedBox(height: 16),
 
@@ -284,13 +312,17 @@ class _MonthlyStockBalanceDialogState
                   };
 
                   final stockAccounts =
-                      accounts
-                          .where(
-                            (a) =>
-                                a.accountType.trim() == '증권' &&
-                                a.status == '활동',
-                          )
-                          .toList();
+                      _isEditing
+                          ? accounts
+                              .where((a) => a.id == widget.editItem!.accountId)
+                              .toList()
+                          : accounts
+                              .where(
+                                (a) =>
+                                    a.accountType.trim() == '증권' &&
+                                    a.status == '활동',
+                              )
+                              .toList();
 
                   if (stockAccounts.isEmpty) {
                     return const Padding(
@@ -307,9 +339,10 @@ class _MonthlyStockBalanceDialogState
                     _selectedAccountId = stockAccounts.first.id;
                   }
 
-                  final currentAccBalances = currentAccountBalancesAsync.value ?? [];
+                  final currentAccBalances =
+                      currentAccountBalancesAsync.value ?? [];
                   final prevAccBalances = prevAccountBalancesAsync.value ?? [];
-                  
+
                   final currentAccData = currentAccBalances.firstWhereOrNull(
                     (b) => b.accountId == _selectedAccountId,
                   );
@@ -318,23 +351,33 @@ class _MonthlyStockBalanceDialogState
                   );
 
                   if (_accountCashBalanceController.text.isEmpty) {
-                    final defaultCash = (currentAccData != null && currentAccData.cashBalance > 0)
-                        ? currentAccData.cashBalance
-                        : (prevAccData?.cashBalance ?? 0.0);
+                    final defaultCash =
+                        (currentAccData != null &&
+                                currentAccData.cashBalance > 0)
+                            ? currentAccData.cashBalance
+                            : (prevAccData?.cashBalance ?? 0.0);
                     if (defaultCash > 0) {
-                      _accountCashBalanceController.text = defaultCash.toCommaString();
+                      _accountCashBalanceController.text =
+                          defaultCash.toCommaString();
                     }
                   }
 
                   if (_exchangeRateController.text.isEmpty) {
-                    final defaultRate = currentAccData?.exchangeRate ?? prevAccData?.exchangeRate ?? 1.0;
+                    final defaultRate =
+                        currentAccData?.exchangeRate ??
+                        prevAccData?.exchangeRate ??
+                        1.0;
                     if (defaultRate > 1.0) {
-                      _exchangeRateController.text = defaultRate.toStringAsFixed(2);
+                      _exchangeRateController.text =
+                          defaultRate.toStringAsFixed(2);
                     }
                   }
 
-                  if (_accountMonthlyWithdrawalController.text.isEmpty && currentAccData != null && currentAccData.monthlyWithdrawal > 0) {
-                    _accountMonthlyWithdrawalController.text = currentAccData.monthlyWithdrawal.toCommaString();
+                  if (_accountMonthlyWithdrawalController.text.isEmpty &&
+                      currentAccData != null &&
+                      currentAccData.monthlyWithdrawal > 0) {
+                    _accountMonthlyWithdrawalController.text =
+                        currentAccData.monthlyWithdrawal.toCommaString();
                   }
 
                   return Column(
@@ -361,14 +404,18 @@ class _MonthlyStockBalanceDialogState
                                 child: Text('$institution - $nameDisplay'),
                               );
                             }).toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            _selectedAccountId = val;
-                            _accountCashBalanceController.clear();
-                            _accountMonthlyWithdrawalController.clear();
-                            _exchangeRateController.clear();
-                          });
-                        },
+                        onChanged:
+                            _isEditing
+                                ? null
+                                : (val) {
+                                  setState(() {
+                                    _selectedAccountId = val;
+                                    _accountCashBalanceController.clear();
+                                    _accountMonthlyWithdrawalController
+                                        .clear();
+                                    _exchangeRateController.clear();
+                                  });
+                                },
                       ),
                       const SizedBox(height: 16),
 
@@ -385,7 +432,11 @@ class _MonthlyStockBalanceDialogState
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.account_balance_wallet, size: 18, color: Colors.indigo.shade800),
+                                  Icon(
+                                    Icons.account_balance_wallet,
+                                    size: 18,
+                                    color: Colors.indigo.shade800,
+                                  ),
                                   const SizedBox(width: 6),
                                   Text(
                                     '계좌 공통 현금, 환율 및 자금 관리',
@@ -423,15 +474,32 @@ class _MonthlyStockBalanceDialogState
                                   Expanded(
                                     child: TextFormField(
                                       controller: _exchangeRateController,
-                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                            decimal: true,
+                                          ),
                                       decoration: InputDecoration(
                                         labelText: '월말 환율',
                                         hintText: '1350.0',
                                         suffixIcon: IconButton(
-                                          icon: _isExchangeRateLoading
-                                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                              : const Icon(Icons.cloud_download, size: 18),
-                                          onPressed: _isExchangeRateLoading ? null : _fetchExchangeRate,
+                                          icon:
+                                              _isExchangeRateLoading
+                                                  ? const SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                  )
+                                                  : const Icon(
+                                                    Icons.cloud_download,
+                                                    size: 18,
+                                                  ),
+                                          onPressed:
+                                              _isExchangeRateLoading
+                                                  ? null
+                                                  : _fetchExchangeRate,
                                         ),
                                         border: const OutlineInputBorder(),
                                         isDense: true,
@@ -473,13 +541,17 @@ class _MonthlyStockBalanceDialogState
                           };
 
                           final matchedHoldings =
-                              holdingItems
-                                  .where(
-                                    (hi) =>
-                                        hi.accountId == _selectedAccountId &&
-                                        hi.isActive,
-                                  )
-                                  .toList();
+                              holdingItems.where((hi) {
+                                final matchesAccount =
+                                    hi.accountId == _selectedAccountId &&
+                                    hi.isActive;
+                                if (_isEditing) {
+                                  return matchesAccount &&
+                                      hi.stockItemId ==
+                                          widget.editItem!.stockItemId;
+                                }
+                                return matchesAccount;
+                              }).toList();
 
                           for (var hi in matchedHoldings) {
                             final stockId = hi.stockItemId;
@@ -511,39 +583,41 @@ class _MonthlyStockBalanceDialogState
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              ElevatedButton.icon(
-                                onPressed:
-                                    _isAllLoading
-                                        ? null
-                                        : () => _fetchAllPrices(
-                                          groupedItems,
-                                          stockItems,
-                                        ),
-                                icon:
-                                    _isAllLoading
-                                        ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
+                              if (!_isEditing) ...[
+                                ElevatedButton.icon(
+                                  onPressed:
+                                      _isAllLoading
+                                          ? null
+                                          : () => _fetchAllPrices(
+                                            groupedItems,
+                                            stockItems,
                                           ),
-                                        )
-                                        : const Icon(Icons.flash_on, size: 16),
-                                label: Text(
-                                  _isAllLoading
-                                      ? '전체 조회 중...'
-                                      : '전체 종목 시세 및 환율 일괄 조회',
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.indigo.shade600,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 10,
+                                  icon:
+                                      _isAllLoading
+                                          ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                          : const Icon(Icons.flash_on, size: 16),
+                                  label: Text(
+                                    _isAllLoading
+                                        ? '전체 조회 중...'
+                                        : '전체 종목 시세 및 환율 일괄 조회',
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.indigo.shade600,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: 12),
+                                const SizedBox(height: 12),
+                              ],
 
                               ListView.separated(
                                 shrinkWrap: true,
@@ -561,39 +635,88 @@ class _MonthlyStockBalanceDialogState
                                   final currentData = currentBalanceMap[key];
 
                                   if (!_quantityControllers.containsKey(key)) {
+                                    final isTargetEdit =
+                                        _isEditing &&
+                                        widget.editItem!.stockItemId == stockId;
+
                                     final currentQty =
-                                        (currentData != null && currentData.quantity > 0)
-                                            ? currentData.quantity
-                                            : (prevBalanceMap[key]?.quantity ?? 0.0);
+                                        isTargetEdit
+                                            ? widget.editItem!.quantity
+                                            : (currentData != null &&
+                                                    currentData.quantity > 0)
+                                                ? currentData.quantity
+                                                : (prevBalanceMap[key]
+                                                        ?.quantity ??
+                                                    0.0);
 
                                     final currentPriceVal =
-                                        (currentData != null && currentData.currentPrice > 0)
-                                            ? currentData.currentPrice
-                                            : (prevBalanceMap[key]?.currentPrice ?? 0.0);
+                                        isTargetEdit
+                                            ? widget.editItem!.currentPrice
+                                            : (currentData != null &&
+                                                    currentData.currentPrice > 0)
+                                                ? currentData.currentPrice
+                                                : (prevBalanceMap[key]
+                                                        ?.currentPrice ??
+                                                    0.0);
 
-                                    _quantityControllers[key] = TextEditingController(
-                                      text: currentQty > 0 ? currentQty.toString() : '',
-                                    );
-                                    _priceControllers[key] = TextEditingController(
-                                      text: currentPriceVal > 0
-                                          ? currentPriceVal.toCommaString()
-                                          : '',
-                                    );
-                                    _monthlyPrincipalControllers[key] = TextEditingController(
-                                      text: (currentData != null && currentData.monthlyPrincipal > 0)
-                                          ? currentData.monthlyPrincipal.toCommaString()
-                                          : '',
-                                    );
-                                    _monthlyPayoutControllers[key] = TextEditingController(
-                                      text: (currentData != null && currentData.monthlyPayout > 0)
-                                          ? currentData.monthlyPayout.toCommaString()
-                                          : '',
-                                    );
-                                    _monthlyWithdrawalControllers[key] = TextEditingController(
-                                      text: (currentData != null && currentData.monthlyWithdrawal > 0)
-                                          ? currentData.monthlyWithdrawal.toCommaString()
-                                          : '',
-                                    );
+                                    final monthlyPrinVal =
+                                        isTargetEdit
+                                            ? widget.editItem!.monthlyPrincipal
+                                            : (currentData?.monthlyPrincipal ??
+                                                0.0);
+
+                                    final monthlyPayoutVal =
+                                        isTargetEdit
+                                            ? widget.editItem!.monthlyPayout
+                                            : (currentData?.monthlyPayout ??
+                                                0.0);
+
+                                    final monthlyWithVal =
+                                        isTargetEdit
+                                            ? widget.editItem!.monthlyWithdrawal
+                                            : (currentData
+                                                    ?.monthlyWithdrawal ??
+                                                0.0);
+
+                                    _quantityControllers[key] =
+                                        TextEditingController(
+                                          text:
+                                              currentQty > 0
+                                                  ? currentQty.toString()
+                                                  : '',
+                                        );
+                                    _priceControllers[key] =
+                                        TextEditingController(
+                                          text:
+                                              currentPriceVal > 0
+                                                  ? currentPriceVal
+                                                      .toCommaString()
+                                                  : '',
+                                        );
+                                    _monthlyPrincipalControllers[key] =
+                                        TextEditingController(
+                                          text:
+                                              monthlyPrinVal > 0
+                                                  ? monthlyPrinVal
+                                                      .toCommaString()
+                                                  : '',
+                                        );
+                                    _monthlyPayoutControllers[key] =
+                                        TextEditingController(
+                                          text:
+                                              monthlyPayoutVal > 0
+                                                  ? monthlyPayoutVal
+                                                      .toCommaString()
+                                                  : '',
+                                        );
+                                    _monthlyWithdrawalControllers[key] =
+                                        TextEditingController(
+                                          text:
+                                              monthlyWithVal > 0
+                                                  ? monthlyWithVal
+                                                      .toCommaString()
+                                                  : '',
+                                        );
                                   }
 
                                   final isLoading =
@@ -688,115 +811,158 @@ class _MonthlyStockBalanceDialogState
                                           ),
                                           const SizedBox(height: 6),
 
-                                          // 누적 현황 표시
                                           Container(
                                             padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
                                               color: Colors.grey.shade100,
-                                              borderRadius: BorderRadius.circular(6),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
                                                   children: [
-                                                    Text('누적투자금: ${groupItem.principal.toWon()}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                                                    Text('누적배당금: ${groupItem.totalPayout.toWon()}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                                    Text(
+                                                      '누적투자금: ${groupItem.principal.toWon()}',
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      '누적배당금: ${groupItem.totalPayout.toWon()}',
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
                                                   ],
                                                 ),
                                                 const SizedBox(height: 2),
-                                                Text('누적매도액: ${groupItem.totalWithdrawal.toWon()}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                                Text(
+                                                  '누적매도액: ${groupItem.totalWithdrawal.toWon()}',
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           ),
                                           const Divider(height: 16),
 
-                                          // 수량 및 현재가
                                           Row(
                                             children: [
                                               Expanded(
                                                 child: TextFormField(
-                                                  controller: _quantityControllers[key],
-                                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                                  decoration: const InputDecoration(
-                                                    labelText: '수량',
-                                                    suffixText: '주',
-                                                    border: OutlineInputBorder(),
-                                                    isDense: true,
-                                                  ),
-                                                  onChanged: (_) => setState(() {}),
+                                                  controller:
+                                                      _quantityControllers[key],
+                                                  keyboardType:
+                                                      const TextInputType.numberWithOptions(
+                                                        decimal: true,
+                                                      ),
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '수량',
+                                                        suffixText: '주',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
+                                                  onChanged:
+                                                      (_) => setState(() {}),
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
                                               Expanded(
                                                 flex: 2,
                                                 child: TextFormField(
-                                                  controller: _priceControllers[key],
-                                                  keyboardType: TextInputType.number,
+                                                  controller:
+                                                      _priceControllers[key],
+                                                  keyboardType:
+                                                      TextInputType.number,
                                                   inputFormatters: [
-                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
                                                     ThousandsSeparatorInputFormatter(),
                                                   ],
-                                                  decoration: const InputDecoration(
-                                                    labelText: '주당 현재가',
-                                                    suffixText: '원/\$',
-                                                    border: OutlineInputBorder(),
-                                                    isDense: true,
-                                                  ),
-                                                  onChanged: (_) => setState(() {}),
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '주당 현재가',
+                                                        suffixText: '원/\$',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
+                                                  onChanged:
+                                                      (_) => setState(() {}),
                                                 ),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 10),
 
-                                          // 당월투자금, 당월배당금
                                           Row(
                                             children: [
                                               Expanded(
                                                 child: TextFormField(
-                                                  controller: _monthlyPrincipalControllers[key],
-                                                  keyboardType: TextInputType.number,
+                                                  controller:
+                                                      _monthlyPrincipalControllers[key],
+                                                  keyboardType:
+                                                      TextInputType.number,
                                                   inputFormatters: [
-                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
                                                     ThousandsSeparatorInputFormatter(),
                                                   ],
-                                                  decoration: const InputDecoration(
-                                                    labelText: '당월투자금',
-                                                    hintText: '0',
-                                                    border: OutlineInputBorder(),
-                                                    isDense: true,
-                                                  ),
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '당월투자금',
+                                                        hintText: '0',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
                                               Expanded(
                                                 child: TextFormField(
-                                                  controller: _monthlyPayoutControllers[key],
-                                                  keyboardType: TextInputType.number,
+                                                  controller:
+                                                      _monthlyPayoutControllers[key],
+                                                  keyboardType:
+                                                      TextInputType.number,
                                                   inputFormatters: [
-                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
                                                     ThousandsSeparatorInputFormatter(),
                                                   ],
-                                                  decoration: const InputDecoration(
-                                                    labelText: '당월배당금',
-                                                    hintText: '0',
-                                                    border: OutlineInputBorder(),
-                                                    isDense: true,
-                                                  ),
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '당월배당금',
+                                                        hintText: '0',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        isDense: true,
+                                                      ),
                                                 ),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 10),
 
-                                          // 당월매도액
                                           TextFormField(
-                                            controller: _monthlyWithdrawalControllers[key],
+                                            controller:
+                                                _monthlyWithdrawalControllers[key],
                                             keyboardType: TextInputType.number,
                                             inputFormatters: [
-                                              FilteringTextInputFormatter.digitsOnly,
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly,
                                               ThousandsSeparatorInputFormatter(),
                                             ],
                                             decoration: const InputDecoration(
@@ -846,7 +1012,10 @@ class _MonthlyStockBalanceDialogState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('저장하기', style: TextStyle(fontSize: 16)),
+                  child: Text(
+                    _isEditing ? '수정하기' : '저장하기',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],
@@ -869,22 +1038,33 @@ class _MonthlyStockBalanceDialogState
 
     try {
       final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
-      final prevAccountBalances = ref.read(
-            monthlyStockAccountBalanceNotifierProvider(prevYearMonth),
-          ).value ?? [];
-      
+      final prevAccountBalances =
+          ref
+              .read(monthlyStockAccountBalanceNotifierProvider(prevYearMonth))
+              .value ??
+          [];
+
       final prevAccountBalance = prevAccountBalances.firstWhereOrNull(
         (b) => b.accountId == _selectedAccountId,
       );
       final prevTotalWithdrawal = prevAccountBalance?.totalWithdrawal ?? 0.0;
 
-      final accountCashBalance = double.tryParse(
-            _accountCashBalanceController.text.replaceAll(RegExp(r'[^0-9.]'), ''),
+      final accountCashBalance =
+          double.tryParse(
+            _accountCashBalanceController.text.replaceAll(
+              RegExp(r'[^0-9.]'),
+              '',
+            ),
           ) ??
           0.0;
-      final exchangeRateVal = double.tryParse(_exchangeRateController.text.trim()) ?? 1.0;
-      final currentMonthlyWithdrawal = double.tryParse(
-            _accountMonthlyWithdrawalController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+      final exchangeRateVal =
+          double.tryParse(_exchangeRateController.text.trim()) ?? 1.0;
+      final currentMonthlyWithdrawal =
+          double.tryParse(
+            _accountMonthlyWithdrawalController.text.replaceAll(
+              RegExp(r'[^0-9]'),
+              '',
+            ),
           ) ??
           0.0;
 
@@ -904,15 +1084,22 @@ class _MonthlyStockBalanceDialogState
       final Map<String, _GroupedStockItem> groupedMap = {};
 
       final prevBalances =
-          ref.read(monthlyStockBalanceNotifierProvider(prevYearMonth)).value ?? [];
+          ref.read(monthlyStockBalanceNotifierProvider(prevYearMonth)).value ??
+          [];
       final prevBalanceMap = {
         for (var b in prevBalances) '${b.accountId}_${b.stockItemId}': b,
       };
 
       final matchedHoldings =
-          holdingItems
-              .where((hi) => hi.accountId == _selectedAccountId && hi.isActive)
-              .toList();
+          holdingItems.where((hi) {
+            final matchesAccount =
+                hi.accountId == _selectedAccountId && hi.isActive;
+            if (_isEditing) {
+              return matchesAccount &&
+                  hi.stockItemId == widget.editItem!.stockItemId;
+            }
+            return matchesAccount;
+          }).toList();
 
       for (var hi in matchedHoldings) {
         final stockId = hi.stockItemId;
@@ -933,6 +1120,8 @@ class _MonthlyStockBalanceDialogState
         final stockId = entry.key;
         final groupItem = entry.value;
         final key = '${_selectedAccountId}_$stockId';
+        final isTargetEdit =
+            _isEditing && widget.editItem!.stockItemId == stockId;
 
         final qtyCtrl = _quantityControllers[key];
         final priceCtrl = _priceControllers[key];
@@ -955,10 +1144,11 @@ class _MonthlyStockBalanceDialogState
                 monthlyPrinCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
               ) ??
               0.0;
-          
+
           final monthlyPayoutVal =
               double.tryParse(
-                monthlyPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
+                monthlyPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ??
+                    '',
               ) ??
               0.0;
 
@@ -968,12 +1158,29 @@ class _MonthlyStockBalanceDialogState
               ) ??
               0.0;
 
-          final finalPrincipal = groupItem.principal + monthlyPrinVal;
-          final finalTotalPayout = groupItem.totalPayout + monthlyPayoutVal;
-          final finalTotalWithdrawal = groupItem.totalWithdrawal + monthlyWithVal;
+          final basePrincipal =
+              isTargetEdit
+                  ? (widget.editItem!.principal -
+                      widget.editItem!.monthlyPrincipal)
+                  : groupItem.principal;
+          final baseTotalPayout =
+              isTargetEdit
+                  ? (widget.editItem!.totalPayout -
+                      widget.editItem!.monthlyPayout)
+                  : groupItem.totalPayout;
+          final baseTotalWithdrawal =
+              isTargetEdit
+                  ? (widget.editItem!.totalWithdrawal -
+                      widget.editItem!.monthlyWithdrawal)
+                  : groupItem.totalWithdrawal;
+
+          final finalPrincipal = basePrincipal + monthlyPrinVal;
+          final finalTotalPayout = baseTotalPayout + monthlyPayoutVal;
+          final finalTotalWithdrawal = baseTotalWithdrawal + monthlyWithVal;
 
           itemsToSave.add(
             MonthlyStockBalance(
+              id: isTargetEdit ? widget.editItem!.id : null,
               yearMonth: _selectedYearMonth,
               accountId: _selectedAccountId!,
               stockItemId: stockId,
@@ -986,7 +1193,10 @@ class _MonthlyStockBalanceDialogState
               monthlyPayout: monthlyPayoutVal,
               totalWithdrawal: finalTotalWithdrawal,
               monthlyWithdrawal: monthlyWithVal,
-              purchaseDate: groupItem.purchaseDate,
+              purchaseDate:
+                  isTargetEdit
+                      ? (widget.editItem!.purchaseDate ?? groupItem.purchaseDate)
+                      : groupItem.purchaseDate,
             ),
           );
         }
@@ -998,7 +1208,10 @@ class _MonthlyStockBalanceDialogState
 
       if (!mounted) return;
       Navigator.pop(context);
-      AppSnackBar.showInfo(context, '주식 월말 평가액이 성공적으로 저장되었습니다.');
+      AppSnackBar.showInfo(
+        context,
+        _isEditing ? '주식 월말 내역이 수정되었습니다.' : '주식 월말 평가액이 성공적으로 저장되었습니다.',
+      );
     } catch (e) {
       if (!mounted) return;
       AppSnackBar.showError(context, '저장 실패: $e');

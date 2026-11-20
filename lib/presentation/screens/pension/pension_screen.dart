@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/jtext.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
 import '../../../core/widgets/section_title.dart';
@@ -62,10 +63,8 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     final selectedMonth = ref.watch(selectedYearMonthProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('연금 자산 현황'),
-        elevation: 0,
-        scrolledUnderElevation: 0,
+      appBar: MainAppBar(
+        titleText: '연금 자산 현황',
         actions: [
           ElevatedButton.icon(
             onPressed: () {
@@ -77,9 +76,9 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
             icon: const Icon(Icons.calendar_month_outlined),
             label: const Text('월말연금'),
           ),
-          const SizedBox(width: 16),
         ],
       ),
+
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('데이터 실패: $err')),
@@ -125,9 +124,10 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                       children: [
                         // 1. 전체 요약 카드
                         balancesAsync.when(
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          loading:
+                              () => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
                           error: (err, _) => Text('오류: $err'),
                           data: (balances) {
                             final accountBalances =
@@ -142,10 +142,11 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             );
 
                             // 월말 계좌별 누적 원금(principal) 합산[cite: 9]
-                            final accountPrincipalSum = accountBalances.fold<double>(
-                              0.0,
-                              (sum, item) => sum + item.principal,
-                            );
+                            final accountPrincipalSum = accountBalances
+                                .fold<double>(
+                                  0.0,
+                                  (sum, item) => sum + item.principal,
+                                );
 
                             final totalAccountWithdrawalSum = accountBalances
                                 .fold<double>(
@@ -203,6 +204,8 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                 profitLossWidget: Row(
                                   children: [
                                     totalProfitOrLoss.toSignedPriceText(
+                                      // isDarkCard: true 는 인디고 바탕위에 다크모드로 하면 색깔이 밝아짐
+                                      isDarkCard: true,
                                       style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
@@ -210,6 +213,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     totalReturnRate.toSignedPercentText(
+                                      isDarkCard: true,
                                       withParentheses: true,
                                       style: const TextStyle(
                                         fontSize: 13,
@@ -230,8 +234,10 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                           ),
                                         ]
                                         : null,
-                                diffFromLastMonthWidget: (totalBalance - lastTotalBalance)
+                                diffFromLastMonthWidget: (totalBalance -
+                                        lastTotalBalance)
                                     .toSignedPriceText(
+                                      isDarkCard: true,
                                       style: const TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
@@ -243,8 +249,9 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         ),
 
                         // 2. 계좌 목록 그리드
+                        const SizedBox(height: 12),
                         const SectionTitle('계좌 목록'),
-                        
+
                         PensionAccountGrid(
                           currentMonth: activeCurrentMonth,
                           lastMonth: lastMonth,
@@ -260,6 +267,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         ),
 
                         // 3. 계좌별 평가 비중 섹션
+                        const SizedBox(height: 12),
                         const SectionTitle('계좌별 평가 비중'),
 
                         PensionPortionSection(
@@ -268,8 +276,9 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                         ),
 
                         // 4. 계좌별 월말 수익률 추이 차트
-                        const SectionTitle('계좌별 월말 수익률 추이 (%)' ),
-                        
+                        const SizedBox(height: 12),
+                        const SectionTitle('계좌별 월말 수익률 추이 (%)'),
+
                         PensionReturnRateChart(
                           currentMonth: activeCurrentMonth,
                           months: months,

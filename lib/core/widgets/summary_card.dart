@@ -28,7 +28,6 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: margin ?? EdgeInsets.zero,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.indigo.shade600,
@@ -192,24 +191,12 @@ class SummaryCard extends StatelessWidget {
             const SizedBox(height: 16),
             LayoutBuilder(
               builder: (context, constraints) {
-                if (context.isMobile) {
-                  return Row(
-                    children: [
-                      Text(
-                        '전월 대비: ',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      diffFromLastMonthWidget!,
-                    ],
-                  );
-                }
                 return Row(
                   children: [
                     Text(
                       '전월 대비: ',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
-
                     diffFromLastMonthWidget!,
                   ],
                 );

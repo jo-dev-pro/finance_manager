@@ -5,6 +5,7 @@ import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/stock/stock_holding_item.dart';
 import '../../../providers/account/account_name_provider.dart';
@@ -34,19 +35,16 @@ class _StockHoldingItemScreenState
     final stockItemsAsync = ref.watch(stockItemNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('계좌별 보유 주식 관리'),
+        appBar: MainAppBar(
+        titleText: '계좌별 보유 주식 관리',
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
-            color: Colors.grey.shade700,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+          ElevatedButton.icon(
             onPressed: () => _showDialog(context),
+            label: const Text('보유종목 추가'),
           ),
-          const SizedBox(width: 16),
         ],
       ),
+     
       body: MainConstrainedBox(
         child: Column(
           children: [
@@ -65,76 +63,71 @@ class _StockHoldingItemScreenState
                       }).toList()
                       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-                return Padding(
+                return Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8.0,
+                    horizontal: 16,
                   ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Text(
-                          '증권계좌 필터: ',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  decoration: BoxDecoration(
+                    color: context.primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text(
+                        '증권계좌 필터: ',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String?>(
-                              value: _selectedAccountId,
-                              isExpanded: true,
-                              icon: const Icon(Icons.arrow_drop_down),
-                              items: [
-                                const DropdownMenuItem<String?>(
-                                  value: null,
-                                  child: Text(
-                                    '전체 증권계좌 보기',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String?>(
+                            value: _selectedAccountId,
+                            isExpanded: true,
+                            icon: const Icon(Icons.arrow_drop_down),
+                            items: [
+                              const DropdownMenuItem<String?>(
+                                value: null,
+                                child: Text(
+                                  '전체 증권계좌 보기',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                ...targetAccounts.map((acc) {
-                                  final nameObj =
-                                      accountNameMap[acc.accountNameId];
-                                  final displayName =
-                                      '[${acc.financialInstitution}] ${nameObj?.accountName ?? '주식계좌'}';
-                                  return DropdownMenuItem<String?>(
-                                    value: acc.id,
-                                    child: Text(
-                                      displayName,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  );
-                                }),
-                              ],
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  _selectedAccountId = newValue;
-                                });
-                              },
-                            ),
+                              ),
+                              ...targetAccounts.map((acc) {
+                                final nameObj =
+                                    accountNameMap[acc.accountNameId];
+                                final displayName =
+                                    '[${acc.financialInstitution}] ${nameObj?.accountName ?? '주식계좌'}';
+                                return DropdownMenuItem<String?>(
+                                  value: acc.id,
+                                  child: Text(
+                                    displayName,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }),
+                            ],
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _selectedAccountId = newValue;
+                              });
+                            },
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
             ),
+
+            SizedBox(height: 16),
 
             // 💡 2. 선택된 증권계좌의 보유 종목 목록 영역
             Expanded(
@@ -194,7 +187,6 @@ class _StockHoldingItemScreenState
                   });
 
                   return ListView.builder(
-                    padding: const EdgeInsets.all(16),
                     itemCount: sortedItems.length,
                     itemBuilder: (context, index) {
                       final item = sortedItems[index];

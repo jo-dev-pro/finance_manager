@@ -5,6 +5,7 @@ import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/pension/pension_holding_product.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -36,19 +37,17 @@ class _PensionHoldingProductScreenState
     final productsAsync = ref.watch(pensionProductNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('계좌별 연금 보유상품 관리'),
+       appBar: MainAppBar(
+        titleText: '계좌별 연금 보유상품 관리',
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, size: 25),
-            color: Colors.grey.shade700,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+          ElevatedButton.icon(
             onPressed: () => _showDialog(context),
+            icon: const Icon(Icons.add_circle_outline_rounded),
+            label: const Text('보유상품 등록'),
           ),
-          const SizedBox(width: 16),
         ],
       ),
+    
       body: MainConstrainedBox(
         child: Column(
           children: [

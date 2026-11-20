@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
-import '../../../../core/utils/responsive_extension.dart';
-import '../../../../core/widgets/bottom_action_button.dart';
 import '../../../../core/widgets/edit_delete_button.dart';
 import '../../../../core/widgets/jtext.dart';
+import '../../../../core/widgets/main_appbar.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
 import '../../../../core/widgets/section_title.dart';
 import '../../../../models/monthly_data/monthly_stock_balance.dart';
@@ -47,10 +45,15 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('월말주식'),
-        elevation: 0,
-        scrolledUnderElevation: 0,
+      appBar: MainAppBar(
+        titleText: '월말주식',
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () => _showDialog(context, yearMonth: targetMonth),
+            icon: const Icon(Icons.playlist_add, size: 18),
+            label: const Text('일괄 입력'),
+          ),
+        ],
       ),
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -82,7 +85,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
           final accountNameMap = {for (var an in accountNames) an.id: an};
           final stockItemMap = {for (var s in stockItems) s.id!: s};
 
-          // 💡 활성화된 증권 계좌 목록 추출
           final stockAccounts =
               accounts
                   .where(
@@ -90,7 +92,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                   )
                   .toList();
 
-          // 💡 선택된 계좌에 따라 월말 내역 필터링
           final filteredItems =
               selectedAccountId == null
                   ? items
@@ -103,7 +104,6 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 💡 기준년월 선택 헤더 & 계좌 선택 콤보박스 (가로 Row 배치)
                   Row(
                     children: [
                       Expanded(
@@ -200,10 +200,9 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-
+                     
+                  const SizedBox(height: 12),
                   const SectionTitle('등록된 월말 입력 내역'),
-                  const SizedBox(height: 8),
 
                   if (filteredItems.isEmpty)
                     Padding(
@@ -266,29 +265,32 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                                         const SizedBox(height: 6),
                                         Row(
                                           children: [
-                                            Container(
-                                              width: 20,
-                                              height: 20,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: ClipOval(
-                                                child: Image.network(
-                                                  logoUrl!,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder:
-                                                      (
-                                                        context,
-                                                        error,
-                                                        stackTrace,
-                                                      ) => const Icon(
-                                                        Icons.account_balance,
-                                                        size: 15,
-                                                      ),
+                                            if (logoUrl != null &&
+                                                logoUrl.isNotEmpty) ...[
+                                              Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: ClipOval(
+                                                  child: Image.network(
+                                                    logoUrl,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder:
+                                                        (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) => const Icon(
+                                                          Icons.account_balance,
+                                                          size: 15,
+                                                        ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            const SizedBox(width: 4),
+                                              const SizedBox(width: 4),
+                                            ],
                                             Text(
                                               accountName,
                                               style: TextStyle(
@@ -329,11 +331,10 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                                       const SizedBox(height: 8),
                                       EditDeleteButtons(
                                         onEdit:
-                                            () => _showEditBottomSheet(
+                                            () => _showDialog(
                                               context,
-                                              ref,
-                                              item,
-                                              displayName,
+                                              yearMonth: item.yearMonth,
+                                              editItem: item,
                                             ),
                                         onDelete:
                                             () => _confirmDelete(
@@ -358,191 +359,25 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
           );
         },
       ),
-      bottomNavigationBar: BottomActionButton(
-        label: '주식 월말 평가액 일괄 입력',
-        onPressed: () => _showAddBottomSheet(context, targetMonth),
-      ),
     );
   }
 
-  void _showAddBottomSheet(BuildContext context, String currentMonth) {
+  void _showDialog(
+    BuildContext context, {
+    required String yearMonth,
+    MonthlyStockBalance? editItem,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => MonthlyStockBalanceDialog(yearMonth: currentMonth),
-    );
-  }
-
-  void _showEditBottomSheet(
-    BuildContext context,
-    WidgetRef ref,
-    MonthlyStockBalance item,
-    String stockName,
-  ) {
-    final quantityController = TextEditingController(
-      text: item.quantity.toCommaString(),
-    );
-    final priceController = TextEditingController(
-      text: item.currentPrice.toCommaString(),
-    );
-    final principalController = TextEditingController(
-      text: item.principal.toCommaString(),
-    );
-    final formKey = GlobalKey<FormState>();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) {
-        return Container(
-          width: double.infinity,
-          padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
-          child: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '$stockName (${item.yearMonth}) 내역 수정',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(sheetContext),
-                      ),
-                    ],
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: quantityController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: '보유 수량',
-                      suffixText: '주',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator:
-                        (val) =>
-                            val == null || val.trim().isEmpty
-                                ? '수량을 입력해주세요.'
-                                : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: priceController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: '현재가',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator:
-                        (val) =>
-                            val == null || val.trim().isEmpty
-                                ? '현재가를 입력해주세요.'
-                                : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: principalController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      ThousandsSeparatorInputFormatter(),
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: '투자 원금',
-                      suffixText: '원/달러',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator:
-                        (val) =>
-                            val == null || val.trim().isEmpty
-                                ? '원금을 입력해주세요.'
-                                : null,
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (!(formKey.currentState?.validate() ?? false)) {
-                          return;
-                        }
-
-                        final qty =
-                            double.tryParse(
-                              quantityController.text
-                                  .replaceAll(',', '')
-                                  .trim(),
-                            ) ??
-                            0.0;
-                        final price =
-                            double.tryParse(
-                              priceController.text.replaceAll(',', '').trim(),
-                            ) ??
-                            0.0;
-                        final principal =
-                            double.tryParse(
-                              principalController.text
-                                  .replaceAll(',', '')
-                                  .trim(),
-                            ) ??
-                            0.0;
-                        final balance = qty * price;
-
-                        final updatedItem = item.copyWith(
-                          quantity: qty,
-                          currentPrice: price,
-                          principal: principal,
-                          balance: balance,
-                        );
-
-                        await ref
-                            .read(
-                              monthlyStockBalanceNotifierProvider(
-                                item.yearMonth,
-                              ).notifier,
-                            )
-                            .saveBalance(updatedItem);
-
-                        if (sheetContext.mounted) Navigator.pop(sheetContext);
-                      },
-                      child: const Text(
-                        '수정 내용 저장',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      builder:
+          (_) => MonthlyStockBalanceDialog(
+            yearMonth: yearMonth,
+            editItem: editItem,
           ),
-        );
-      },
     );
   }
 

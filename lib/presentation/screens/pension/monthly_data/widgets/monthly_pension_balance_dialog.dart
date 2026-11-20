@@ -1,25 +1,30 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:collection/collection.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
 import '../../../../../core/utils/responsive_extension.dart';
 import '../../../../../core/widgets/app_snackbar.dart';
-import '../../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../../models/monthly_data/monthly_pension_account_balance.dart';
+import '../../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../../providers/account/account_name_provider.dart';
 import '../../../../../providers/account/account_provider.dart';
-import '../../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
+import '../../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../../../providers/pension/pension_holding_product_provider.dart';
 import '../../../../../providers/pension/pension_product_provider.dart';
 
 class MonthlyPensionBalanceDialog extends ConsumerStatefulWidget {
   final String yearMonth;
+  final MonthlyPensionBalance? editItem;
 
-  const MonthlyPensionBalanceDialog({super.key, required this.yearMonth});
+  const MonthlyPensionBalanceDialog({
+    super.key,
+    required this.yearMonth,
+    this.editItem,
+  });
 
   @override
   ConsumerState<MonthlyPensionBalanceDialog> createState() =>
@@ -31,16 +36,12 @@ class _MonthlyPensionBalanceDialogState
   late String _selectedYearMonth;
   String? _selectedAccountId;
 
-  // 상품별 평가액 입력 컨트롤러
   final Map<String, TextEditingController> _balanceControllers = {};
   final Map<String, TextEditingController> _quantityControllers = {};
   final Map<String, TextEditingController> _basePriceControllers = {};
-
-  // 상품별 당월분 입력 컨트롤러들 (연금수령 컨트롤러 제거 완료)
   final Map<String, TextEditingController> _monthlyPrincipalControllers = {};
-  final Map<String, TextEditingController> _monthlySaleControllers = {}; // 당월 매도액 컨트롤러
+  final Map<String, TextEditingController> _monthlySaleControllers = {};
 
-  // 계좌 공통 입력 컨트롤러 (예수금, 당월 입금액, 당월 총 인출액)
   final TextEditingController _accountCashBalanceController =
       TextEditingController();
   final TextEditingController _accountMonthlyPrincipalController =
@@ -50,19 +51,32 @@ class _MonthlyPensionBalanceDialogState
 
   final _formKey = GlobalKey<FormState>();
 
+  bool get _isEditing => widget.editItem != null;
+
   @override
   void initState() {
     super.initState();
-    _selectedYearMonth = widget.yearMonth;
+    _selectedYearMonth = widget.editItem?.yearMonth ?? widget.yearMonth;
+    _selectedAccountId = widget.editItem?.accountId;
   }
 
   @override
   void dispose() {
-    for (var c in _balanceControllers.values) { c.dispose(); }
-    for (var c in _quantityControllers.values) { c.dispose(); }
-    for (var c in _basePriceControllers.values) { c.dispose(); }
-    for (var c in _monthlyPrincipalControllers.values) { c.dispose(); }
-    for (var c in _monthlySaleControllers.values) { c.dispose(); }
+    for (var c in _balanceControllers.values) {
+      c.dispose();
+    }
+    for (var c in _quantityControllers.values) {
+      c.dispose();
+    }
+    for (var c in _basePriceControllers.values) {
+      c.dispose();
+    }
+    for (var c in _monthlyPrincipalControllers.values) {
+      c.dispose();
+    }
+    for (var c in _monthlySaleControllers.values) {
+      c.dispose();
+    }
     _accountCashBalanceController.dispose();
     _accountMonthlyPrincipalController.dispose();
     _accountMonthlyWithdrawalController.dispose();
@@ -107,7 +121,7 @@ class _MonthlyPensionBalanceDialogState
 
     return Container(
       width: double.infinity,
-         padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -118,9 +132,12 @@ class _MonthlyPensionBalanceDialogState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '연금 월말 평가액/입금액 일괄 입력',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    _isEditing ? '연금 월말 내역 수정' : '연금 월말 평가액/입금액 일괄 입력',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -133,6 +150,7 @@ class _MonthlyPensionBalanceDialogState
 
               TextFormField(
                 initialValue: _selectedYearMonth,
+                readOnly: _isEditing,
                 decoration: const InputDecoration(
                   labelText: '기준월',
                   hintText: 'YYYY-MM',
@@ -145,12 +163,16 @@ class _MonthlyPensionBalanceDialogState
                   ),
                 ),
                 onChanged: (val) {
+                  if (_isEditing) return;
                   setState(() {
                     _selectedYearMonth = val.trim();
                   });
                 },
                 validator:
-                    (val) => val == null || val.isEmpty ? '기준월을 입력해주세요.' : null,
+                    (val) =>
+                        val == null || val.trim().isEmpty
+                            ? '기준월을 입력해주세요.'
+                            : null,
               ),
               const SizedBox(height: 16),
 
@@ -164,15 +186,19 @@ class _MonthlyPensionBalanceDialogState
                   };
 
                   final pensionAccounts =
-                      accounts
-                          .where(
-                            (a) =>
-                                (a.accountType.trim().contains('연금') ||
-                                    a.accountType.trim().contains('IRP') ||
-                                    a.accountType.trim().contains('DC')) &&
-                                a.status == '활동',
-                          )
-                          .toList();
+                      _isEditing
+                          ? accounts
+                              .where((a) => a.id == widget.editItem!.accountId)
+                              .toList()
+                          : accounts
+                              .where(
+                                (a) =>
+                                    (a.accountType.trim().contains('연금') ||
+                                        a.accountType.trim().contains('IRP') ||
+                                        a.accountType.trim().contains('DC')) &&
+                                    a.status == '활동',
+                              )
+                              .toList();
 
                   if (pensionAccounts.isEmpty) {
                     return const Padding(
@@ -250,18 +276,21 @@ class _MonthlyPensionBalanceDialogState
                                 child: Text('$institution - $nameDisplay'),
                               );
                             }).toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            _selectedAccountId = val;
-                            _accountCashBalanceController.clear();
-                            _accountMonthlyPrincipalController.clear();
-                            _accountMonthlyWithdrawalController.clear();
-                          });
-                        },
+                        onChanged:
+                            _isEditing
+                                ? null
+                                : (val) {
+                                  setState(() {
+                                    _selectedAccountId = val;
+                                    _accountCashBalanceController.clear();
+                                    _accountMonthlyPrincipalController.clear();
+                                    _accountMonthlyWithdrawalController
+                                        .clear();
+                                  });
+                                },
                       ),
                       const SizedBox(height: 16),
 
-                      // 상단 계좌 공통 정보 카드 (예수금, 당월 입금액, 당월 통합 인출액)
                       Card(
                         color: Colors.teal.shade50,
                         shape: RoundedRectangleBorder(
@@ -405,13 +434,16 @@ class _MonthlyPensionBalanceDialogState
                           };
 
                           final matchedHoldings =
-                              holdingProducts
-                                  .where(
-                                    (hp) =>
-                                        hp.accountId == _selectedAccountId &&
-                                        hp.isActive,
-                                  )
-                                  .toList();
+                              holdingProducts.where((hp) {
+                                final matchesAccount =
+                                    hp.accountId == _selectedAccountId &&
+                                    hp.isActive;
+                                if (_isEditing) {
+                                  return matchesAccount &&
+                                      hp.productId == widget.editItem!.productId;
+                                }
+                                return matchesAccount;
+                              }).toList();
 
                           if (matchedHoldings.isEmpty) {
                             return const Padding(
@@ -437,16 +469,27 @@ class _MonthlyPensionBalanceDialogState
                               final prevData = prevBalanceMap[key];
 
                               if (!_balanceControllers.containsKey(key)) {
+                                final isTargetEdit =
+                                    _isEditing &&
+                                    widget.editItem!.productId == prodId;
+
                                 final currentBal =
-                                    (currentData != null &&
-                                            currentData.balance > 0)
-                                        ? currentData.balance
-                                        : (prevData?.balance ?? 0.0);
+                                    isTargetEdit
+                                        ? widget.editItem!.balance
+                                        : (currentData != null &&
+                                                currentData.balance > 0)
+                                            ? currentData.balance
+                                            : (prevData?.balance ?? 0.0);
 
                                 final currentMonthlyPrin =
-                                    currentData?.monthlyPrincipal ?? 0.0;
+                                    isTargetEdit
+                                        ? widget.editItem!.monthlyPrincipal
+                                        : (currentData?.monthlyPrincipal ??
+                                            0.0);
                                 final currentMonthlySale =
-                                    currentData?.monthlySale ?? 0.0;
+                                    isTargetEdit
+                                        ? widget.editItem!.monthlySale
+                                        : (currentData?.monthlySale ?? 0.0);
 
                                 _balanceControllers[key] =
                                     TextEditingController(
@@ -677,7 +720,6 @@ class _MonthlyPensionBalanceDialogState
                                         ],
                                       ),
                                       const SizedBox(height: 10),
-                                      // 💡 상품별 입금액(추가원금)만 단독으로 배치
                                       Row(
                                         children: [
                                           Expanded(
@@ -728,7 +770,10 @@ class _MonthlyPensionBalanceDialogState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('저장하기', style: TextStyle(fontSize: 16)),
+                  child: Text(
+                    _isEditing ? '수정하기' : '저장하기',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],
@@ -750,7 +795,6 @@ class _MonthlyPensionBalanceDialogState
     );
 
     try {
-      // 1. 계좌 요약 테이블 저장
       final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
       final prevAccountBalances =
           ref
@@ -786,8 +830,10 @@ class _MonthlyPensionBalanceDialogState
           ) ??
           0.0;
 
-      final finalAccountPrincipal = prevAccountPrincipal + currentMonthlyPrincipal;
-      final finalTotalWithdrawal = prevTotalWithdrawal + currentMonthlyWithdrawal;
+      final finalAccountPrincipal =
+          prevAccountPrincipal + currentMonthlyPrincipal;
+      final finalTotalWithdrawal =
+          prevTotalWithdrawal + currentMonthlyWithdrawal;
 
       final accountBalanceItem = MonthlyPensionAccountBalance(
         yearMonth: _selectedYearMonth,
@@ -800,7 +846,6 @@ class _MonthlyPensionBalanceDialogState
       );
       await accountBalanceNotifier.saveBalance(accountBalanceItem);
 
-      // 2. 상품별 월말 데이터 파싱 및 저장
       final holdingProducts =
           ref.read(pensionHoldingProductNotifierProvider).value ?? [];
 
@@ -812,9 +857,14 @@ class _MonthlyPensionBalanceDialogState
       };
 
       final matchedHoldings =
-          holdingProducts
-              .where((hp) => hp.accountId == _selectedAccountId && hp.isActive)
-              .toList();
+          holdingProducts.where((hp) {
+            final matchesAccount =
+                hp.accountId == _selectedAccountId && hp.isActive;
+            if (_isEditing) {
+              return matchesAccount && hp.productId == widget.editItem!.productId;
+            }
+            return matchesAccount;
+          }).toList();
 
       final List<MonthlyPensionBalance> itemsToSave = [];
 
@@ -822,6 +872,8 @@ class _MonthlyPensionBalanceDialogState
         final prodId = hp.productId;
         final key = '${_selectedAccountId}_$prodId';
         final prevData = prevBalanceMap[key];
+        final isTargetEdit =
+            _isEditing && widget.editItem!.productId == prodId;
 
         final qtyCtrl = _quantityControllers[key];
         final basePriceCtrl = _basePriceControllers[key];
@@ -844,7 +896,9 @@ class _MonthlyPensionBalanceDialogState
         } else {
           finalBalance =
               double.tryParse(balCtrl?.text.replaceAll(',', '').trim() ?? '') ??
-              (prevData?.balance ?? 0.0);
+              (isTargetEdit
+                  ? widget.editItem!.balance
+                  : (prevData?.balance ?? 0.0));
         }
 
         final monthlyPrinVal =
@@ -858,11 +912,18 @@ class _MonthlyPensionBalanceDialogState
             ) ??
             0.0;
 
-        final prevPrincipal = prevData?.principal ?? 0.0;
-        final prevTotalSale = prevData?.totalSale ?? 0.0;
+        final basePrincipal =
+            isTargetEdit
+                ? (widget.editItem!.principal -
+                    widget.editItem!.monthlyPrincipal)
+                : (prevData?.principal ?? 0.0);
+        final baseTotalSale =
+            isTargetEdit
+                ? (widget.editItem!.totalSale - widget.editItem!.monthlySale)
+                : (prevData?.totalSale ?? 0.0);
 
-        final finalPrincipal = prevPrincipal + monthlyPrinVal;
-        final finalTotalSale = prevTotalSale + monthlySaleVal;
+        final finalPrincipal = basePrincipal + monthlyPrinVal;
+        final finalTotalSale = baseTotalSale + monthlySaleVal;
 
         if (finalBalance > 0 ||
             monthlySaleVal > 0 ||
@@ -870,6 +931,7 @@ class _MonthlyPensionBalanceDialogState
             finalPrincipal > 0) {
           itemsToSave.add(
             MonthlyPensionBalance(
+              id: isTargetEdit ? widget.editItem!.id : null,
               yearMonth: _selectedYearMonth,
               accountId: _selectedAccountId!,
               productId: prodId,
@@ -889,7 +951,10 @@ class _MonthlyPensionBalanceDialogState
 
       if (!mounted) return;
       Navigator.pop(context);
-      AppSnackBar.showInfo(context, '연금 월말 평가액이 성공적으로 저장되었습니다.');
+      AppSnackBar.showInfo(
+        context,
+        _isEditing ? '연금 월말 내역이 수정되었습니다.' : '연금 월말 평가액이 성공적으로 저장되었습니다.',
+      );
     } catch (e) {
       if (!mounted) return;
       AppSnackBar.showError(context, '저장 실패: $e');

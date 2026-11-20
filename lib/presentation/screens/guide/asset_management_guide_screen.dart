@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 
 class AssetManagementGuideScreen extends StatelessWidget {
@@ -10,9 +11,8 @@ class AssetManagementGuideScreen extends StatelessWidget {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('자산 관리 앱 사용 가이드'),
-          centerTitle: true,
+        appBar: MainAppBar(
+          titleText: '자산 관리 앱 사용 가이드',
           bottom: const TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
@@ -136,7 +136,8 @@ class _BankGuideTab extends StatelessWidget {
               _GuideStepItem(
                 step: '3',
                 title: '저장 및 갱신',
-                content: '저장 시 YYYY-MM_계정ID로 저장됩니다. 추후 금액 변경 시 기존 데이터를 자동으로 불러오므로 수정된 부분만 입력 후 저장하면 덮어쓰기됩니다.',
+                content:
+                    '저장 시 YYYY-MM_계정ID로 저장됩니다. 추후 금액 변경 시 기존 데이터를 자동으로 불러오므로 수정된 부분만 입력 후 저장하면 덮어쓰기됩니다.',
               ),
             ],
           ),
@@ -164,17 +165,20 @@ class _PensionGuideTab extends StatelessWidget {
               _GuideStepItem(
                 step: '1',
                 title: '계좌 공통 현금성 자산 (예수금) 입력',
-                content: 'IRP, 연금저축 계좌 상단의 민트색 카드 영역에서 계좌 내 미투자 예수금(현금성 잔액)과 당월 인출액을 입력합니다.',
+                content:
+                    'IRP, 연금저축 계좌 상단의 민트색 카드 영역에서 계좌 내 미투자 예수금(현금성 잔액)과 당월 인출액을 입력합니다.',
               ),
               _GuideStepItem(
                 step: '2',
                 title: '개별 투자 상품 평가액 입력',
-                content: '하단 리스트에서 실제 보유 중인 펀드/ETF 상품의 당월 평가액(또는 좌수/기준가), 누적 원금을 입력합니다.',
+                content:
+                    '하단 리스트에서 실제 보유 중인 펀드/ETF 상품의 당월 평가액(또는 좌수/기준가), 누적 원금을 입력합니다.',
               ),
               _GuideStepItem(
                 step: '3',
                 title: '현금성자산 상품 분리 규칙',
-                content: '개별 상품 목록의 "현금성자산"은 중복 계산 방지를 위해 제거되며, 계좌 공통 예수금 필드로 통합 관리됩니다.',
+                content:
+                    '개별 상품 목록의 "현금성자산"은 중복 계산 방지를 위해 제거되며, 계좌 공통 예수금 필드로 통합 관리됩니다.',
               ),
             ],
           ),
@@ -202,17 +206,20 @@ class _StockGuideTab extends StatelessWidget {
               _GuideStepItem(
                 step: '1',
                 title: '주식 계좌 요약 관리',
-                content: '주식 계좌별 전체 월말 잔액 및 요약 정보를 관리합니다 (monthly_stock_account_balance).',
+                content:
+                    '주식 계좌별 전체 월말 잔액 및 요약 정보를 관리합니다 (monthly_stock_account_balance).',
               ),
               _GuideStepItem(
                 step: '2',
                 title: '종목별 포트폴리오 관리',
-                content: '계좌에 속한 보유 종목별로 당월 평가액, 보유 수량, 평단가, 매수일 정보를 기록합니다 (monthly_stock_balance).',
+                content:
+                    '계좌에 속한 보유 종목별로 당월 평가액, 보유 수량, 평단가, 매수일 정보를 기록합니다 (monthly_stock_balance).',
               ),
               _GuideStepItem(
                 step: '3',
                 title: '고유 문서 ID 정렬',
-                content: 'YYYY-MM_계정ID_종목ID 형식으로 데이터가 저장되어, 월별 포트폴리오 변동 내역 및 자산 성장 추이를 직관적으로 분석할 수 있습니다.',
+                content:
+                    'YYYY-MM_계정ID_종목ID 형식으로 데이터가 저장되어, 월별 포트폴리오 변동 내역 및 자산 성장 추이를 직관적으로 분석할 수 있습니다.',
               ),
             ],
           ),
@@ -278,7 +285,13 @@ class _RuleItem extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(domain, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(
+                domain,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
@@ -287,14 +300,24 @@ class _RuleItem extends StatelessWidget {
                 ),
                 child: Text(
                   rule,
-                  style: TextStyle(fontSize: 11, color: Colors.indigo.shade800, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.indigo.shade800,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 2),
-          Text('• 컬렉션: $collection', style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
-          Text('• 설명: $desc', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          Text(
+            '• 컬렉션: $collection',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+          ),
+          Text(
+            '• 설명: $desc',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
         ],
       ),
     );
@@ -322,16 +345,36 @@ class _GuideStepItem extends StatelessWidget {
           CircleAvatar(
             radius: 12,
             backgroundColor: Colors.teal.shade100,
-            child: Text(step, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.teal.shade900)),
+            child: Text(
+              step,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.teal.shade900,
+              ),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(content, style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.4)),
+                Text(
+                  content,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
           ),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../models/account/account.dart';
 import '../../../providers/account/account_name_provider.dart';
@@ -19,17 +20,16 @@ class AccountScreen extends ConsumerWidget {
     final accountNamesAsync = ref.watch(accountNameNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('계좌 관리'),
-        elevation: 0,
+      appBar: MainAppBar(
+        titleText: '계좌 관리',
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: '계좌 추가',
+          ElevatedButton.icon(
             onPressed: () => _showAccountDialog(context, ref, null),
+            label: const Text('계좌 추가'),
           ),
         ],
       ),
+     
       body: accountsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('계좌를 불러오지 못했습니다: $err')),

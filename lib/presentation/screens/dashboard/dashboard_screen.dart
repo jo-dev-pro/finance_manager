@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/month_selector_header.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
@@ -30,7 +31,8 @@ class DashboardScreen extends ConsumerWidget {
     final summaryAsync = ref.watch(dashboardSummaryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('대시보드'), elevation: 0, scrolledUnderElevation: 0),
+      appBar: MainAppBar(titleText: '대시보드'),
+      
       body: monthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),
@@ -63,14 +65,15 @@ class DashboardScreen extends ConsumerWidget {
                   currentMonth: activeCurrentMonth,
                 ),
                 const SizedBox(height: 16),
-                  
+
                 Expanded(
-                  child: summary == null
-                      ? const Padding(
-                          padding: EdgeInsets.only(top: 60),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      : BuildDashboardData(summary: summary)
+                  child:
+                      summary == null
+                          ? const Padding(
+                            padding: EdgeInsets.only(top: 60),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                          : BuildDashboardData(summary: summary),
                 ),
               ],
             ),

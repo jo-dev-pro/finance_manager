@@ -7,6 +7,7 @@ import '../../../../core/utils/toss_direct_api_service.dart';
 import '../../../../core/utils/upbit_api_service.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/jtext.dart';
+import '../../../../core/widgets/main_appbar.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
@@ -128,9 +129,9 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
     final stockItemMap = {for (var s in stockItems) s.id!: s};
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('실시간 자산 평가'),
-        actions: [
+       appBar: MainAppBar(
+        titleText: '실시간 자산 평가',
+         actions: [
           if (_lastUpdatedAt != null)
             Center(
               child: Padding(
@@ -153,9 +154,9 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                     : const Icon(Icons.refresh),
             tooltip: '실시간 시세 새로고침',
           ),
-          const SizedBox(width: 8),
         ],
       ),
+    
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('데이터 로드 실패: $err')),

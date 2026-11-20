@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/jtext.dart';
+import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
 import '../../../core/widgets/section_title.dart';
@@ -55,24 +56,19 @@ class _StockScreenState extends ConsumerState<StockScreen> {
     final accountsAsync = ref.watch(accountNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('주식 자산 현황'),
-        elevation: 0,
-        scrolledUnderElevation: 0,
+      appBar: MainAppBar(
+        titleText: '주식 자산 현황',
         actions: [
           Row(
             children: [
-                  IconButton(
+              IconButton(
                 onPressed: () {
-                  context.push(
-                    AppRoutePath.realtimeStock,
-                  );
+                  context.push(AppRoutePath.realtimeStock);
                 },
                 icon: const Icon(Icons.candlestick_chart),
                 color: Colors.red,
               ),
-              SizedBox(width: 8),
-
+              const SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: () {
                   context.push(
@@ -83,13 +79,11 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                 icon: const Icon(Icons.calendar_month_outlined),
                 label: const Text('월말주식'),
               ),
-              
-          
             ],
           ),
-          const SizedBox(width: 16),
         ],
       ),
+
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('데이터 실패: $err')),
@@ -264,6 +258,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                 profitLossWidget: Row(
                                   children: [
                                     totalProfitOrLoss.round().toSignedPriceText(
+                                      isDarkCard: true,
                                       style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
@@ -271,6 +266,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     totalReturnRate.toSignedPercentText(
+                                      isDarkCard: true,
                                       withParentheses: true,
                                       style: const TextStyle(
                                         fontSize: 13,
@@ -297,9 +293,11 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                       ),
                                     ),
                                 ],
-                                diffFromLastMonthWidget: (totalBalance - lastTotalBalance)
+                                diffFromLastMonthWidget: (totalBalance -
+                                        lastTotalBalance)
                                     .round()
                                     .toSignedPriceText(
+                                      isDarkCard: true,
                                       style: const TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
@@ -311,6 +309,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                         ),
 
                         // 2. 주식 계좌 목록 그리드
+                        const SizedBox(height: 12),
                         const SectionTitle('주식 계좌 목록'),
 
                         StockAccountGrid(
@@ -328,6 +327,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                         ),
 
                         // 3. 계좌별 평가 비중
+                        const SizedBox(height: 12),
                         const SectionTitle('계좌별 평가 비중'),
 
                         StockPortionSection(
@@ -336,7 +336,8 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                         ),
 
                         // 4. 계좌별 월말 수익률 추이
-                        const SectionTitle('계좌별 월말 수익률 추이 (%)' ),
+                        const SizedBox(height: 12),
+                        const SectionTitle('계좌별 월말 수익률 추이 (%)'),
 
                         StockReturnRateChart(
                           currentMonth: activeCurrentMonth,

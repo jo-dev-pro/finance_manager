@@ -45,7 +45,8 @@ class BuildBankData extends StatelessWidget {
             ),
           ),
           
-          const SectionTitle('계좌 목록', topSpacing: 24, bottomSpacing: 12),
+          const SizedBox(height: 12),
+          const SectionTitle('계좌 목록'),
       
           if (items.isEmpty)
             const Padding(

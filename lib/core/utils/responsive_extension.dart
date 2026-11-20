@@ -6,14 +6,14 @@ extension ResponsiveExtension on BuildContext {
   double get screenHeight => MediaQuery.of(this).size.height;
 
   // 💡 데스크톱 기준 너비 값 설정
-  double get desktopWidthSize => 1200;
+  double get desktopWidthSize => 1000;
 
   // 기기 타입 판별 브레이크포인트 (ResponsiveScaffold 기준 통일)
   bool get isMobile => screenWidth < 600;
   bool get isTablet => screenWidth >= 600 && screenWidth < 1000;
   bool get isDesktop => screenWidth >= 1000;
   
-// 💡 키보드 및 시스템 하단 인셋 관련 편의 기능 추가
+  // 💡 키보드 및 시스템 하단 인셋 관련 편의 기능 추가
   double get bottomInset => MediaQuery.of(this).viewInsets.bottom;
   bool get isKeyboardOpen => bottomInset > 0;
 
