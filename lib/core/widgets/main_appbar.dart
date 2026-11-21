@@ -6,7 +6,8 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.titleText,
     this.actions,
-    this.showBackButton, 
+    this.showBackButton,
+    this.onBackPressed,
     this.bottom,
     this.elevation = 0,
     this.scrolledUnderElevation = 0,
@@ -15,35 +16,37 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String titleText;
   final List<Widget>? actions;
   final bool? showBackButton;
+  final VoidCallback? onBackPressed;
   final PreferredSizeWidget? bottom;
   final double elevation;
   final double scrolledUnderElevation;
 
   @override
   Widget build(BuildContext context) {
-    // 💡 showBackButton이 명시되지 않았다면(null), 실제로 뒤로 갈 수 있는지(canPop) 자동 판단
     final bool canPop = showBackButton ?? Navigator.canPop(context);
 
     return AppBar(
       automaticallyImplyLeading: false,
+      titleSpacing: 0,
       elevation: elevation,
       scrolledUnderElevation: scrolledUnderElevation,
       title: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: context.desktopWidthSize),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Row(
               children: [
-                // 💡 뒤로 갈 수 있는 상태일 때만 화살표 아이콘 노출 (박스 라인 안쪽 정렬)
                 if (canPop) ...[
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    onPressed: () => Navigator.of(context).pop(),
+                    visualDensity: VisualDensity.compact,
+                    onPressed:
+                        onBackPressed ?? () => Navigator.of(context).maybePop(),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                 ],
                 Expanded(
                   child: Text(
@@ -52,6 +55,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -61,7 +65,6 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-      actions: const [SizedBox.shrink()],
       bottom: bottom,
     );
   }

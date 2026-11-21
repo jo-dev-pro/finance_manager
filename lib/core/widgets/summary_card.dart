@@ -55,133 +55,61 @@ class SummaryCard extends StatelessWidget {
             const Divider(color: Colors.white24, height: 1),
             const SizedBox(height: 16),
 
-            // 💡 LayoutBuilder를 사용하여 화면 폭에 따라 Row/Column 자동 분기 (모바일 잘림 방지)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (context.isMobile) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (principalText != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (principalText != null) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              '총 투자 원금',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Flexible(
-                              child: JText(
-                                principalText!,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14, // 폰트 크기를 살짝 조절하여 오버플로우 방지
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: true,
-                              ),
-                            ),
-                          ],
+                      const Text(
+                        '총 투자 원금',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                      Flexible(
+                        child: JText(
+                          principalText!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14, // 폰트 크기를 살짝 조절하여 오버플로우 방지
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: true,
                         ),
-                      ],
-                      if (principalText != null && profitLossWidget != null)
-                        const SizedBox(height: 10),
-
-                      if (profitLossWidget != null) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              '평가 손익 (수익률)',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                            profitLossWidget!,
-                          ],
-                        ),
-
-                        if (subInfoWidgets != null &&
-                            subInfoWidgets!.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: subInfoWidgets!,
-                          ),
-                        ],
-                      ],
-                    ],
-                  );
-                }
-
-                // 일반적인 넓은 화면(데스크톱/큰 태블릿)에서는 기존처럼 좌우(Row) 배치 유지
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (principalText != null)
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '총 투자 원금',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                JText(
-                                  principalText!,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: true,
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (principalText != null && profitLossWidget != null)
-                          const SizedBox(width: 8),
-                        if (profitLossWidget != null)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              const Text(
-                                '평가 손익 (수익률)',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              profitLossWidget!,
-                            ],
-                          ),
-                      ],
-                    ),
-                    if (subInfoWidgets != null &&
-                        subInfoWidgets!.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: subInfoWidgets!,
                       ),
                     ],
+                  ),
+                ],
+                if (principalText != null && profitLossWidget != null)
+                  const SizedBox(height: 10),
+
+                if (profitLossWidget != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '평가손익(수익률)',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                      const SizedBox(width: 8),
+
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: profitLossWidget!,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  if (subInfoWidgets != null && subInfoWidgets!.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(spacing: 12, runSpacing: 6, children: subInfoWidgets!),
                   ],
-                );
-              },
+                ],
+              ],
             ),
           ],
 

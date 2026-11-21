@@ -285,7 +285,7 @@ class MonthlyStockSummaryScreen extends ConsumerWidget {
                             .state = val,
                   ),
                   const SizedBox(height: 16),
-
+ 
                   MonthlyEvaluationSummaryCard(
                     title: '주식 월말평가 총 자산',
                     badgeText:

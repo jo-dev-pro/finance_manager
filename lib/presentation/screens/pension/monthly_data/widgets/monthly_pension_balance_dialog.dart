@@ -310,12 +310,16 @@ class _MonthlyPensionBalanceDialogState
                                     color: Colors.teal.shade800,
                                   ),
                                   const SizedBox(width: 6),
-                                  Text(
-                                    '계좌 공통 현금성 자산 및 입금/인출 관리',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: Colors.teal.shade900,
+                                  Expanded(
+                                    child: Text(
+                                      '계좌 공통 현금성 자산 및 입금/인출 관리',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.teal.shade900,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],

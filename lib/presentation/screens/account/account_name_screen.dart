@@ -24,52 +24,97 @@ class AccountNameScreen extends ConsumerWidget {
         actions: [
           ElevatedButton.icon(
             onPressed: () => _showDialog(context),
-            label: const Text('계좌 추가'),
+            label: const Text('등록'),
           ),
         ],
       ),
-
       body: accountNameAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('오류가 발생했습니다: $err')),
         data: (accountNames) {
-          if (accountNames.isEmpty) {
-            return const Center(child: Text('등록된 계좌명이 없습니다.'));
-          }
-      
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: accountNames.length,
-            itemBuilder: (context, index) {
-              final accountName = accountNames[index];
-      
-              return MainConstrainedBox(
-                child: Padding(
-                   padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min, // 필요한 만큼만 공간 차지
-                    children: [
-                      Expanded(
-                        child: JText(
-                          accountName.accountName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
+          return MainConstrainedBox(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
 
-                      // 수정 & 삭제 버튼
-                      EditDeleteButtons(
-                        onEdit: () => _showDialog(context, accountName: accountName),
-                        onDelete: () => _confirmDelete(context, ref, accountName),
-                      ),
-                    ],
-                  ),
+                Expanded(
+                  child: accountNames.isEmpty
+                          ? const Center(
+                            child: Text(
+                              '등록된 계좌가 없습니다.\n상단의 등록 버튼을 눌러 추가해 보세요.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          )
+                          : ListView.builder(
+                            itemCount: accountNames.length,
+                            itemBuilder: (context, index) {
+                              final accountName = accountNames[index];
+
+                              return Card(
+                                elevation: 1,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: Colors.teal.shade50,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.label_outline,
+                                          size: 20,
+                                          color: Colors.teal.shade700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: JText(
+                                          accountName.accountName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      EditDeleteButtons(
+                                        onEdit:
+                                            () => _showDialog(
+                                              context,
+                                              accountName: accountName,
+                                            ),
+                                        onDelete:
+                                            () => _confirmDelete(
+                                              context,
+                                              ref,
+                                              accountName,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                 ),
-              );
-            },
+              ],
+            ),
           );
         },
       ),
@@ -79,7 +124,7 @@ class AccountNameScreen extends ConsumerWidget {
   void _showDialog(BuildContext context, {AccountName? accountName}) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 키보드 자리에 맞게 바텀시트가 올라오도록 설정
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

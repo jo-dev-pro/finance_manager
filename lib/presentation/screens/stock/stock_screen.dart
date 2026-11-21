@@ -252,28 +252,33 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                 );
                               },
                               child: SummaryCard(
-                                title: '주식 자산 전체 금액',
+                                title: '주식 자산',
                                 mainAmountText: totalBalance.round().toWon(),
                                 principalText: totalPrincipal.round().toWon(),
-                                profitLossWidget: Row(
-                                  children: [
-                                    totalProfitOrLoss.round().toSignedPriceText(
-                                      isDarkCard: true,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
+                                profitLossWidget: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      totalProfitOrLoss.round().toSignedPriceText(
+                                        isDarkCard: true,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    totalReturnRate.toSignedPercentText(
-                                      isDarkCard: true,
-                                      withParentheses: true,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
+                                      const SizedBox(width: 4),
+                                      totalReturnRate.toSignedPercentText(
+                                        isDarkCard: true,
+                                        withParentheses: true,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                                 subInfoWidgets: [
                                   if (totalPayoutSum > 0)
@@ -286,7 +291,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                     ),
                                   if (totalAccountWithdrawalSum > 0)
                                     JText(
-                                      '계좌 누적 인출: ${totalAccountWithdrawalSum.round().toWon()}',
+                                      '누적 인출: ${totalAccountWithdrawalSum.round().toWon()}',
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 13,
@@ -310,7 +315,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
 
                         // 2. 주식 계좌 목록 그리드
                         const SizedBox(height: 12),
-                        const SectionTitle('주식 계좌 목록'),
+                        const SectionTitle('계좌 목록'),
 
                         StockAccountGrid(
                           currentMonth: activeCurrentMonth,

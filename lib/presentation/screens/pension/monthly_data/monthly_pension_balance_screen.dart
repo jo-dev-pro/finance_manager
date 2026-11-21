@@ -7,6 +7,7 @@ import '../../../../core/widgets/edit_delete_button.dart';
 import '../../../../core/widgets/jtext.dart';
 import '../../../../core/widgets/main_appbar.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
+import '../../../../core/widgets/month_account_selector_header.dart';
 import '../../../../core/widgets/section_title.dart';
 import '../../../../models/monthly_data/monthly_pension_balance.dart';
 import '../../../../providers/account/account_name_provider.dart';
@@ -91,11 +92,28 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                   )
                   .toList();
 
+          final isValidAccountId =
+              selectedAccountId == null ||
+              pensionAccounts.any((acc) => acc.id == selectedAccountId);
+          final currentDropdownValue =
+              isValidAccountId ? selectedAccountId : null;
+
+          final accountFilterItems =
+              pensionAccounts.map((acc) {
+                final accId = acc.id ?? '';
+                final nameObj = accountNameMap[acc.accountNameId];
+                final accName = nameObj?.accountName ?? '계좌';
+                return MonthAccountSelectorItem(
+                  value: accId,
+                  label: '${acc.financialInstitution}$accName',
+                );
+              }).toList();
+
           final filteredItems =
-              selectedAccountId == null
+              currentDropdownValue == null
                   ? items
                   : items
-                      .where((item) => item.accountId == selectedAccountId)
+                      .where((item) => item.accountId == currentDropdownValue)
                       .toList();
 
           return MainConstrainedBox(
@@ -103,101 +121,22 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade400),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value:
-                                  months.contains(activeCurrentMonth)
-                                      ? activeCurrentMonth
-                                      : months.first,
-                              isExpanded: true,
-                              items:
-                                  months.map((ym) {
-                                    return DropdownMenuItem(
-                                      value: ym,
-                                      child: Text(
-                                        ym,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  ref
-                                      .read(selectedYearMonthProvider.notifier)
-                                      .select(val);
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade400),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String?>(
-                              value: selectedAccountId,
-                              isExpanded: true,
-                              hint: const Text('전체 계좌'),
-                              items: [
-                                const DropdownMenuItem<String?>(
-                                  value: null,
-                                  child: Text(
-                                    '전체 계좌',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                ...pensionAccounts.map((acc) {
-                                  final accId = acc.id ?? '';
-                                  final nameObj =
-                                      accountNameMap[acc.accountNameId];
-                                  final accName = nameObj?.accountName ?? '계좌';
-                                  final institution = acc.financialInstitution;
-                                  return DropdownMenuItem<String?>(
-                                    value: accId,
-                                    child: Text(
-                                      '$institution$accName',
-                                      style: const TextStyle(fontSize: 14),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  );
-                                }),
-                              ],
-                              onChanged: (val) {
-                                ref
-                                    .read(
-                                      selectedPensionAccountFilterProvider
-                                          .notifier,
-                                    )
-                                    .state = val;
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  MonthAccountSelectorHeader(
+                    months: months,
+                    currentMonth: activeCurrentMonth,
+                    onMonthChanged:
+                        (val) => ref
+                            .read(selectedYearMonthProvider.notifier)
+                            .select(val),
+                    selectedAccountValue: currentDropdownValue,
+                    accountItems: accountFilterItems,
+                    onAccountChanged:
+                        (val) =>
+                            ref
+                                .read(
+                                  selectedPensionAccountFilterProvider.notifier,
+                                )
+                                .state = val,
                   ),
 
                   const SizedBox(height: 12),
@@ -232,59 +171,57 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
 
                         final logoUrl = matchedAcc?.logoUrl;
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            elevation: 1,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          displayName,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                          ),
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        displayName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
                                         ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            if (logoUrl != null &&
-                                                logoUrl.isNotEmpty) ...[
-                                              Container(
-                                                width: 20,
-                                                height: 20,
-                                                decoration: const BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: ClipOval(
-                                                  child: Image.network(
-                                                    logoUrl,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder:
-                                                        (
-                                                          context,
-                                                          error,
-                                                          stackTrace,
-                                                        ) => const Icon(
-                                                          Icons.account_balance,
-                                                          size: 15,
-                                                        ),
-                                                  ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          if (logoUrl != null &&
+                                              logoUrl.isNotEmpty) ...[
+                                            Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: ClipOval(
+                                                child: Image.network(
+                                                  logoUrl,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder:
+                                                      (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) => const Icon(
+                                                        Icons.account_balance,
+                                                        size: 15,
+                                                      ),
                                                 ),
                                               ),
-                                              const SizedBox(width: 4),
-                                            ],
-                                            Text(
+                                            ),
+                                            const SizedBox(width: 4),
+                                          ],
+                                          Flexible(
+                                            child: Text(
                                               accountName,
                                               style: TextStyle(
                                                 fontSize: 12,
@@ -293,42 +230,42 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      JText(
-                                        balanceItem.balance.toWon(),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      EditDeleteButtons(
-                                        onEdit:
-                                            () => _showDialog(
-                                              context,
-                                              yearMonth: balanceItem.yearMonth,
-                                              editItem: balanceItem,
-                                            ),
-                                        onDelete:
-                                            () => _confirmDelete(
-                                              context,
-                                              ref,
-                                              balanceItem,
-                                              displayName,
-                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    JText(
+                                      balanceItem.balance.toWon(),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    EditDeleteButtons(
+                                      onEdit:
+                                          () => _showDialog(
+                                            context,
+                                            yearMonth: balanceItem.yearMonth,
+                                            editItem: balanceItem,
+                                          ),
+                                      onDelete:
+                                          () => _confirmDelete(
+                                            context,
+                                            ref,
+                                            balanceItem,
+                                            displayName,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         );

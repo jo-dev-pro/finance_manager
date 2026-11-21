@@ -17,9 +17,12 @@ class MonthSelectorHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = months.indexOf(currentMonth);
+    final canGoPrev = currentIndex >= 0 && currentIndex < months.length - 1;
+    final canGoNext = currentIndex > 0;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: context.primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
@@ -28,50 +31,113 @@ class MonthSelectorHeader extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: (currentIndex >= 0 && currentIndex < months.length - 1)
-                ? () {
+          _CompactArrowButton(
+            icon: Icons.chevron_left,
+            enabled: canGoPrev,
+            onTap:
+                canGoPrev
+                    ? () {
+                      ref
+                          .read(selectedYearMonthProvider.notifier)
+                          .select(months[currentIndex + 1]);
+                    }
+                    : null,
+          ),
+          Flexible(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: months.contains(currentMonth)
+                    ? currentMonth
+                    : months.first,
+                isDense: true,
+                icon: const Icon(Icons.arrow_drop_down, size: 18),
+                selectedItemBuilder:
+                    (context) =>
+                        months
+                            .map(
+                              (month) => Center(
+                                child: Text(
+                                  month,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  overflow: TextOverflow.fade,
+                                  style: const TextStyle(
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                items:
+                    months.map((String month) {
+                      return DropdownMenuItem<String>(
+                        value: month,
+                        child: Text(
+                          month,
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                onChanged: (String? newMonth) {
+                  if (newMonth != null) {
                     ref
                         .read(selectedYearMonthProvider.notifier)
-                        .select(months[currentIndex + 1]);
+                        .select(newMonth);
                   }
-                : null,
-          ),
-          DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: months.contains(currentMonth) ? currentMonth : months.first,
-              icon: const Icon(Icons.arrow_drop_down),
-              items: months.map((String month) {
-                return DropdownMenuItem<String>(
-                  value: month,
-                  child: Text(
-                    month,
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (String? newMonth) {
-                if (newMonth != null) {
-                  ref.read(selectedYearMonthProvider.notifier).select(newMonth);
-                }
-              },
+                },
+              ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: currentIndex > 0
-                ? () {
-                    ref
-                        .read(selectedYearMonthProvider.notifier)
-                        .select(months[currentIndex - 1]);
-                  }
-                : null,
+          _CompactArrowButton(
+            icon: Icons.chevron_right,
+            enabled: canGoNext,
+            onTap:
+                canGoNext
+                    ? () {
+                      ref
+                          .read(selectedYearMonthProvider.notifier)
+                          .select(months[currentIndex - 1]);
+                    }
+                    : null,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CompactArrowButton extends StatelessWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback? onTap;
+
+  const _CompactArrowButton({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 28,
+      height: 36,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: enabled ? onTap : null,
+        child: Center(
+          child: Icon(
+            icon,
+            size: 18,
+            color: enabled ? Colors.black87 : Colors.black26,
+          ),
+        ),
       ),
     );
   }

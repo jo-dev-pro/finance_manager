@@ -108,8 +108,6 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
 
                           final matchedAccount =
                               accountMap[balanceItem.accountId];
-                          final institution =
-                              matchedAccount?.financialInstitution ?? '기타 금융기관';
                           final nameObj =
                               matchedAccount != null
                                   ? accountNameMap[matchedAccount.accountNameId]
@@ -119,115 +117,121 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                           final String? accountNumber =
                               matchedAccount?.accountNumber;
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Card(
-                              elevation: 1,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor: Colors.grey.shade100,
-                                      backgroundImage:
-                                          logoUrl != null && logoUrl.isNotEmpty
-                                              ? NetworkImage(logoUrl)
-                                              : null,
-                                      child:
-                                          (logoUrl == null || logoUrl.isEmpty)
-                                              ? Icon(
-                                                Icons.account_balance,
-                                                color: Colors.blue.shade700,
-                                              )
-                                              : null,
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Text(
+                          return Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 16,
+                                    backgroundColor: Colors.grey.shade100,
+                                    backgroundImage:
+                                        logoUrl != null && logoUrl.isNotEmpty
+                                            ? NetworkImage(logoUrl)
+                                            : null,
+                                    child:
+                                        (logoUrl == null || logoUrl.isEmpty)
+                                            ? Icon(
+                                              Icons.account_balance,
+                                              size: 16,
+                                              color: Colors.blue.shade700,
+                                            )
+                                            : null,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
                                                 accountName,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
+                                                  fontSize: 15,
                                                 ),
                                                 maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
+                                                overflow:
+                                                    TextOverflow.ellipsis,
                                               ),
-                                              const SizedBox(width: 16),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 6,
-                                                      vertical: 2,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.grey.shade200,
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  balanceItem.yearMonth,
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: Colors.grey.shade600,
-                                                    fontWeight: FontWeight.bold,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
                                                   ),
-                                                ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade200,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
                                               ),
-                                            ],
-                                          ),
+                                              child: Text(
+                                                balanceItem.yearMonth,
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey.shade600,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                softWrap: false,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        if (accountNumber != null &&
+                                            accountNumber.isNotEmpty) ...[
                                           const SizedBox(height: 4),
                                           JText(
-                                            '$institution${accountNumber != null && accountNumber.isNotEmpty ? ' | $accountNumber' : ''}',
+                                            accountNumber,
                                             style: TextStyle(
-                                              fontSize: 13,
+                                              fontSize: 12,
                                               color: Colors.grey.shade600,
                                             ),
                                             maxLines: 1,
                                             overflow: true,
                                           ),
                                         ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        JText(
-                                          balanceItem.balance.toWon(),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        EditDeleteButtons(
-                                          onEdit: () => _showDialog(
-                                            context,
-                                            yearMonth: balanceItem.yearMonth,
-                                            editItem: balanceItem,
-                                            accountNameText: accountName,
-                                          ),
-                                          onDelete: () => _confirmDelete(
-                                            context,
-                                            ref,
-                                            balanceItem,
-                                            accountName,
-                                          ),
-                                        ),
                                       ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.end,
+                                    children: [
+                                      JText(
+                                        balanceItem.balance.toWon(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      EditDeleteButtons(
+                                        onEdit: () => _showDialog(
+                                          context,
+                                          yearMonth: balanceItem.yearMonth,
+                                          editItem: balanceItem,
+                                          accountNameText: accountName,
+                                        ),
+                                        onDelete: () => _confirmDelete(
+                                          context,
+                                          ref,
+                                          balanceItem,
+                                          accountName,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           );

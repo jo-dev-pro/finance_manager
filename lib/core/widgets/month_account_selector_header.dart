@@ -38,33 +38,41 @@ class MonthAccountSelectorHeader extends StatelessWidget {
     final safeMonthValue =
         months.contains(currentMonth) ? currentMonth : months.first;
 
+    final isValidAccount =
+        selectedAccountValue == null ||
+        accountItems.any((item) => item.value == selectedAccountValue);
+    final safeAccountValue = isValidAccount ? selectedAccountValue : null;
+
     return Row(
       children: [
         Expanded(
+          flex: 2,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade400),
               borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: safeMonthValue,
                 isExpanded: true,
-                items: months
-                    .map(
-                      (ym) => DropdownMenuItem<String>(
-                        value: ym,
-                        child: Text(
-                          ym,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                items:
+                    months
+                        .map(
+                          (ym) => DropdownMenuItem<String>(
+                            value: ym,
+                            child: Text(
+                              ym,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    )
-                    .toList(),
+                        )
+                        .toList(),
                 onChanged: (val) {
                   if (val != null) onMonthChanged(val);
                 },
@@ -74,16 +82,17 @@ class MonthAccountSelectorHeader extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          flex: 2,
+          flex: 3,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade400),
               borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String?>(
-                value: selectedAccountValue,
+                value: safeAccountValue,
                 isExpanded: true,
                 hint: Text(allAccountsLabel),
                 items: [

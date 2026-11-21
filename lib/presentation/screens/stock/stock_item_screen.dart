@@ -18,103 +18,130 @@ class StockItemScreen extends ConsumerWidget {
     final stockItemsState = ref.watch(stockItemNotifierProvider);
 
     return Scaffold(
-        appBar: MainAppBar(
-        titleText: '종목 관리',
+      appBar: MainAppBar(
+        titleText: '종목명 관리',
         actions: [
           ElevatedButton.icon(
             onPressed: () => _showDialog(context),
-            label: const Text('종목 추가'),
+            label: const Text('등록'),
           ),
         ],
       ),
-     
-      body: stockItemsState.when(
-        data: (items) {
-          if (items.isEmpty) {
-            return const Center(
-              child: Text(
-                '등록된 종목이 없습니다.\n상단의 + 버튼을 눌러 추가해 보세요.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-            );
-          }
 
-          return ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) { 
-              final item = items[index];
-          
-              return MainConstrainedBox(
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric( 
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        // 💡 시장 구분 뱃지 (yahooName 반영)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            item.yahooName ?? 'KR',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade800,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                          
-                        // 💡 종목 정보 (itemName, stockCode, otherName 반영)
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.itemName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '코드: ${item.stockCode}${item.otherName.isNotEmpty ? ' • ${item.otherName}' : ''}',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                          
-                        // 수정 & 삭제 버튼
-                        EditDeleteButtons(
-                          onEdit: () => _showDialog(context, item: item),
-                          onDelete: () => _confirmDelete(context, ref, item),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        },
+      body: stockItemsState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('데이터를 불러오는 중 오류가 발생했습니다:\n$e')),
+        data: (items) {
+          return MainConstrainedBox(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+
+                Expanded(
+                  child:
+                      items.isEmpty
+                          ? const Center(
+                            child: Text(
+                              '등록된 종목명이 없습니다.\n상단의 등록 버튼을 눌러 추가해 보세요.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          )
+                          : ListView.builder(
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+
+                              return Card(
+                                elevation: 1,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      // 💡 시장 구분 뱃지 (yahooName 반영)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade50,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          item.yahooName ?? 'KR',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue.shade800,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                              
+                                      // 💡 종목 정보 (itemName, stockCode, otherName 반영)
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item.itemName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '코드: ${item.stockCode}${item.otherName.isNotEmpty ? ' • ${item.otherName}' : ''}',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                              
+                                      // 수정 & 삭제 버튼
+                                      EditDeleteButtons(
+                                        onEdit:
+                                            () => _showDialog(
+                                              context,
+                                              item: item,
+                                            ),
+                                        onDelete:
+                                            () => _confirmDelete(
+                                              context,
+                                              ref,
+                                              item,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

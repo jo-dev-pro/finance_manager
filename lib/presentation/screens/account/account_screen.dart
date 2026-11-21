@@ -11,7 +11,7 @@ import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
 import 'widgets/account_dialog.dart';
 
-class AccountScreen extends ConsumerWidget {
+class AccountScreen extends ConsumerWidget { 
   const AccountScreen({super.key});
 
   @override
@@ -25,130 +25,195 @@ class AccountScreen extends ConsumerWidget {
         actions: [
           ElevatedButton.icon(
             onPressed: () => _showAccountDialog(context, ref, null),
-            label: const Text('계좌 추가'),
+            label: const Text('등록'),
           ),
         ],
       ),
-     
       body: accountsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('계좌를 불러오지 못했습니다: $err')),
         data: (accounts) {
           return accountNamesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('계좌 명칭을 불러오지 못했습니다: $err')),
+            error:
+                (err, stack) => Center(child: Text('계좌 명칭을 불러오지 못했습니다: $err')),
             data: (accountNames) {
               final accountNameMap = {for (var an in accountNames) an.id: an};
-      
-              if (accounts.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.account_balance_wallet_outlined, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
+              
+              return MainConstrainedBox(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child:
+                          accounts.isEmpty
+                              ? const Center(
+                                child: Text(
+                                  '등록된 계좌 내역이 없습니다.\n상단의 등록 버튼을 눌러 추가해 보세요.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: accounts.length,
+                                itemBuilder: (context, index) {
+                                  final account = accounts[index];
+                                  final accountNameObj =
+                                      accountNameMap[account.accountNameId];
+                                  final accountName =
+                                      accountNameObj?.accountName ?? '지정 안됨';
+                                  final status = account.status;
+                                  final logoUrl = account.logoUrl;
 
-                      const Text('등록된 계좌가 없습니다.', style: TextStyle(color: Colors.grey, fontSize: 16)),
-                      const SizedBox(height: 16),
+                                  final isForeign = account.isForeignCurrency;
+                                  final currencyLabel =
+                                      isForeign ? 'USD' : 'KRW';
 
-                      ElevatedButton.icon(
-                        onPressed: () => _showAccountDialog(context, ref, null),
-                        icon: const Icon(Icons.add),
-                        label: const Text('계좌등록'),
-                      ),
-                    ],
-                  ),
-                );
-              }
-      
-              // 자산 유형별 또는 상태별로 그룹화하거나 리스트 형태로 출력
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: accounts.length,
-                itemBuilder: (context, index) {
-                  final account = accounts[index];
-                  final accountNameObj = accountNameMap[account.accountNameId];
-                  final accountName = accountNameObj?.accountName ?? '지정 안됨';
-                  final institution = account.financialInstitution;
-                  final accountType = account.accountType;
-                  final status = account.status;
-                  final logoUrl = account.logoUrl;
-                      
-                  // 💡 모델의 isForeignCurrency 겟터 및 currency 필드 활용
-                  final isForeign = account.isForeignCurrency;
-                  final currencyLabel = isForeign ? '외화 (USD)' : '원화 (KRW)';
-                      
-                  return MainConstrainedBox(
-                    child: Card(
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.indigo.shade50,
-                          backgroundImage: (logoUrl != null && logoUrl.isNotEmpty) ? NetworkImage(logoUrl) : null,
-                          child: (logoUrl == null || logoUrl.isEmpty)
-                              ? const Icon(Icons.account_balance, color: Colors.indigo)
-                              : null,
-                        ),
-                        title: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '$institution - $accountName',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                  return Card(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: ListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 8,
+                                          ),
+                                      leading: SizedBox(
+                                        height: 30,
+                                        width: 30,
+                                        child: CircleAvatar(
+                                          backgroundColor:
+                                              Colors.indigo.shade50,
+                                          backgroundImage:
+                                              (logoUrl != null &&
+                                                      logoUrl.isNotEmpty)
+                                                  ? NetworkImage(logoUrl)
+                                                  : null,
+                                          child:
+                                              (logoUrl == null ||
+                                                      logoUrl.isEmpty)
+                                                  ? const Icon(
+                                                    Icons.account_balance,
+                                                    color: Colors.indigo,
+                                                    size: 15,
+                                                  )
+                                                  : null,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        accountName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+
+                                      subtitle: Padding(
+                                        padding: const EdgeInsets.only(top: 6),
+                                        child: Row(
+                                          children: [
+                                            Flexible(
+                                              child: FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 3,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        isForeign
+                                                            ? Colors
+                                                                .orange
+                                                                .shade50
+                                                            : Colors
+                                                                .blue
+                                                                .shade50,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                    border: Border.all(
+                                                      color:
+                                                          isForeign
+                                                              ? Colors
+                                                                  .orange
+                                                                  .shade200
+                                                              : Colors
+                                                                  .blue
+                                                                  .shade200,
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    currencyLabel,
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color:
+                                                          isForeign
+                                                              ? Colors
+                                                                  .orange
+                                                                  .shade800
+                                                              : Colors
+                                                                  .blue
+                                                                  .shade800,
+                                                    ),
+                                                    maxLines: 1,
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(width: 5),
+
+                                            Text(
+                                              '상태: $status',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color:
+                                                    status == '활동'
+                                                        ? Colors.green.shade700
+                                                        : Colors.red.shade400,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                              maxLines: 1,
+                                              softWrap: false,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      trailing: EditDeleteButtons(
+                                        onEdit:
+                                            () => _showAccountDialog(
+                                              context,
+                                              ref,
+                                              account,
+                                            ),
+                                        onDelete:
+                                            () => _confirmDelete(
+                                              context,
+                                              ref,
+                                              account,
+                                            ),
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: isForeign ? Colors.orange.shade50 : Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: isForeign ? Colors.orange.shade200 : Colors.blue.shade200,
-                                ),
-                              ),
-                              child: Text(
-                                currencyLabel,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: isForeign ? Colors.orange.shade800 : Colors.blue.shade800,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Row(
-                            children: [
-                              Text(
-                                '유형: $accountType',
-                                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                '상태: $status',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: status == '활동' ? Colors.green.shade700 : Colors.red.shade400,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        trailing:  // 수정 & 삭제 버튼
-                          EditDeleteButtons(
-                            onEdit: () => _showAccountDialog(context, ref, account),
-                            onDelete: () => _confirmDelete(context, ref, account),
-                          ),
-                      ),
                     ),
-                  );
-                },
+                  ],
+                ),
               );
             },
           );
@@ -157,7 +222,11 @@ class AccountScreen extends ConsumerWidget {
     );
   }
 
-  void _showAccountDialog(BuildContext context, WidgetRef ref, Account? account) {
+  void _showAccountDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Account? account,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -168,7 +237,7 @@ class AccountScreen extends ConsumerWidget {
     );
   }
 
- void _confirmDelete(BuildContext context, WidgetRef ref, Account account) {
+  void _confirmDelete(BuildContext context, WidgetRef ref, Account account) {
     if (account.id == null) return;
 
     AppDialog.showDeleteConfirm(

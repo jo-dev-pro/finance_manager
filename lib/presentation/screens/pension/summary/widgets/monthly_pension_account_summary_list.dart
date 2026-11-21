@@ -75,10 +75,13 @@ class MonthlyPensionAccountSummaryList extends ConsumerWidget {
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       const SizedBox(height: 4),
-                      Row(
+                     Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           JText(
-                            '현금성 잔액: ${cash.toWon()}',
+                            '현금: ${cash.toWon()}',
                             style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                           ),
                           const SizedBox(width: 8),

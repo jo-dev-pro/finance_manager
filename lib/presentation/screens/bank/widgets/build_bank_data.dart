@@ -33,7 +33,7 @@ class BuildBankData extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SummaryCard(
-            title: '은행 계좌 전체 금액',
+            title: '은행 자산',
             mainAmountText: totalCurrentBalance.toWon(),
             // 💡 어두운 카드 배경이므로 isDarkCard: true 적용하여 가인성 확보
             diffFromLastMonthWidget: totalDiffFromLastMonth.toSignedPriceText(
@@ -62,8 +62,8 @@ class BuildBankData extends StatelessWidget {
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: context.isMobile ? 1 : 2,
                 crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                mainAxisExtent: 130,
+                mainAxisSpacing: 4,
+                mainAxisExtent: 120,
               ),
               itemCount: items.length,
               itemBuilder: (context, index) => _buildBankTile(items[index]),
@@ -77,7 +77,7 @@ class BuildBankData extends StatelessWidget {
     final account = item.account;
     final diff = item.diffFromLastMonth;
     final logoUrl = account.logoUrl;
-    final institutionText = '${account.financialInstitution}${account.accountNumber != null && account.accountNumber!.isNotEmpty ? ' | ${account.accountNumber}' : ''}';
+    final institutionText = account.accountNumber ?? '';
 
     return AccountCard(
       logoUrl: logoUrl,

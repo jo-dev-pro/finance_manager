@@ -198,38 +198,43 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                 );
                               },
                               child: SummaryCard(
-                                title: '연금 자산 전체 금액',
+                                title: '연금 자산',
                                 mainAmountText: totalBalance.toWon(),
                                 principalText: totalPrincipal.toWon(),
-                                profitLossWidget: Row(
-                                  children: [
-                                    totalProfitOrLoss.toSignedPriceText(
-                                      // isDarkCard: true 는 인디고 바탕위에 다크모드로 하면 색깔이 밝아짐
-                                      isDarkCard: true,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
+                                profitLossWidget: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      totalProfitOrLoss.toSignedPriceText(
+                                        // isDarkCard: true 는 인디고 바탕위에 다크모드로 하면 색깔이 밝아짐
+                                        isDarkCard: true,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    totalReturnRate.toSignedPercentText(
-                                      isDarkCard: true,
-                                      withParentheses: true,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
+                                      const SizedBox(width: 4),
+                                      totalReturnRate.toSignedPercentText(
+                                        isDarkCard: true,
+                                        withParentheses: true,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                                 subInfoWidgets:
                                     totalAccountWithdrawalSum > 0
                                         ? [
                                           JText(
-                                            '계좌 누적 인출액: ${totalAccountWithdrawalSum.toWon()}',
+                                            '누적 인출: ${totalAccountWithdrawalSum.toWon()}',
                                             style: const TextStyle(
                                               color: Colors.white70,
-                                              fontSize: 13,
+                                              fontSize: 12,
                                             ),
                                           ),
                                         ]
@@ -239,7 +244,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                     .toSignedPriceText(
                                       isDarkCard: true,
                                       style: const TextStyle(
-                                        fontSize: 13,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),

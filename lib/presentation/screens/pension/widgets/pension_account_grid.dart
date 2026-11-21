@@ -90,7 +90,7 @@ class PensionAccountGrid extends ConsumerWidget {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: context.isMobile ? 1 : 2,
         crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        mainAxisSpacing: 4,
         mainAxisExtent: 170,
       ),
       itemCount: accountIds.length,

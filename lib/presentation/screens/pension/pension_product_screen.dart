@@ -18,72 +18,97 @@ class PensionProductScreen extends ConsumerWidget {
     final productsState = ref.watch(pensionProductNotifierProvider);
 
     return Scaffold(
-        appBar: MainAppBar(
+      appBar: MainAppBar(
         titleText: '연금상품 관리',
         actions: [
           ElevatedButton.icon(
             onPressed: () => _showDialog(context),
-            icon: const Icon(Icons.add_circle_outline_rounded),
-            label: const Text('연금상품 등록'),
+            label: const Text('등록'),
           ),
         ],
       ),
-    
+
       body: productsState.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text('데이터를 불러오는 중 오류가 발생했습니다:\n$e')),
         data: (products) {
-          if (products.isEmpty) {
-            return const Center(
-              child: Text(
-                '등록된 연금상품이 없습니다.\n하단의 + 버튼을 눌러 추가해 보세요.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-            );
-          }
-
           return MainConstrainedBox(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: products.length,
-              itemBuilder: (context, index) {
-                final item = products[index];
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                Expanded(
+                  child:
+                      products.isEmpty
+                          ? const Center(
+                            child: Text(
+                              '등록된 연금상품이 없습니다.\n상단의 등록 버튼을 눌러 추가해 보세요.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          )
+                          : ListView.builder(
+                            itemCount: products.length,
+                            itemBuilder: (context, index) {
+                              final item = products[index];
 
-                return Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.productName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                              return Card(
+                                elevation: 1,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item.productName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                  
+                                      const SizedBox(width: 16),
+                                  
+                                      // 수정 & 삭제 버튼
+                                      EditDeleteButtons(
+                                        onEdit:
+                                            () => _showDialog(
+                                              context,
+                                              product: item,
+                                            ),
+                                        onDelete:
+                                            () => _confirmDelete(
+                                              context,
+                                              ref,
+                                              item,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      // 수정 & 삭제 버튼
-                     EditDeleteButtons(
-                      onEdit: () => _showDialog(context, product: item),
-                      onDelete: () => _confirmDelete(context, ref, item),
-                    ),
-                    ],
-                  ),
-                );
-              },
+                ),
+              ],
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('오류 발생: $e')),
       ),
     );
   }
 
- void _showDialog(BuildContext context, {PensionProduct? product}) {
+  void _showDialog(BuildContext context, {PensionProduct? product}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

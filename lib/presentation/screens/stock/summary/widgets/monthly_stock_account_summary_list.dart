@@ -1,4 +1,4 @@
-  import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
@@ -16,7 +16,8 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
     String accountId,
     String accountDisplayName,
     MonthlyStockAccountBalance? currentBalance,
-  )? onEditPressed;
+  )?
+  onEditPressed;
 
   const MonthlyStockAccountSummaryList({
     super.key,
@@ -31,15 +32,22 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (stockAccounts.isEmpty) {
-      return const Text('등록된 증권 계좌가 없습니다.', style: TextStyle(color: Colors.grey));
+      return const Text(
+        '등록된 증권 계좌가 없습니다.',
+        style: TextStyle(color: Colors.grey),
+      );
     }
 
-    final displayAccounts = selectedAccountId == null
-        ? stockAccounts
-        : stockAccounts.where((a) => a.id == selectedAccountId).toList();
+    final displayAccounts =
+        selectedAccountId == null
+            ? stockAccounts
+            : stockAccounts.where((a) => a.id == selectedAccountId).toList();
 
     if (displayAccounts.isEmpty) {
-      return const Text('해당 계좌 정보가 없습니다.', style: TextStyle(color: Colors.grey));
+      return const Text(
+        '해당 계좌 정보가 없습니다.',
+        style: TextStyle(color: Colors.grey),
+      );
     }
 
     return ListView.builder(
@@ -106,10 +114,13 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           JText(
-                            '현금성 잔액: $cashStr',
+                            '현금: $cashStr',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade700,
@@ -147,12 +158,17 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
                 ),
                 if (onEditPressed != null)
                   IconButton(
-                    icon: const Icon(Icons.edit, size: 18, color: Colors.indigo),
-                    onPressed: () => onEditPressed!(
-                      accId,
-                      '$institution$accName',
-                      accBalanceData,
+                    icon: const Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: Colors.indigo,
                     ),
+                    onPressed:
+                        () => onEditPressed!(
+                          accId,
+                          '$institution$accName',
+                          accBalanceData,
+                        ),
                   ),
               ],
             ),

@@ -21,7 +21,6 @@ class AssetGridCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -61,6 +60,7 @@ class AssetGridCard extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     amountWon,
@@ -71,7 +71,7 @@ class AssetGridCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -82,7 +82,13 @@ class AssetGridCard extends StatelessWidget {
                           color: Colors.grey.shade600,
                         ),
                       ),
-                      diffWidget, // 💡 전월 대비 실제 계산된 금액 위젯
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: diffWidget,
+                        ),
+                      ),
                     ],
                   ),
                 ],

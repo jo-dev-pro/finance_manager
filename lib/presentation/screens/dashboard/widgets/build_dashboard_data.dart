@@ -44,6 +44,7 @@ class BuildDashboardData extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end, // 💡 핵심: 우측으로 정렬
               children: [
                 profitOrLoss.toSignedPriceText(
+                  isDarkCard: true,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -73,9 +74,9 @@ class BuildDashboardData extends StatelessWidget {
             crossAxisCount: context.isMobile ? 2 : 3,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: context.isMobile ? 1.8 : 2.5,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 8,
+            childAspectRatio: context.isMobile ? 1.6 : 2.5,
             children: [
               AssetGridCard(
                 icon: Icons.account_balance,
@@ -127,7 +128,7 @@ class BuildDashboardData extends StatelessWidget {
     );
   }
 
-  Widget _buildAssetRatioChartCard(dynamic summary) {
+ Widget _buildAssetRatioChartCard(dynamic summary) {
     final double bank = (summary.bankBalance ?? 0).toDouble();
     final double stock = (summary.stockBalance ?? 0).toDouble();
     final double pension = (summary.pensionBalance ?? 0).toDouble();
@@ -156,20 +157,23 @@ class BuildDashboardData extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(
-              height: 200,
+              height: 210,
               child: PieChart(
                 PieChartData(
                   sectionsSpace: 2,
-                  centerSpaceRadius: 50,
+                  centerSpaceRadius: 48,
                   sections: [
                     if (bank > 0)
                       PieChartSectionData(
                         color: Colors.blue.shade600,
                         value: bank,
-                        title: bankRatio.toPercent(fractionDigits: 1),
-                        radius: 35,
+                        title:
+                            bankRatio >= 4
+                                ? bankRatio.toPercent(fractionDigits: 1)
+                                : '',
+                        radius: 40,
                         titleStyle: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -178,10 +182,13 @@ class BuildDashboardData extends StatelessWidget {
                       PieChartSectionData(
                         color: Colors.orange.shade600,
                         value: stock,
-                        title: stockRatio.toPercent(fractionDigits: 1),
-                        radius: 35,
+                        title:
+                            stockRatio >= 4
+                                ? stockRatio.toPercent(fractionDigits: 1)
+                                : '',
+                        radius: 40,
                         titleStyle: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -190,10 +197,13 @@ class BuildDashboardData extends StatelessWidget {
                       PieChartSectionData(
                         color: Colors.green.shade600,
                         value: pension,
-                        title: pensionRatio.toPercent(fractionDigits: 1),
-                        radius: 35,
+                        title:
+                            pensionRatio >= 4
+                                ? pensionRatio.toPercent(fractionDigits: 1)
+                                : '',
+                        radius: 40,
                         titleStyle: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),

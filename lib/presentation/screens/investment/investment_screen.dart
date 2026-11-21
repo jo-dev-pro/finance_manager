@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/number_formatter.dart';
-import '../../../core/widgets/app_dialog.dart';      // 💡 공통 삭제 다이얼로그
-import '../../../core/widgets/app_snackbar.dart';  // 💡 공통 스낵바
+import '../../../core/widgets/app_dialog.dart'; // 💡 공통 삭제 다이얼로그
+import '../../../core/widgets/app_snackbar.dart'; // 💡 공통 스낵바
 import '../../../core/widgets/edit_delete_button.dart';
 import '../../../core/widgets/jtext.dart';
 import '../../../core/widgets/main_appbar.dart';
@@ -21,22 +21,25 @@ class InvestmentScreen extends ConsumerWidget {
     final investmentState = ref.watch(investmentNotifierProvider);
 
     return Scaffold(
-        appBar: MainAppBar(
-        titleText: '투자 내역 관리',
+      appBar: MainAppBar(
+        titleText: '투자금 관리',
         actions: [
           ElevatedButton.icon(
-            onPressed: () => _showDialog(context), 
-            label: const Text('투자금 추가'),
+            onPressed: () => _showDialog(context),
+            label: const Text('등록'),
           ),
         ],
       ),
-      
+
       body: investmentState.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text('데이터를 불러오는 중 오류가 발생했습니다:\n$e')),
         data: (investments) {
           final totalAmount = investments.fold<double>(
             0,
             (sum, item) => sum + item.amount,
           );
+
 
           return MainConstrainedBox(
             child: Column(
@@ -53,7 +56,7 @@ class InvestmentScreen extends ConsumerWidget {
                       investments.isEmpty
                           ? const Center(
                             child: Text(
-                              '등록된 투자 내역이 없습니다.\n하단의 + 버튼을 눌러 추가해 보세요.',
+                              '등록된 투자 내역이 없습니다.\n상단의 등록 버튼을 눌러 추가해 보세요.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.grey,
@@ -62,62 +65,64 @@ class InvestmentScreen extends ConsumerWidget {
                             ),
                           )
                           : ListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             itemCount: investments.length,
                             itemBuilder: (context, index) {
                               final item = investments[index];
                               return Card(
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),
-                                  child: Row(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              item.description,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                            if (item.createdAt != null &&
-                                                item.createdAt!.isNotEmpty) ...[
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                item.createdAt!,
-                                                style: TextStyle(
-                                                  color: Colors.grey.shade600,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                      JText(
-                                        item.amount.toWon(),
+                                      Text(
+                                        item.description,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
-                                          color: Colors.blueAccent,
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
-                                      EditDeleteButtons(
-                                        onEdit: () => _showDialog(
-                                          context,
-                                          investment: item, // 💡 수정 모드 호출
+                                      if (item.createdAt != null &&
+                                          item.createdAt!.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          item.createdAt!,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 12,
+                                          ),
                                         ),
-                                        onDelete: () => _confirmDelete(
-                                          context,
-                                          ref,
-                                          item,
-                                        ),
+                                      ],
+                                      SizedBox(height: 8),
+
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          JText(
+                                            item.amount.toWon(),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: Colors.blueAccent,
+                                            ),
+                                          ),
+                                          EditDeleteButtons(
+                                            onEdit:
+                                                () => _showDialog(
+                                                  context,
+                                                  investment:
+                                                      item, // 💡 수정 모드 호출
+                                                ),
+                                            onDelete:
+                                                () => _confirmDelete(
+                                                  context,
+                                                  ref,
+                                                  item,
+                                                ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -130,8 +135,6 @@ class InvestmentScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('데이터를 불러오는 중 오류가 발생했습니다:\n$e')),
       ),
     );
   }

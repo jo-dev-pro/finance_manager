@@ -1,6 +1,13 @@
 {
   "version": "0.2.0",
   "configurations": [
+    
+     {
+      "name": "Flutter (모바일/에뮬레이터)",
+      "request": "launch",
+      "type": "dart"
+    },
+
     {
       "name": "Flutter Web (CORS 해제 크롬)",
       "request": "launch",
