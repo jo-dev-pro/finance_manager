@@ -55,14 +55,11 @@ class MonthlyPensionAccountSummaryList extends ConsumerWidget {
         final totalWith = accBalanceData?.totalWithdrawal ?? 0.0;
 
         return Card(
-          elevation: 1.0,
-          margin: const EdgeInsets.only(bottom: 10),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

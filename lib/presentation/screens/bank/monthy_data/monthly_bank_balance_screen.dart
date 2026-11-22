@@ -122,7 +122,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.all(14),
+                              padding: const EdgeInsets.all(16),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [

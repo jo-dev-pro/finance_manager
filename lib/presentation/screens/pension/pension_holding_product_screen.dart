@@ -221,6 +221,9 @@ class _PensionHoldingProductScreenState
                               productMap[item.productId] ?? '알 수 없는 상품';
 
                           return Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Column(
@@ -236,7 +239,8 @@ class _PensionHoldingProductScreenState
                                   SizedBox(height: 4),
 
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Column(
                                         crossAxisAlignment:

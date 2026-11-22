@@ -56,7 +56,6 @@ class AccountNameScreen extends ConsumerWidget {
                               final accountName = accountNames[index];
 
                               return Card(
-                                elevation: 1,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),

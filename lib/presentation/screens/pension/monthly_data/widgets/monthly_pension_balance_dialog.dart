@@ -573,13 +573,11 @@ class _MonthlyPensionBalanceDialogState
                               final prevPrincipal = prevData?.principal ?? 0.0;
 
                               return Card(
-                                elevation: 1.0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  side: BorderSide(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
+                                  padding: const EdgeInsets.all(16.0),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,

@@ -57,7 +57,6 @@ class StockItemScreen extends ConsumerWidget {
                               final item = items[index];
 
                               return Card(
-                                elevation: 1,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),

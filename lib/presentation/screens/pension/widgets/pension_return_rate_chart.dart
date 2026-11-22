@@ -22,11 +22,13 @@ class PensionReturnRateChart extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final allBalances = ref.watch(allMonthlyPensionBalancesProvider).value ?? [];
+    final allBalances =
+        ref.watch(allMonthlyPensionBalancesProvider).value ?? [];
     final currentBalances =
         ref.watch(monthlyPensionBalanceNotifierProvider(currentMonth)).value ??
-            [];
-    final currentAccountBalances = ref
+        [];
+    final currentAccountBalances =
+        ref
             .watch(monthlyPensionAccountBalanceNotifierProvider(currentMonth))
             .value ??
         [];
@@ -47,13 +49,13 @@ class PensionReturnRateChart extends ConsumerWidget {
     // 월별 계좌 데이터 맵 캐싱 (연월 -> 계좌리스트)
     final monthlyAccountBalanceMap = {
       for (var ym in sortedMonths)
-        ym: ref
-                .watch(monthlyPensionAccountBalanceNotifierProvider(ym))
-                .value ??
+        ym:
+            ref.watch(monthlyPensionAccountBalanceNotifierProvider(ym)).value ??
             [],
     };
 
     return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -62,62 +64,65 @@ class PensionReturnRateChart extends ConsumerWidget {
             Wrap(
               spacing: 16,
               runSpacing: 8,
-              children: accountIds.asMap().entries.map((entry) {
-                final idx = entry.key;
-                final accId = entry.value;
-                final matchedAcc = accountMap[accId];
-                final matchedName = matchedAcc != null
-                    ? accountNameMap[matchedAcc.accountNameId]
-                    : null;
-                final name = matchedName?.accountName ?? accId;
-                final logoUrl = matchedAcc?.logoUrl;
-                final color = chartColors[idx % chartColors.length];
+              children:
+                  accountIds.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final accId = entry.value;
+                    final matchedAcc = accountMap[accId];
+                    final matchedName =
+                        matchedAcc != null
+                            ? accountNameMap[matchedAcc.accountNameId]
+                            : null;
+                    final name = matchedName?.accountName ?? accId;
+                    final logoUrl = matchedAcc?.logoUrl;
+                    final color = chartColors[idx % chartColors.length];
 
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    if (logoUrl != null && logoUrl.isNotEmpty)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: Image.network(
-                          logoUrl,
-                          width: 16,
-                          height: 16,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.account_balance,
-                            size: 14,
-                            color: Colors.grey,
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
                           ),
                         ),
-                      )
-                    else
-                      const Icon(
-                        Icons.account_balance,
-                        size: 14,
-                        color: Colors.indigo,
-                      ),
-                    const SizedBox(width: 4),
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
+                        const SizedBox(width: 6),
+                        if (logoUrl != null && logoUrl.isNotEmpty)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.network(
+                              logoUrl,
+                              width: 20,
+                              height: 20,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => const Icon(
+                                    Icons.account_balance,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
+                            ),
+                          )
+                        else
+                          const Icon(
+                            Icons.account_balance,
+                            size: 14,
+                            color: Colors.indigo,
+                          ),
+                        const SizedBox(width: 4),
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -127,10 +132,12 @@ class PensionReturnRateChart extends ConsumerWidget {
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: true,
-                    getDrawingHorizontalLine: (value) =>
-                        FlLine(color: Colors.grey.shade200, strokeWidth: 1),
-                    getDrawingVerticalLine: (value) =>
-                        FlLine(color: Colors.grey.shade100, strokeWidth: 1),
+                    getDrawingHorizontalLine:
+                        (value) =>
+                            FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+                    getDrawingVerticalLine:
+                        (value) =>
+                            FlLine(color: Colors.grey.shade100, strokeWidth: 1),
                   ),
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
@@ -177,9 +184,10 @@ class PensionReturnRateChart extends ConsumerWidget {
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 30,
-                        interval: sortedMonths.length > 12
-                            ? (sortedMonths.length / 6).ceil().toDouble()
-                            : 1.0,
+                        interval:
+                            sortedMonths.length > 12
+                                ? (sortedMonths.length / 6).ceil().toDouble()
+                                : 1.0,
                         getTitlesWidget: (val, meta) {
                           int idx = val.toInt();
                           if (idx >= 0 && idx < sortedMonths.length) {
@@ -199,54 +207,64 @@ class PensionReturnRateChart extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  lineBarsData: accountIds.asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final accId = entry.value;
+                  lineBarsData:
+                      accountIds.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final accId = entry.value;
 
-                    final spots = sortedMonths.asMap().entries.map((mEntry) {
-                      final mIdx = mEntry.key;
-                      final ym = mEntry.value;
+                        final spots =
+                            sortedMonths.asMap().entries.map((mEntry) {
+                              final mIdx = mEntry.key;
+                              final ym = mEntry.value;
 
-                      final items = allBalances.where(
-                        (b) =>
-                            b.balanceItem.yearMonth == ym &&
-                            b.balanceItem.accountId == accId,
-                      );
-                      final productBal = items.fold<double>(
-                        0.0,
-                        (s, item) => s + item.balanceItem.balance,
-                      );
+                              final items = allBalances.where(
+                                (b) =>
+                                    b.balanceItem.yearMonth == ym &&
+                                    b.balanceItem.accountId == accId,
+                              );
+                              final productBal = items.fold<double>(
+                                0.0,
+                                (s, item) => s + item.balanceItem.balance,
+                              );
 
-                      final accBalObj = monthlyAccountBalanceMap[ym]
-                          ?.firstWhereOrNull((ab) => ab.accountId == accId);
+                              final accBalObj = monthlyAccountBalanceMap[ym]
+                                  ?.firstWhereOrNull(
+                                    (ab) => ab.accountId == accId,
+                                  );
 
-                      final cashBal = accBalObj?.cashBalance ?? 0.0;
-                      final withdrawal = accBalObj?.totalWithdrawal ?? 0.0;
-                      // 월말 계좌 기준 원금 우선 사용, 없으면 상품 원금 합산
-                      final totalPrin = accBalObj != null && accBalObj.principal > 0
-                          ? accBalObj.principal
-                          : items.fold<double>(
-                              0.0,
-                              (s, item) => s + item.balanceItem.principal,
-                            );
+                              final cashBal = accBalObj?.cashBalance ?? 0.0;
+                              final withdrawal =
+                                  accBalObj?.totalWithdrawal ?? 0.0;
+                              // 월말 계좌 기준 원금 우선 사용, 없으면 상품 원금 합산
+                              final totalPrin =
+                                  accBalObj != null && accBalObj.principal > 0
+                                      ? accBalObj.principal
+                                      : items.fold<double>(
+                                        0.0,
+                                        (s, item) =>
+                                            s + item.balanceItem.principal,
+                                      );
 
-                      final totalBal = productBal + cashBal;
-                      final profit = (totalBal + withdrawal) - totalPrin;
+                              final totalBal = productBal + cashBal;
+                              final profit =
+                                  (totalBal + withdrawal) - totalPrin;
 
-                      final rate =
-                          totalPrin > 0 ? (profit / totalPrin) * 100 : 0.0;
-                      return FlSpot(mIdx.toDouble(), rate);
-                    }).toList();
+                              final rate =
+                                  totalPrin > 0
+                                      ? (profit / totalPrin) * 100
+                                      : 0.0;
+                              return FlSpot(mIdx.toDouble(), rate);
+                            }).toList();
 
-                    return LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      color: chartColors[idx % chartColors.length],
-                      barWidth: 3,
-                      dotData: const FlDotData(show: true),
-                      belowBarData: BarAreaData(show: false),
-                    );
-                  }).toList(),
+                        return LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color: chartColors[idx % chartColors.length],
+                          barWidth: 3,
+                          dotData: const FlDotData(show: true),
+                          belowBarData: BarAreaData(show: false),
+                        );
+                      }).toList(),
                 ),
               ),
             ),

@@ -74,7 +74,6 @@ class StockPortionSection extends ConsumerWidget {
     final overallTotalBalance = (calcTotalStock + calcTotalCash).roundToDouble();
 
     return Card(
-      elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -103,7 +102,6 @@ class StockPortionSection extends ConsumerWidget {
                     ? accountNameMap[matchedAcc.accountNameId]
                     : null;
 
-            final institution = matchedAcc?.financialInstitution ?? "기타";
             final accountName = matchedAccountName?.accountName ?? accId;
             final logoUrl = matchedAcc?.logoUrl;
 
@@ -128,8 +126,8 @@ class StockPortionSection extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(4),
                             child: Image.network(
                               logoUrl,
-                              width: 18,
-                              height: 18,
+                              width: 25,
+                              height: 25,
                               fit: BoxFit.cover,
                               errorBuilder:
                                   (_, __, ___) => const Icon(
@@ -148,7 +146,7 @@ class StockPortionSection extends ConsumerWidget {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            '[$institution] $accountName',
+                            accountName,
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,

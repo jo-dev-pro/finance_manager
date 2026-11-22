@@ -262,7 +262,6 @@ Widget _buildSectionCard({
   required Widget child,
 }) {
   return Card(
-    elevation: 1,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     child: Padding(
       padding: const EdgeInsets.all(16.0),

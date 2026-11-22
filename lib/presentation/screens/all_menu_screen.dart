@@ -171,10 +171,8 @@ class _MenuSectionCard extends StatelessWidget {
           ),
         ),
         Card(
-          elevation: 1,
-          margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             children: [

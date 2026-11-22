@@ -71,12 +71,12 @@ class BuildDashboardData extends StatelessWidget {
           const SectionTitle('자산별 현황'),
 
           GridView.count(
-            crossAxisCount: context.isMobile ? 2 : 3,
+            crossAxisCount: context.isMobile ? 1 : 3,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 4,
             crossAxisSpacing: 8,
-            childAspectRatio: context.isMobile ? 1.6 : 2.5,
+            childAspectRatio: 3.0,
             children: [
               AssetGridCard(
                 icon: Icons.account_balance,
@@ -136,7 +136,6 @@ class BuildDashboardData extends StatelessWidget {
 
     if (total <= 0) {
       return Card(
-        elevation: 1,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: const Padding(
           padding: EdgeInsets.all(24.0),
@@ -150,7 +149,6 @@ class BuildDashboardData extends StatelessWidget {
     final double pensionRatio = (pension / total) * 100;
 
     return Card(
-      elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),

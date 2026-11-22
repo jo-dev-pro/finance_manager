@@ -60,7 +60,7 @@ class BuildBankData extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: context.isMobile ? 1 : 2,
+                crossAxisCount: context.isMobile ? 1 : 3,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 4,
                 mainAxisExtent: 120,

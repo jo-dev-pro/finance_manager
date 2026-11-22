@@ -216,7 +216,8 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                 final accName = nameObj?.accountName ?? '계좌';
                 return MonthAccountSelectorItem(
                   value: accId,
-                  label: '${account.financialInstitution}$accName',
+                  label: accName,
+                  logoUrl: account.logoUrl,
                 );
               }).toList();
 
@@ -245,7 +246,7 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
 
                   MonthlyEvaluationSummaryCard(
-                    title: '연금 월말평가 총 자산',
+                    title: '연금 월말평가',
                     totalBalanceText: grandTotalBalance.round().toWon(),
                     principalText: totalPensionPrincipal.round().toWon(),
                     profitLossRowWidget: Row(
@@ -346,152 +347,110 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                         final double monthlySale = balanceItem.monthlySale;
                         final double totalSale = balanceItem.totalSale;
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            elevation: 1,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    displayName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  displayName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        '[$institution]$accountName',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          '[$institution]$accountName',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      if (balanceItem.purchaseDate != null &&
-                                          balanceItem
-                                              .purchaseDate!
-                                              .isNotEmpty) ...[
-                                        const SizedBox(width: 8),
-                                        Flexible(
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerRight,
-                                            child: Text(
-                                              '매수일: ${balanceItem.purchaseDate}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.indigo.shade600,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              maxLines: 1,
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  const Divider(height: 16),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Flexible(
-                                        child: FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          alignment: Alignment.centerLeft,
-                                          child: JText(
-                                            '평가액: ${balanceItem.balance.toWon()}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
+                                    if (balanceItem.purchaseDate != null &&
+                                        balanceItem
+                                            .purchaseDate!
+                                            .isNotEmpty) ...[
                                       const SizedBox(width: 8),
                                       Flexible(
                                         child: FittedBox(
                                           fit: BoxFit.scaleDown,
                                           alignment: Alignment.centerRight,
-                                          child: JText(
-                                            '원금: ${balanceItem.principal.toWon()}',
+                                          child: Text(
+                                            '매수일: ${balanceItem.purchaseDate}',
                                             style: TextStyle(
-                                              fontSize: 13,
-                                              color: Colors.grey.shade700,
+                                              fontSize: 12,
+                                              color: Colors.indigo.shade600,
+                                              fontWeight: FontWeight.bold,
                                             ),
+                                            maxLines: 1,
+                                            softWrap: false,
                                           ),
                                         ),
                                       ),
                                     ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade50,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: Colors.grey.shade200,
+                                  ],
+                                ),
+                                const Divider(height: 16),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: JText(
+                                          '평가액: ${balanceItem.balance.toWon()}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Flexible(
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: JText(
-                                              '당월 매도: ${monthlySale.toWon()}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.teal.shade700,
-                                              ),
-                                            ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerRight,
+                                        child: JText(
+                                          '원금: ${balanceItem.principal.toWon()}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey.shade700,
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
-                                        Flexible(
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerRight,
-                                            child: JText(
-                                              '누적 매도: ${totalSale.toWon()}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.teal.shade900,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.grey.shade200,
                                     ),
                                   ),
-                                  const Divider(
-                                    height: 16,
-                                    color: Colors.black12,
-                                  ),
-                                  Row(
+                                  child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
@@ -499,32 +458,12 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                                         child: FittedBox(
                                           fit: BoxFit.scaleDown,
                                           alignment: Alignment.centerLeft,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                '수익률: ',
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  color: Colors.grey.shade700,
-                                                ),
-                                              ),
-                                              returnRate.toSignedPercentText(
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                withParentheses: false,
-                                              ),
-                                              const SizedBox(width: 6),
-                                              JText(
-                                                '(연환산: ${balanceItem.annualizedReturnRate.toSignedPercent()})',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey.shade600,
-                                                ),
-                                              ),
-                                            ],
+                                          child: JText(
+                                            '당월 매도: ${monthlySale.toWon()}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.teal.shade700,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -533,32 +472,90 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                                         child: FittedBox(
                                           fit: BoxFit.scaleDown,
                                           alignment: Alignment.centerRight,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                '전월 대비: ',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey.shade600,
-                                                ),
-                                              ),
-                                              diffFromLastMonth
-                                                  .toSignedPriceText(
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                            ],
+                                          child: JText(
+                                            '누적 매도: ${totalSale.toWon()}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.teal.shade900,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const Divider(
+                                  height: 16,
+                                  color: Colors.black12,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              '수익률: ',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey.shade700,
+                                              ),
+                                            ),
+                                            returnRate.toSignedPercentText(
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              withParentheses: false,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            JText(
+                                              '(연환산: ${balanceItem.annualizedReturnRate.toSignedPercent()})',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerRight,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              '전월 대비: ',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                            diffFromLastMonth
+                                                .toSignedPriceText(
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight:
+                                                        FontWeight.bold,
+                                                  ),
+                                                ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         );

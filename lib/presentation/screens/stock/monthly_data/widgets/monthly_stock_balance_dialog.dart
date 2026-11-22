@@ -422,11 +422,10 @@ class _MonthlyStockBalanceDialogState
                       Card(
                         color: Colors.indigo.shade50,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: BorderSide(color: Colors.indigo.shade200),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(12.0),
+                          padding: const EdgeInsets.all(16.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -739,9 +738,8 @@ class _MonthlyStockBalanceDialogState
                                   final calcBalance = qty * price;
 
                                   return Card(
-                                    elevation: 1.0,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(12),
                                       side: BorderSide(
                                         color: Colors.grey.shade300,
                                       ),

@@ -30,10 +30,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -62,7 +59,6 @@ class DefaultFirebaseOptions {
     projectId: 'finance-manager-ca7d8',
     storageBucket: 'finance-manager-ca7d8.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBqFdyCzaHygNs2dqzVm9dSDoR-akcztJk',
     appId: '1:393969183829:ios:6ba3cc9190adbc6438f8dc',
@@ -70,5 +66,14 @@ class DefaultFirebaseOptions {
     projectId: 'finance-manager-ca7d8',
     storageBucket: 'finance-manager-ca7d8.firebasestorage.app',
     iosBundleId: 'com.example.financeManager',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyAVL0WF78U3FaQO1LCrij8NsQhMVRpga_k',
+    appId: '1:393969183829:web:dfdf9f4ecfff6dae38f8dc',
+    messagingSenderId: '393969183829',
+    projectId: 'finance-manager-ca7d8',
+    authDomain: 'finance-manager-ca7d8.firebaseapp.com',
+    storageBucket: 'finance-manager-ca7d8.firebasestorage.app',
   );
 }

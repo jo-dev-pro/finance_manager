@@ -105,7 +105,8 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                 final accName = nameObj?.accountName ?? '계좌';
                 return MonthAccountSelectorItem(
                   value: accId,
-                  label: '${acc.financialInstitution}$accName',
+                  label: accName,
+                  logoUrl: acc.logoUrl,
                 );
               }).toList();
 

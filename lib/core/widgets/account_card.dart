@@ -47,49 +47,56 @@ class AccountCard extends StatelessWidget {
             children: [
               // 1. 헤더 (로고, 기관명, 계좌명, 잔액)
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (logoUrl != null && logoUrl!.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.network(
-                        logoUrl!,
-                        width: 22,
-                        height: 22,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (_, __, ___) => const Icon(
-                              Icons.account_balance,
-                              size: 20,
-                              color: Colors.grey,
-                            ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (logoUrl != null && logoUrl!.isNotEmpty)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.network(
+                            logoUrl!,
+                            width: 25,
+                            height: 25,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (_, __, ___) => const Icon(
+                                  Icons.account_balance,
+                                  size: 20,
+                                  color: Colors.grey,
+                                ),
+                          ),
+                        )
+                      else
+                        const Icon(
+                          Icons.account_balance,
+                          size: 20,
+                          color: Colors.indigo,
+                        ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: JText(
+                          accountName,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: true,
+                        ),
                       ),
-                    )
-                  else
-                    const Icon(
-                      Icons.account_balance,
-                      size: 20,
-                      color: Colors.indigo,
-                    ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: JText(
-                      accountName,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                      maxLines: 1,
-                      overflow: true,
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Flexible(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerRight,
                       child: JText(
                         totalBalance.toWon(),
+                        maxLines: 1,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

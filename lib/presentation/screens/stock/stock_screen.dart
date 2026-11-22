@@ -175,7 +175,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                               final rate =
                                   accountExchangeRateMap[ab.accountId] ?? 1.0;
                               totalCashBalance += ab.cashBalance * rate;
-                              accountPrincipalSum += ab.principal * rate;
+                              accountPrincipalSum += ab.principal;
                               totalAccountWithdrawalSum +=
                                   ab.totalWithdrawal * rate;
                             }
@@ -286,7 +286,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                       '누적 배당: ${totalPayoutSum.round().toWon()}',
                                       style: const TextStyle(
                                         color: Colors.white70,
-                                        fontSize: 13,
+                                        fontSize: 12,
                                       ),
                                     ),
                                   if (totalAccountWithdrawalSum > 0)
@@ -294,7 +294,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                       '누적 인출: ${totalAccountWithdrawalSum.round().toWon()}',
                                       style: const TextStyle(
                                         color: Colors.white70,
-                                        fontSize: 13,
+                                        fontSize: 12,
                                       ),
                                     ),
                                 ],

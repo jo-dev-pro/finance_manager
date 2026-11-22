@@ -208,7 +208,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       totalProfitOrLoss.toSignedPriceText(
-                                        // isDarkCard: true 는 인디고 바탕위에 다크모드로 하면 색깔이 밝아짐
                                         isDarkCard: true,
                                         style: const TextStyle(
                                           fontSize: 15,

@@ -7,10 +7,7 @@ class EvaluationMetric {
   final String label;
   final String value;
 
-  const EvaluationMetric({
-    required this.label,
-    required this.value,
-  });
+  const EvaluationMetric({required this.label, required this.value});
 }
 
 class MonthlyEvaluationSummaryCard extends StatelessWidget {
@@ -39,7 +36,7 @@ class MonthlyEvaluationSummaryCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.indigo.shade600,
         borderRadius: BorderRadius.circular(16),
@@ -48,26 +45,62 @@ class MonthlyEvaluationSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                title,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              if (badgeText != null && badgeText!.isNotEmpty)
-                JText(
-                  badgeText!,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: isMobile ? 13 : 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
                 ),
+              ),
+
+              // 환율
+              if (badgeText != null) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    badgeText!,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 6),
-          JText(
-            totalBalanceText,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
+          // 총 자산 금액 (별도 줄)
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              totalBalanceText,
+              maxLines: 1,
+              softWrap: false,
+              style: TextStyle(
+                fontSize: isMobile ? 24 : 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -79,29 +112,40 @@ class MonthlyEvaluationSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: _MetricColumn(
-                  label: '총 투자 원금',
-                  value: principalText,
-                  isMobile: isMobile,
-                ),
+              Text(
+                '총 투자 원금',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text(
-                    '평가 손익 (수익률)',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                  const SizedBox(height: 2),
-                  profitLossRowWidget,
-                ],
+              JText(
+                principalText, 
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: true,
               ),
             ],
           ),
+          SizedBox(height: 6),
 
-         if (detailMetrics.isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '평가손익(수익률)',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              profitLossRowWidget,
+            ],
+          ),
+
+          if (detailMetrics.isNotEmpty) ...[
             const SizedBox(height: 14),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -112,7 +156,6 @@ class MonthlyEvaluationSummaryCard extends StatelessWidget {
                     child: _MetricColumn(
                       label: detailMetrics[i].label,
                       value: detailMetrics[i].value,
-                      isMobile: isMobile,
                       crossAxisAlignment:
                           i == 0
                               ? CrossAxisAlignment.start
@@ -127,7 +170,6 @@ class MonthlyEvaluationSummaryCard extends StatelessWidget {
           ],
 
           const SizedBox(height: 16),
-          
           const Divider(color: Colors.white24, height: 1),
           const SizedBox(height: 14),
 
@@ -149,13 +191,11 @@ class MonthlyEvaluationSummaryCard extends StatelessWidget {
 class _MetricColumn extends StatelessWidget {
   final String label;
   final String value;
-  final bool isMobile;
   final CrossAxisAlignment crossAxisAlignment;
 
   const _MetricColumn({
     required this.label,
     required this.value,
-    required this.isMobile,
     this.crossAxisAlignment = CrossAxisAlignment.start,
   });
 

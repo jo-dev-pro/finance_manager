@@ -60,6 +60,7 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
         final nameObj = accountNameMap[acc.accountNameId];
         final accName = nameObj?.accountName ?? '계좌';
         final institution = acc.financialInstitution;
+        final logoUrl = acc?.logoUrl;
 
         final isOverseasAccount = acc.isForeignCurrency;
 
@@ -76,14 +77,11 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
             isOverseasAccount ? totalWith.toUSD() : totalWith.toWon();
 
         return Card(
-          elevation: 1.0,
-          margin: const EdgeInsets.only(bottom: 10),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -93,8 +91,31 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
+                           if (logoUrl != null && logoUrl.isNotEmpty)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.network(
+                              logoUrl,
+                              width: 25,
+                              height: 25,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => const Icon(
+                                    Icons.account_balance,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
+                            ),
+                          )
+                        else
+                          const Icon(
+                            Icons.account_balance,
+                            size: 16,
+                            color: Colors.indigo,
+                          ),
+                          const SizedBox(width: 4), 
                           Text(
-                            '$institution -$accName',
+                            accName,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,

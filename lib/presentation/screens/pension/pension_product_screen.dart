@@ -56,7 +56,6 @@ class PensionProductScreen extends ConsumerWidget {
                               final item = products[index];
 
                               return Card(
-                                elevation: 1,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),

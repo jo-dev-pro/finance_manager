@@ -70,6 +70,9 @@ class InvestmentScreen extends ConsumerWidget {
                             itemBuilder: (context, index) {
                               final item = investments[index];
                               return Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Column(

@@ -473,190 +473,186 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                       String fmtMoney(double val) =>
                           isForeign ? val.toUSD() : val.round().toWon();
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Card(
-                          elevation: 1.5,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        stockCode.isNotEmpty
-                                            ? '$stockName ($stockCode)'
-                                            : stockName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            isCrypto
-                                                ? Colors.orange.shade50
-                                                : Colors.indigo.shade50,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        isCrypto ? '업비트' : '토스증권',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color:
-                                              isCrypto
-                                                  ? Colors.orange.shade800
-                                                  : Colors.indigo.shade700,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '[$institution] $accName',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                const Divider(height: 16),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    JText(
-                                      '실시간 평가액: ${fmtMoney(liveBalance)}',
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      stockCode.isNotEmpty
+                                          ? '$stockName ($stockCode)'
+                                          : stockName,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 13,
+                                        fontSize: 15,
                                       ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    JText(
-                                      '원금: ${fmtMoney(item.principal)}',
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isCrypto
+                                              ? Colors.orange.shade50
+                                              : Colors.indigo.shade50,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      isCrypto ? '업비트' : '토스증권',
                                       style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey.shade700,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            isCrypto
+                                                ? Colors.orange.shade800
+                                                : Colors.indigo.shade700,
                                       ),
                                     ),
-                                  ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '[$institution] $accName',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
                                 ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '현재가: ${fmtMoney(livePrice)}  |  수량: ${item.quantity.toCommaString()}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade700,
-                                      ),
+                              ),
+                              const Divider(height: 16),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  JText(
+                                    '실시간 평가액: ${fmtMoney(liveBalance)}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
                                     ),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          '총 손익: ',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
-                                          ),
+                                  ),
+                                  JText(
+                                    '원금: ${fmtMoney(item.principal)}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '현재가: ${fmtMoney(livePrice)}  |  수량: ${item.quantity.toCommaString()}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '총 손익: ',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
                                         ),
-                                        isForeign
-                                            ? JText(
-                                              '${itemProfit > 0 ? '+' : ''}${itemProfit.toUSD()}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color:
-                                                    itemProfit >= 0
-                                                        ? Colors.red.shade700
-                                                        : Colors.blue.shade700,
-                                              ),
-                                            )
-                                            : itemProfit
-                                                .round()
-                                                .toSignedPriceText(
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
+                                      ),
+                                      isForeign
+                                          ? JText(
+                                            '${itemProfit > 0 ? '+' : ''}${itemProfit.toUSD()}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color:
+                                                  itemProfit >= 0
+                                                      ? Colors.red.shade700
+                                                      : Colors.blue.shade700,
+                                            ),
+                                          )
+                                          : itemProfit
+                                              .round()
+                                              .toSignedPriceText(
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const Divider(
-                                  height: 16,
-                                  color: Colors.black12,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          '수익률: ',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade700,
-                                          ),
+                                              ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const Divider(
+                                height: 16,
+                                color: Colors.black12,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '수익률: ',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
                                         ),
-                                        itemReturnRate.toSignedPercentText(
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                      ),
+                                      itemReturnRate.toSignedPercentText(
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          '전일: ',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
-                                          ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '전일: ',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
                                         ),
-                                        _buildSignedMoney(
-                                          dailyDiff,
-                                          isForeign: isForeign,
+                                      ),
+                                      _buildSignedMoney(
+                                        dailyDiff,
+                                        isForeign: isForeign,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '전월: ',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
                                         ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          '전월: ',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
-                                          ),
-                                        ),
-                                        _buildSignedMoney(
-                                          monthlyDiffItem,
-                                          isForeign: isForeign,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                      ),
+                                      _buildSignedMoney(
+                                        monthlyDiffItem,
+                                        isForeign: isForeign,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       );

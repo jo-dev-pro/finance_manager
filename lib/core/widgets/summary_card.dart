@@ -1,4 +1,3 @@
-import 'package:finance_manager/core/utils/responsive_extension.dart';
 import 'package:flutter/material.dart';
 
 import 'jtext.dart';
@@ -28,7 +27,7 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.indigo.shade600,
         borderRadius: BorderRadius.circular(16),
@@ -82,7 +81,7 @@ class SummaryCard extends StatelessWidget {
                   ),
                 ],
                 if (principalText != null && profitLossWidget != null)
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
 
                 if (profitLossWidget != null) ...[
                   Row(
@@ -92,7 +91,7 @@ class SummaryCard extends StatelessWidget {
                         '평가손익(수익률)',
                         style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
 
                       Flexible(
                         child: FittedBox(
@@ -105,8 +104,8 @@ class SummaryCard extends StatelessWidget {
                   ),
 
                   if (subInfoWidgets != null && subInfoWidgets!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Wrap(spacing: 12, runSpacing: 6, children: subInfoWidgets!),
+                    const SizedBox(height: 6),
+                    Wrap(spacing: 12, runSpacing: 8, children: subInfoWidgets!),
                   ],
                 ],
               ],

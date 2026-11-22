@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class MonthAccountSelectorItem {
   final String? value;
   final String label;
+  final String? logoUrl;
   final bool isBold;
 
   const MonthAccountSelectorItem({
     required this.value,
     required this.label,
+    this.logoUrl,
     this.isBold = false,
   });
 }
@@ -33,6 +35,78 @@ class MonthAccountSelectorHeader extends StatelessWidget {
     this.allAccountsLabel = '전체 계좌',
   });
 
+  Widget _buildAccountRow({
+    required BuildContext context,
+    required String label,
+    String? logoUrl,
+    bool isBold = false,
+    bool isAllAccounts = false,
+  }) {
+    final hasLogo = logoUrl != null && logoUrl.isNotEmpty;
+
+    return Row(
+      children: [
+        if (hasLogo)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.network(
+              logoUrl,
+              width: 22,
+              height: 22,
+              fit: BoxFit.cover,
+              errorBuilder:
+                  (_, __, ___) => const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: Icon(
+                      Icons.account_balance,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
+                  ),
+            ),
+          )
+        else if (isAllAccounts)
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Icon(
+              Icons.account_balance_wallet,
+              size: 15,
+              color: Theme.of(context).primaryColor,
+            ),
+          )
+        else
+          const SizedBox(
+            width: 22,
+            height: 22,
+            child: Icon(
+              Icons.account_balance,
+              size: 18,
+              color: Colors.grey,
+            ),
+          ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            ),
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final safeMonthValue =
@@ -48,7 +122,8 @@ class MonthAccountSelectorHeader extends StatelessWidget {
         Expanded(
           flex: 2,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade400),
               borderRadius: BorderRadius.circular(8),
@@ -65,6 +140,9 @@ class MonthAccountSelectorHeader extends StatelessWidget {
                             value: ym,
                             child: Text(
                               ym,
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
@@ -84,7 +162,8 @@ class MonthAccountSelectorHeader extends StatelessWidget {
         Expanded(
           flex: 3,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade400),
               borderRadius: BorderRadius.circular(8),
@@ -94,30 +173,30 @@ class MonthAccountSelectorHeader extends StatelessWidget {
               child: DropdownButton<String?>(
                 value: safeAccountValue,
                 isExpanded: true,
-                hint: Text(allAccountsLabel),
+                hint: _buildAccountRow(
+                  context: context,
+                  label: allAccountsLabel,
+                  isBold: true,
+                  isAllAccounts: true,
+                ),
                 items: [
                   DropdownMenuItem<String?>(
                     value: null,
-                    child: Text(
-                      allAccountsLabel,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+                    child: _buildAccountRow(
+                      context: context,
+                      label: allAccountsLabel,
+                      isBold: true,
+                      isAllAccounts: true,
                     ),
                   ),
                   ...accountItems.map(
                     (item) => DropdownMenuItem<String?>(
                       value: item.value,
-                      child: Text(
-                        item.label,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight:
-                              item.isBold ? FontWeight.bold : FontWeight.normal,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      child: _buildAccountRow(
+                        context: context,
+                        label: item.label,
+                        logoUrl: item.logoUrl,
+                        isBold: item.isBold,
                       ),
                     ),
                   ),
