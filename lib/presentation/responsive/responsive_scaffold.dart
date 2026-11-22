@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 💡 안드로이드 실기기 앱 종료를 위한 시스템 네비게이터
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/utils/responsive_extension.dart'; // 💡 위에서 만든 확장 함수 임포트
+import '../../core/providers/onpop_invoked_provider.dart';
+import '../../core/utils/responsive_extension.dart';
 
 class ResponsiveScaffold extends ConsumerStatefulWidget {
   const ResponsiveScaffold({super.key, required this.navigationShell});
@@ -15,18 +15,13 @@ class ResponsiveScaffold extends ConsumerStatefulWidget {
 }
 
 class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
-  DateTime? _lastPressedAt; // 💡 마지막으로 뒤로가기 누른 시간 체크용 변수
-
   void _onDestinationSelected(int index) {
-    if (widget.navigationShell.currentIndex == index) {
-      widget.navigationShell.goBranch(index, initialLocation: true);
-    } else {
-      widget.navigationShell.goBranch(index, initialLocation: true);
-    }
+    widget.navigationShell.goBranch(index, initialLocation: true);
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(jOnPopInvokedProvider);
     final indicatorBgColor = context.primaryColor.withValues(alpha: 0.2);
 
     final destinations = const [
@@ -158,32 +153,20 @@ class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
       );
     }
 
-    // 💡 PopScope를 통해 모바일 물리 뒤로가기 버튼 인터셉트 및 2초 내 2회 터치 시 종료 구현
     return PopScope(
-      canPop: false, // 기본 시스템 뒤로가기 동작 원천 차단
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
 
-        final now = DateTime.now();
-        const duration = Duration(seconds: 2);
-
-        // 첫 번째 누르거나 2초가 지난 경우
-        if (_lastPressedAt == null ||
-            now.difference(_lastPressedAt!) > duration) {
-          _lastPressedAt = now;
-
-          ScaffoldMessenger.of(context).removeCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("'뒤로' 버튼을 한 번 더 누르면 앱이 종료됩니다."),
-              duration: Duration(seconds: 2),
-            ),
-          );
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          router.pop(result);
           return;
         }
 
-        // 2초 내에 두 번 누른 경우 실제 모바일 앱 종료
-        await SystemNavigator.pop();
+        await ref
+            .read(jOnPopInvokedProvider.notifier)
+            .handlePopInvoked(context);
       },
       child: scaffoldContent,
     );

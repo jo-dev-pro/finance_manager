@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -9,14 +11,13 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/jtext.dart';
 import '../../../../core/widgets/main_appbar.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
+import '../../../../core/widgets/monthly_return_rate_chart_dialog.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
 import '../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 import '../../../../providers/stock/stock_item_provider.dart';
-
-enum AssetFilterType { all, stock, crypto }
 
 class RealtimeStockScreen extends ConsumerStatefulWidget {
   const RealtimeStockScreen({super.key});
@@ -27,12 +28,22 @@ class RealtimeStockScreen extends ConsumerStatefulWidget {
 }
 
 class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
-  AssetFilterType _filterType = AssetFilterType.all;
+  String? _selectedAccountId;
   bool _isLoadingQuotes = false;
   DateTime? _lastUpdatedAt;
+  DateTime? _exchangeRateDate;
 
   Map<String, RealtimeQuote> _quoteMap = {};
   double _realtimeExchangeRate = 1380.0;
+
+  String _getPreviousYearMonth(DateTime referenceDate) {
+    final prevMonthDate = DateTime(
+      referenceDate.year,
+      referenceDate.month - 1,
+      1,
+    );
+    return DateFormat('yyyy-MM').format(prevMonthDate);
+  }
 
   @override
   void initState() {
@@ -93,22 +104,21 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
       fetchedQuotes.addAll(tossResult);
 
       final fetchedRate = await rateFuture;
+      final now = DateTime.now();
 
       if (mounted) {
         setState(() {
           _quoteMap = fetchedQuotes;
           if (fetchedRate != null && fetchedRate > 0) {
             _realtimeExchangeRate = fetchedRate;
+            _exchangeRateDate = now;
           }
-          _lastUpdatedAt = DateTime.now();
+          _lastUpdatedAt = now;
         });
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.showError(
-          context, 
-          '실시간 시세 조회 중 오류가 발생했습니다: $e',
-        );
+        AppSnackBar.showError(context, '실시간 시세 조회 중 오류가 발생했습니다: $e');
       }
     } finally {
       if (mounted) {
@@ -117,6 +127,159 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
     }
   }
 
+  Widget _buildAccountLogo({required String? logoUrl, double size = 18}) {
+    if (logoUrl != null && logoUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: Image.network(
+          logoUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder:
+              (_, __, ___) => Container(
+                width: size,
+                height: size,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.indigo.shade50,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet,
+                  size: size - 4,
+                  color: Colors.indigo.shade700,
+                ),
+              ),
+        ),
+      );
+    }
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade50,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(
+        Icons.account_balance_wallet,
+        size: size - 4,
+        color: Colors.indigo.shade700,
+      ),
+    );
+  }
+
+  Widget _buildAccountLogoAndName({
+    required String? logoUrl,
+    required String accountName,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildAccountLogo(logoUrl: logoUrl, size: 18),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            accountName,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDbPriceFallbackBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.amber.shade300),
+      ),
+      child: Text(
+        'DB 단가 적용 중',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: Colors.amber.shade900,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStockAccountDropdown({
+    required String? currentValue,
+    required List<dynamic> stockAccounts,
+    required Map<String?, dynamic> accountNameMap,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String?>(
+          value: currentValue,
+          isExpanded: true,
+          icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade700),
+          onChanged: onChanged,
+          items: [
+            DropdownMenuItem<String?>(
+              value: null,
+              child: Row(
+                children: [
+                  _buildAccountLogo(logoUrl: null, size: 22),
+                  const SizedBox(width: 10),
+                  const Text(
+                    '전체 계좌',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            ...stockAccounts.map((acc) {
+              final accId = acc.id as String?;
+              final accName =
+                  accountNameMap[acc.accountNameId]?.accountName ?? '계좌';
+              return DropdownMenuItem<String?>(
+                value: accId,
+                child: Row(
+                  children: [
+                    _buildAccountLogo(
+                      logoUrl: acc.logoUrl as String?,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        accName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
@@ -128,10 +291,29 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
     final accountNameMap = {for (var an in accountNames) an.id: an};
     final stockItemMap = {for (var s in stockItems) s.id!: s};
 
+    final stockAccounts =
+        accounts
+            .where((a) => a.accountType.trim() == '증권' && a.status == '활동')
+            .toList();
+
+    final isValidAccountId =
+        _selectedAccountId == null ||
+        stockAccounts.any((acc) => acc.id == _selectedAccountId);
+    final currentAccountValue = isValidAccountId ? _selectedAccountId : null;
+
+    final selectedAcc =
+        currentAccountValue != null ? accountMap[currentAccountValue] : null;
+    final isSingleOverseasAccount = selectedAcc?.isForeignCurrency ?? false;
+
+    final formattedRate = _realtimeExchangeRate.toExchangeRateString();
+    final quoteDate = _lastUpdatedAt ?? DateTime.now();
+    final rateBaseDateStr = (_exchangeRateDate ?? quoteDate).toYmdDot();
+    final prevMonthEndStr = _getPreviousYearMonth(quoteDate);
+
     return Scaffold(
-       appBar: MainAppBar(
+      appBar: MainAppBar(
         titleText: '실시간 자산 평가',
-         actions: [
+        actions: [
           if (_lastUpdatedAt != null)
             Center(
               child: Padding(
@@ -156,7 +338,6 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
           ),
         ],
       ),
-    
       body: availableMonthsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('데이터 로드 실패: $err')),
@@ -175,29 +356,64 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                   .value ??
               [];
 
+          final prevMonthBalances =
+              ref
+                  .watch(monthlyStockBalanceNotifierProvider(prevMonthEndStr))
+                  .value ??
+              [];
+          final prevMonthAccountBalances =
+              ref
+                  .watch(
+                    monthlyStockAccountBalanceNotifierProvider(prevMonthEndStr),
+                  )
+                  .value ??
+              [];
+
+          final prevMonthAccountBalanceMap = {
+            for (var ab in prevMonthAccountBalances) ab.accountId: ab,
+          };
+
           final filteredItems =
               baseBalances.where((b) {
                 if (b.quantity <= 0) return false;
-                final code =
-                    stockItemMap[b.stockItemId]?.stockCode.trim() ?? '';
-                final isCrypto =
-                    code.startsWith('KRW-') || code.startsWith('USDT-');
-
-                if (_filterType == AssetFilterType.stock) return !isCrypto;
-                if (_filterType == AssetFilterType.crypto) return isCrypto;
+                if (currentAccountValue != null &&
+                    b.accountId != currentAccountValue) {
+                  return false;
+                }
                 return true;
               }).toList();
+
+          final filteredAccountBalances =
+              currentAccountValue == null
+                  ? baseAccountBalances
+                  : baseAccountBalances
+                      .where((ab) => ab.accountId == currentAccountValue)
+                      .toList();
+
+          final hasAnyLiveQuote = filteredItems.any((item) {
+            final code = stockItemMap[item.stockItemId]?.stockCode.trim() ?? '';
+            return code.isNotEmpty && _quoteMap[code] != null;
+          });
 
           double totalRealtimeAsset = 0;
           double totalPrincipal = 0;
           double totalPayoutAndSale = 0;
           double totalDailyDiff = 0;
-          double totalPrevMonthAsset = 0;
+          double totalPrevMonthEndAsset = 0;
+          double rawForeignEval = 0;
 
           for (var item in filteredItems) {
             final acc = accountMap[item.accountId];
             final isForeign = acc?.isForeignCurrency ?? false;
             final rate = isForeign ? _realtimeExchangeRate : 1.0;
+
+            final prevAccBal = prevMonthAccountBalanceMap[item.accountId];
+            final prevRate =
+                isForeign
+                    ? ((prevAccBal != null && prevAccBal.exchangeRate > 0)
+                        ? prevAccBal.exchangeRate
+                        : _realtimeExchangeRate)
+                    : 1.0;
 
             final stock = stockItemMap[item.stockItemId];
             final code = stock?.stockCode.trim() ?? '';
@@ -206,66 +422,83 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
             final livePrice = quote?.currentPrice ?? item.currentPrice;
             final dailyChangePerUnit = quote?.changePrice ?? 0.0;
 
-            final liveEvalKrw = (item.quantity * livePrice) * rate;
-            final prevMonthEvalKrw = item.balance * rate;
+            final prevMonthItem = prevMonthBalances.firstWhereOrNull(
+              (prev) =>
+                  prev.accountId == item.accountId &&
+                  prev.stockItemId == item.stockItemId,
+            );
+            final prevMonthUnitPrice =
+                prevMonthItem?.currentPrice ?? item.currentPrice;
+
+            final liveEval = item.quantity * livePrice;
+            final liveEvalKrw = liveEval * rate;
+            final prevMonthEndEvalKrw =
+                (item.quantity * prevMonthUnitPrice) * prevRate;
             final dailyDiffKrw = (item.quantity * dailyChangePerUnit) * rate;
 
             totalRealtimeAsset += liveEvalKrw;
-            totalPrevMonthAsset += prevMonthEvalKrw;
+            totalPrevMonthEndAsset += prevMonthEndEvalKrw;
             totalDailyDiff += dailyDiffKrw;
             totalPrincipal += item.principal * rate;
             totalPayoutAndSale +=
                 (item.totalPayout + item.totalWithdrawal) * rate;
+
+            if (isSingleOverseasAccount) {
+              rawForeignEval += liveEval;
+            }
           }
 
           double totalCashKrw = 0;
-          if (_filterType == AssetFilterType.all) {
-            for (var ab in baseAccountBalances) {
-              final acc = accountMap[ab.accountId];
-              final isForeign = acc?.isForeignCurrency ?? false;
-              final rate = isForeign ? _realtimeExchangeRate : 1.0;
-              totalCashKrw += ab.cashBalance * rate;
+          double totalPrevMonthEndCashKrw = 0;
+          double rawForeignCash = 0;
+
+          for (var ab in filteredAccountBalances) {
+            final acc = accountMap[ab.accountId];
+            final isForeign = acc?.isForeignCurrency ?? false;
+            final rate = isForeign ? _realtimeExchangeRate : 1.0;
+            totalCashKrw += ab.cashBalance * rate;
+
+            final prevAb = prevMonthAccountBalanceMap[ab.accountId];
+            final prevCash = prevAb?.cashBalance ?? ab.cashBalance;
+            final prevRate =
+                isForeign
+                    ? ((prevAb != null && prevAb.exchangeRate > 0)
+                        ? prevAb.exchangeRate
+                        : _realtimeExchangeRate)
+                    : 1.0;
+            totalPrevMonthEndCashKrw += prevCash * prevRate;
+
+            if (isSingleOverseasAccount) {
+              rawForeignCash += ab.cashBalance;
             }
           }
 
           totalRealtimeAsset += totalCashKrw;
-          totalPrevMonthAsset += totalCashKrw;
+          totalPrevMonthEndAsset += totalPrevMonthEndCashKrw;
+
+          final rawForeignGrandTotal = rawForeignEval + rawForeignCash;
+          final totalAssetDisplayText =
+              isSingleOverseasAccount
+                  ? '${totalRealtimeAsset.round().toWon()} (${rawForeignGrandTotal.toUSD()})'
+                  : totalRealtimeAsset.round().toWon();
 
           final totalProfit =
               (totalRealtimeAsset + totalPayoutAndSale) - totalPrincipal;
           final totalReturnRate =
               totalPrincipal > 0 ? (totalProfit / totalPrincipal) * 100 : 0.0;
-          final monthlyDiff = totalRealtimeAsset - totalPrevMonthAsset;
+          final monthlyDiff = totalRealtimeAsset - totalPrevMonthEndAsset;
 
           return MainConstrainedBox(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SegmentedButton<AssetFilterType>(
-                        segments: const [
-                          ButtonSegment(
-                            value: AssetFilterType.all,
-                            label: Text('전체'),
-                          ),
-                          ButtonSegment(
-                            value: AssetFilterType.stock,
-                            label: Text('주식(토스)'),
-                          ),
-                          ButtonSegment(
-                            value: AssetFilterType.crypto,
-                            label: Text('코인(업비트)'),
-                          ),
-                        ],
-                        selected: {_filterType},
-                        onSelectionChanged: (set) {
-                          setState(() => _filterType = set.first);
-                        },
-                      ),
-                    ],
+                  _buildStockAccountDropdown(
+                    currentValue: currentAccountValue,
+                    stockAccounts: stockAccounts,
+                    accountNameMap: accountNameMap,
+                    onChanged:
+                        (val) => setState(() => _selectedAccountId = val),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -279,7 +512,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                         ),
                       ),
                       Text(
-                        '적용 환율: ${_realtimeExchangeRate.toCommaString()}원/\$',
+                        '환율: ${formattedRate}원(기준일:$rateBaseDateStr)',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -288,6 +521,25 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                       ),
                     ],
                   ),
+                  if (!hasAnyLiveQuote && filteredItems.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _buildDbPriceFallbackBadge(),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '실시간 시세를 불러오지 못해 DB 단가로 계산 중입니다.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.amber.shade900,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 12),
 
                   // 상단 실시간 요약 카드
@@ -307,7 +559,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                         ),
                         const SizedBox(height: 4),
                         JText(
-                          totalRealtimeAsset.round().toWon(),
+                          totalAssetDisplayText,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 26,
@@ -400,7 +652,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                             Row(
                               children: [
                                 Text(
-                                  '전월($baseMonth) 대비: ',
+                                  '전월($prevMonthEndStr) 대비: ',
                                   style: const TextStyle(
                                     color: Colors.white70,
                                     fontSize: 13,
@@ -427,237 +679,315 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      final acc = accountMap[item.accountId];
-                      final institution =
-                          acc?.financialInstitution ?? '기타 금융기관';
-                      final accName =
-                          acc != null
-                              ? (accountNameMap[acc.accountNameId]
-                                      ?.accountName ??
-                                  '계좌')
-                              : '계좌';
-                      final isForeign = acc?.isForeignCurrency ?? false;
-
-                      final stock = stockItemMap[item.stockItemId];
-                      final stockName = stock?.itemName ?? '알 수 없는 종목';
-                      final stockCode = stock?.stockCode.trim() ?? '';
-                      final isCrypto =
-                          stockCode.startsWith('KRW-') ||
-                          stockCode.startsWith('USDT-');
-
-                      final quote = _quoteMap[stockCode];
-                      final livePrice =
-                          quote?.currentPrice ?? item.currentPrice;
-                      final dailyChangeUnit = quote?.changePrice ?? 0.0;
-
-                      final liveBalance = item.quantity * livePrice;
-                      final dailyDiff = item.quantity * dailyChangeUnit;
-                      final monthlyDiffItem = liveBalance - item.balance;
-
-                      final itemProfit =
-                          (liveBalance +
-                              item.totalPayout +
-                              item.totalWithdrawal) -
-                          item.principal;
-                      final itemReturnRate =
-                          item.principal > 0
-                              ? (itemProfit / item.principal) * 100
-                              : 0.0;
-
-                      String fmtMoney(double val) =>
-                          isForeign ? val.toUSD() : val.round().toWon();
-
-                      return Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  if (filteredItems.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text(
+                          '선택한 조건에 해당하는 보유 종목이 없습니다.',
+                          style: TextStyle(color: Colors.grey.shade600),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      stockCode.isNotEmpty
-                                          ? '$stockName ($stockCode)'
-                                          : stockName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          isCrypto
-                                              ? Colors.orange.shade50
-                                              : Colors.indigo.shade50,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      isCrypto ? '업비트' : '토스증권',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color:
-                                            isCrypto
-                                                ? Colors.orange.shade800
-                                                : Colors.indigo.shade700,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '[$institution] $accName',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = filteredItems[index];
+                        final acc = accountMap[item.accountId];
+                        final accountName =
+                            acc != null
+                                ? (accountNameMap[acc.accountNameId]
+                                        ?.accountName ??
+                                    '계좌')
+                                : '계좌';
+                        final isForeign = acc?.isForeignCurrency ?? false;
+
+                        final stock = stockItemMap[item.stockItemId];
+                        final stockName = stock?.itemName ?? '알 수 없는 종목';
+                        final stockCode = stock?.stockCode.trim() ?? '';
+                        final displayName =
+                            stockCode.isNotEmpty
+                                ? '$stockName ($stockCode)'
+                                : stockName;
+
+                        final quote =
+                            stockCode.isNotEmpty ? _quoteMap[stockCode] : null;
+                        final isUsingDbPrice = quote == null;
+
+                        final livePrice =
+                            quote?.currentPrice ?? item.currentPrice;
+                        final dailyChangeUnit = quote?.changePrice ?? 0.0;
+
+                        final prevMonthItem = prevMonthBalances
+                            .firstWhereOrNull(
+                              (prev) =>
+                                  prev.accountId == item.accountId &&
+                                  prev.stockItemId == item.stockItemId,
+                            );
+                        final prevMonthUnitPrice =
+                            prevMonthItem?.currentPrice ?? item.currentPrice;
+
+                        final liveBalance = item.quantity * livePrice;
+                        final dailyDiff = item.quantity * dailyChangeUnit;
+                        final monthlyDiffItem =
+                            (livePrice - prevMonthUnitPrice) * item.quantity;
+
+                        final itemProfit =
+                            (liveBalance +
+                                item.totalPayout +
+                                item.totalWithdrawal) -
+                            item.principal;
+                        final itemReturnRate =
+                            item.principal > 0
+                                ? (itemProfit / item.principal) * 100
+                                : 0.0;
+
+                        String fmtMoney(double val) =>
+                            isForeign ? val.toUSD() : val.round().toWon();
+
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap:
+                                () => MonthlyReturnRateChartDialog.show(
+                                  context,
+                                  titleText: '$displayName 수익률 (%)',
+                                  accountName: accountName,
+                                  logoUrl: acc?.logoUrl,
+                                  emptyMessage: '표시할 수익률 데이터가 없습니다.',
+                                  rateCalculator: (dialogRef, ym) {
+                                    final monthsList =
+                                        dialogRef
+                                            .watch(availableYearMonthsProvider)
+                                            .value ??
+                                        [];
+                                    final latestYm =
+                                        monthsList.isNotEmpty
+                                            ? monthsList.reversed.toList().last
+                                            : null;
+                                    final liveQuote =
+                                        stockCode.isNotEmpty
+                                            ? _quoteMap[stockCode]
+                                            : null;
+
+                                    final monthItems =
+                                        dialogRef
+                                            .watch(
+                                              monthlyStockBalanceNotifierProvider(
+                                                ym,
+                                              ),
+                                            )
+                                            .value ??
+                                        [];
+                                    final matchedItems = monthItems.where(
+                                      (b) =>
+                                          b.accountId == item.accountId &&
+                                          b.stockItemId == item.stockItemId,
+                                    );
+                                    final totalPrin = matchedItems.fold<double>(
+                                      0.0,
+                                      (sum, b) => sum + b.principal,
+                                    );
+                                    if (totalPrin <= 0) return 0.0;
+
+                                    final totalPayout = matchedItems
+                                        .fold<double>(
+                                          0.0,
+                                          (sum, b) => sum + b.totalPayout,
+                                        );
+                                    final totalWithdrawal = matchedItems
+                                        .fold<double>(
+                                          0.0,
+                                          (sum, b) => sum + b.totalWithdrawal,
+                                        );
+
+                                    final evalBal =
+                                        (ym == latestYm && liveQuote != null)
+                                            ? matchedItems.fold<double>(
+                                                  0.0,
+                                                  (sum, b) => sum + b.quantity,
+                                                ) *
+                                                liveQuote.currentPrice
+                                            : matchedItems.fold<double>(
+                                              0.0,
+                                              (sum, b) => sum + b.balance,
+                                            );
+
+                                    final profit =
+                                        (evalBal +
+                                            totalPayout +
+                                            totalWithdrawal) -
+                                        totalPrin;
+                                    return (profit / totalPrin) * 100;
+                                  },
                                 ),
-                              ),
-                              const Divider(height: 16),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  JText(
-                                    '실시간 평가액: ${fmtMoney(liveBalance)}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  JText(
-                                    '원금: ${fmtMoney(item.principal)}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '현재가: ${fmtMoney(livePrice)}  |  수량: ${item.quantity.toCommaString()}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
                                   Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        '총 손익: ',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
+                                      Expanded(
+                                        child: Text(
+                                          displayName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      isForeign
-                                          ? JText(
-                                            '${itemProfit > 0 ? '+' : ''}${itemProfit.toUSD()}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color:
-                                                  itemProfit >= 0
-                                                      ? Colors.red.shade700
-                                                      : Colors.blue.shade700,
-                                            ),
-                                          )
-                                          : itemProfit
-                                              .round()
-                                              .toSignedPriceText(
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
+                                      if (isUsingDbPrice) ...[
+                                        const SizedBox(width: 8),
+                                        _buildDbPriceFallbackBadge(),
+                                      ],
                                     ],
                                   ),
-                                ],
-                              ),
-                              const Divider(
-                                height: 16,
-                                color: Colors.black12,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
+                                  const SizedBox(height: 6),
+                                  _buildAccountLogoAndName(
+                                    logoUrl: acc?.logoUrl,
+                                    accountName: accountName,
+                                  ),
+                                  const Divider(height: 16),
                                   Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      JText(
+                                        '실시간 평가액: ${fmtMoney(liveBalance)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      JText(
+                                        '원금: ${fmtMoney(item.principal)}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        '수익률: ',
+                                        '현재가: ${fmtMoney(livePrice)}  |  수량: ${item.quantity.toCommaString()}',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey.shade700,
                                         ),
                                       ),
-                                      itemReturnRate.toSignedPercentText(
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '총 손익: ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                          isForeign
+                                              ? JText(
+                                                '${itemProfit > 0 ? '+' : ''}${itemProfit.toUSD()}',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color:
+                                                      itemProfit >= 0
+                                                          ? Colors.red.shade700
+                                                          : Colors
+                                                              .blue
+                                                              .shade700,
+                                                ),
+                                              )
+                                              : itemProfit
+                                                  .round()
+                                                  .toSignedPriceText(
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                        ],
                                       ),
                                     ],
                                   ),
+                                  const Divider(
+                                    height: 16,
+                                    color: Colors.black12,
+                                  ),
                                   Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        '전일: ',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '수익률: ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade700,
+                                            ),
+                                          ),
+                                          itemReturnRate.toSignedPercentText(
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      _buildSignedMoney(
-                                        dailyDiff,
-                                        isForeign: isForeign,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '전월: ',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      _buildSignedMoney(
-                                        monthlyDiffItem,
-                                        isForeign: isForeign,
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '전일: ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                          _buildSignedMoney(
+                                            dailyDiff,
+                                            isForeign: isForeign,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '전월: ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                          _buildSignedMoney(
+                                            monthlyDiffItem,
+                                            isForeign: isForeign,
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),

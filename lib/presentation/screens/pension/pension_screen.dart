@@ -184,7 +184,7 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                             final lastTotalBalance =
                                 lastProductSum + lastCashSum;
 
-                            return GestureDetector(
+                            return InkWell(
                               onTap: () {
                                 ref
                                     .read(

@@ -284,7 +284,7 @@ class _PensionHoldingProductDialogState
 
                   // 💡 3. "현금성자산"이 아닐 때만 최초 매수일 입력 필드 노출
                   if (!isCash) ...[
-                    GestureDetector(
+                    InkWell(
                       onTap: _pickDate,
                       child: AbsorbPointer(
                         child: TextFormField(

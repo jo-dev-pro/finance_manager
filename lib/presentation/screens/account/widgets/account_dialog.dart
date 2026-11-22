@@ -183,7 +183,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
 
               // 로고 선택
               Center(
-                child: GestureDetector(
+                child: InkWell(
                   onTap: _pickImage,
                   child: CircleAvatar(
                     radius: 36,

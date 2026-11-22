@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +11,7 @@ import '../../../../core/widgets/main_appbar.dart';
 import '../../../../core/widgets/main_constrainedbox.dart';
 import '../../../../core/widgets/month_account_selector_header.dart';
 import '../../../../core/widgets/monthly_evaluation_summary_card.dart';
+import '../../../../core/widgets/monthly_return_rate_chart_dialog.dart';
 import '../../../../core/widgets/section_title.dart';
 import '../../../../providers/account/account_name_provider.dart';
 import '../../../../providers/account/account_provider.dart';
@@ -48,6 +50,52 @@ class _MonthlyStockSummaryScreenState
     } catch (_) {
       return currentYearMonth;
     }
+  }
+
+  Widget _buildAccountLogoAndName({
+    required String? logoUrl,
+    required String accountName,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (logoUrl != null && logoUrl.isNotEmpty)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.network(
+              logoUrl,
+              width: 18,
+              height: 18,
+              fit: BoxFit.cover,
+              errorBuilder:
+                  (_, __, ___) => Icon(
+                    Icons.account_balance,
+                    size: 15,
+                    color: Colors.grey.shade600,
+                  ),
+            ),
+          )
+        else
+          Icon(
+            Icons.account_balance,
+            size: 15,
+            color: Colors.grey.shade600,
+          ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            accountName,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -238,7 +286,7 @@ class _MonthlyStockSummaryScreenState
           for (var ab in filteredAccountBalances) {
             final rate = exchangeRateMap[ab.accountId] ?? 1.0;
             totalCashBalance += ab.cashBalance * rate;
-            totalPrincipal += ab.principal; 
+            totalPrincipal += ab.principal;
             totalCumulativeWithdrawal += ab.totalWithdrawal * rate;
 
             if (isSingleOverseasAccount) {
@@ -381,7 +429,7 @@ class _MonthlyStockSummaryScreenState
                   ),
 
                   const SizedBox(height: 12),
-                  SectionTitle('계좌별 현금 및 자금 요약'),
+                  const SectionTitle('계좌별 현금 및 자금 요약'),
 
                   MonthlyStockAccountSummaryList(
                     stockAccounts: stockAccounts,
@@ -393,7 +441,7 @@ class _MonthlyStockSummaryScreenState
                   ),
 
                   const SizedBox(height: 12),
-                  SectionTitle('보유 종목별 월말 내역'),
+                  const SectionTitle('보유 종목별 월말 내역'),
 
                   if (filteredStockItems.isEmpty)
                     Padding(
@@ -412,8 +460,6 @@ class _MonthlyStockSummaryScreenState
                       itemBuilder: (context, index) {
                         final item = filteredStockItems[index];
                         final matchedAcc = accountMap[item.accountId];
-                        final institution =
-                            matchedAcc?.financialInstitution ?? '기타 금융기관';
                         final nameObj =
                             matchedAcc != null
                                 ? accountNameMap[matchedAcc.accountNameId]
@@ -441,131 +487,170 @@ class _MonthlyStockSummaryScreenState
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  displayName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '[$institution] $accountName',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    JText(
-                                      '${item.quantity.toCommaString()}주 · ${item.currentPrice.toCurrency(isForeign: isForeign)}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Divider(height: 16),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    JText(
-                                      '평가액: ${item.balance.toCurrency(isForeign: isForeign)}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                    JText(
-                                      '원금: ${item.principal.toCurrency(isForeign: isForeign)}',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey.shade700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.grey.shade200,
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap:
+                               () => MonthlyReturnRateChartDialog.show(
+      context,
+      titleText: '$displayName 월별 수익률 (%)',
+      accountName: accountName,
+      logoUrl: matchedAcc?.logoUrl,
+      rateCalculator: (dialogRef, ym) {
+        final monthItems =
+            dialogRef.watch(monthlyStockBalanceNotifierProvider(ym)).value ?? [];
+        final matchedItems = monthItems.where(
+          (prev) =>
+              prev.accountId == item.accountId &&
+              prev.stockItemId == item.stockItemId,
+        );
+        final totalBal = matchedItems.fold<double>(
+          0.0,
+          (sum, prev) => sum + prev.balance,
+        );
+        final totalPayout = matchedItems.fold<double>(
+          0.0,
+          (sum, prev) => sum + prev.totalPayout,
+        );
+        final totalWithdrawal = matchedItems.fold<double>(
+          0.0,
+          (sum, prev) => sum + prev.totalWithdrawal,
+        );
+        final totalPrin = matchedItems.fold<double>(
+          0.0,
+          (sum, prev) => sum + prev.principal,
+        );
+        if (totalPrin <= 0) return 0.0;
+        final profit = (totalBal + totalPayout + totalWithdrawal) - totalPrin;
+        return (profit / totalPrin) * 100;
+      },
+    ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    displayName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
                                     ),
                                   ),
-                                  child: Row(
+                                  const SizedBox(height: 6),
+                                  Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      JText(
-                                        '당월 배당: ${item.monthlyPayout.toCurrency(isForeign: isForeign)}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.teal.shade700,
+                                      Flexible(
+                                        child: _buildAccountLogoAndName(
+                                          logoUrl: matchedAcc?.logoUrl,
+                                          accountName: accountName,
                                         ),
                                       ),
+                                      const SizedBox(width: 8),
                                       JText(
-                                        '누적 배당: ${item.totalPayout.toCurrency(isForeign: isForeign)}',
+                                        '${item.quantity.toCommaString()}주 · ${item.currentPrice.toCurrency(isForeign: isForeign)}',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.teal.shade900,
-                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey.shade700,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                const Divider(height: 16, color: Colors.black12),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    JText(
-                                      '당월 매도: ${item.monthlyWithdrawal.toCurrency(isForeign: isForeign)}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade700,
+                                  const Divider(height: 16),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      JText(
+                                        '평가액: ${item.balance.toCurrency(isForeign: isForeign)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      JText(
+                                        '원금: ${item.principal.toCurrency(isForeign: isForeign)}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade50,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.grey.shade200,
                                       ),
                                     ),
-                                    Row(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          '전월 대비: ',
+                                        JText(
+                                          '당월 배당: ${item.monthlyPayout.toCurrency(isForeign: isForeign)}',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey.shade600,
+                                            color: Colors.teal.shade700,
                                           ),
                                         ),
-                                        diffFromLastMonth
-                                            .toSignedCurrencyText(
-                                              isForeign: isForeign,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
+                                        JText(
+                                          '누적 배당: ${item.totalPayout.toCurrency(isForeign: isForeign)}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.teal.shade900,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                  const Divider(
+                                    height: 16,
+                                    color: Colors.black12,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      JText(
+                                        '당월 매도: ${item.monthlyWithdrawal.toCurrency(isForeign: isForeign)}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '전월 대비: ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                          diffFromLastMonth
+                                              .toSignedCurrencyText(
+                                                isForeign: isForeign,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );

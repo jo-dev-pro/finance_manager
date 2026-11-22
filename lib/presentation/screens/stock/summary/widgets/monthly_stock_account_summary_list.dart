@@ -1,10 +1,16 @@
+import 'package:collection/collection.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/utils/number_formatter.dart';
 import '../../../../../core/widgets/jtext.dart';
+import '../../../../../core/widgets/monthly_return_rate_chart_dialog.dart';
 import '../../../../../models/account/account_name.dart';
 import '../../../../../models/monthly_data/monthly_stock_account_balance.dart';
+import '../../../../../providers/dashboard/dashboard_provider.dart';
+import '../../../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
+import '../../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 
 class MonthlyStockAccountSummaryList extends ConsumerWidget {
   final List<dynamic> stockAccounts;
@@ -28,6 +34,31 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
     required this.targetMonth,
     this.onEditPressed,
   });
+
+  Widget _buildAccountLogo(String? logoUrl, {double size = 18}) {
+    if (logoUrl != null && logoUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: Image.network(
+          logoUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder:
+              (_, __, ___) => Icon(
+                Icons.account_balance,
+                size: size - 2,
+                color: Colors.grey.shade600,
+              ),
+        ),
+      );
+    }
+    return Icon(
+      Icons.account_balance,
+      size: size - 2,
+      color: Colors.grey.shade600,
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,10 +90,9 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
         final accId = acc.id ?? '';
         final nameObj = accountNameMap[acc.accountNameId];
         final accName = nameObj?.accountName ?? '계좌';
-        final institution = acc.financialInstitution;
-        final logoUrl = acc?.logoUrl;
+        final String? logoUrl = acc?.logoUrl as String?;
 
-        final isOverseasAccount = acc.isForeignCurrency;
+        final isOverseasAccount = acc.isForeignCurrency == true;
 
         final accBalanceData = accountBalanceMap[accId];
         final cash = accBalanceData?.cashBalance ?? 0.0;
@@ -80,118 +110,159 @@ class MonthlyStockAccountSummaryList extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                           if (logoUrl != null && logoUrl.isNotEmpty)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: Image.network(
-                              logoUrl,
-                              width: 25,
-                              height: 25,
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, __, ___) => const Icon(
-                                    Icons.account_balance,
-                                    size: 16,
-                                    color: Colors.grey,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap:
+                accId.isEmpty
+                    ? null
+                    : () => MonthlyReturnRateChartDialog.show(
+                      context,
+                      titleText: '$accName 월별 수익률 (%)',
+                      accountName: accName,
+                      logoUrl: logoUrl,
+                      showAccountLogoInTitleRow: true,
+                      rateCalculator: (dialogRef, ym) {
+                        final stockItems =
+                            dialogRef
+                                .watch(monthlyStockBalanceNotifierProvider(ym))
+                                .value ??
+                            [];
+                        final accBalList =
+                            dialogRef
+                                .watch(
+                                  monthlyStockAccountBalanceNotifierProvider(
+                                    ym,
                                   ),
+                                )
+                                .value ??
+                            [];
+                        final accBal = accBalList.firstWhereOrNull(
+                          (ab) => ab.accountId == accId,
+                        );
+                        final rate =
+                            (isOverseasAccount &&
+                                    accBal != null &&
+                                    accBal.exchangeRate > 0)
+                                ? accBal.exchangeRate
+                                : 1.0;
+                        final matchedStockItems = stockItems.where(
+                          (item) => item.accountId == accId,
+                        );
+                        final stockEvalKrw = matchedStockItems.fold<double>(
+                          0.0,
+                          (sum, item) => sum + (item.balance * rate),
+                        );
+                        final payoutKrw = matchedStockItems.fold<double>(
+                          0.0,
+                          (sum, item) => sum + (item.totalPayout * rate),
+                        );
+                        final cashKrw = (accBal?.cashBalance ?? 0.0) * rate;
+                        final withdrawalKrw =
+                            (accBal?.totalWithdrawal ?? 0.0) * rate;
+                        final totalPrin = accBal?.principal ?? 0.0;
+                        if (totalPrin <= 0) return 0.0;
+                        final profit =
+                            (stockEvalKrw +
+                                cashKrw +
+                                payoutKrw +
+                                withdrawalKrw) -
+                            totalPrin;
+                        return (profit / totalPrin) * 100;
+                      },
+                    ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildAccountLogo(logoUrl),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                accName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          )
-                        else
-                          const Icon(
-                            Icons.account_balance,
-                            size: 16,
-                            color: Colors.indigo,
-                          ),
-                          const SizedBox(width: 4), 
-                          Text(
-                            accName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                            if (isOverseasAccount && exchangeRate > 1.0) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                '(환율: ${exchangeRate.toCommaString()})',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.indigo.shade700,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            JText(
+                              '현금: $cashStr',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
                             ),
-                          ),
-                          if (isOverseasAccount && exchangeRate > 1.0) ...[
                             const SizedBox(width: 8),
                             Text(
-                              '(환율: ${exchangeRate.toCommaString()})',
+                              '|',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            JText(
+                              '당월 인출: $monthlyWithStr',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            JText(
+                              '(누적: $totalWithStr)',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.indigo.shade700,
+                                color: Colors.indigo.shade600,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          JText(
-                            '현금: $cashStr',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '|',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          JText(
-                            '당월 인출: $monthlyWithStr',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          JText(
-                            '(누적: $totalWithStr)',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.indigo.shade600,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (onEditPressed != null)
-                  IconButton(
-                    icon: const Icon(
-                      Icons.edit,
-                      size: 18,
-                      color: Colors.indigo,
-                    ),
-                    onPressed:
-                        () => onEditPressed!(
-                          accId,
-                          '$institution$accName',
-                          accBalanceData,
                         ),
+                      ],
+                    ),
                   ),
-              ],
+                  if (onEditPressed != null)
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit,
+                        size: 18,
+                        color: Colors.indigo,
+                      ),
+                      onPressed:
+                          () => onEditPressed!(accId, accName, accBalanceData),
+                    ),
+                ],
+              ),
             ),
           ),
         );

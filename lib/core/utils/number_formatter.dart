@@ -79,6 +79,13 @@ extension NumberFormatter on num {
     return NumberFormat('#,###.##').format(this);
   }
 
+  /// 소수점 자릿수 고정 3자리 콤마 환율 문자열 (예: 1380 -> "1,380.00")
+  String toExchangeRateString({int fractionDigits = 2}) {
+    final pattern =
+        fractionDigits > 0 ? '#,##0.${'0' * fractionDigits}' : '#,##0';
+    return NumberFormat(pattern).format(this);
+  }
+
   /// 뒤에 '원' 부착 (예: 15000 -> "15,000원")
   String toWon() {
     return '${toCommaString()}원';
@@ -144,13 +151,15 @@ extension NumberFormatter on num {
 
   /// [대시보드/은행/연금 공용] 부호(+/-)에 따라 색상이 적용된 금액 Text 위젯 리턴
   Widget toSignedPriceText({
-   TextStyle? style,
+    TextStyle? style,
     bool isDarkCard = false, // 💡 어두운 카드 배경인지 여부 (기본값: false = 하얀 바탕)
     String suffix = '원',
     bool showPlusSign = true,
   }) {
-    final Color positiveColor = isDarkCard ? const Color(0xFFFF8A80) : Colors.red.shade700;
-    final Color negativeColor = isDarkCard ? const Color(0xFF82B1FF) : Colors.blue.shade700;
+    final Color positiveColor =
+        isDarkCard ? const Color(0xFFFF8A80) : Colors.red.shade700;
+    final Color negativeColor =
+        isDarkCard ? const Color(0xFF82B1FF) : Colors.blue.shade700;
     final Color zeroColor = Colors.grey;
 
     Color textColor;
@@ -179,11 +188,12 @@ extension NumberFormatter on num {
     bool showPlusSign = true,
     bool withParentheses = false,
   }) {
-
-    final Color positiveColor = isDarkCard ? const Color(0xFFFF8A80) : Colors.red.shade700;
-    final Color negativeColor = isDarkCard ? const Color(0xFF82B1FF) : Colors.blue.shade700;
+    final Color positiveColor =
+        isDarkCard ? const Color(0xFFFF8A80) : Colors.red.shade700;
+    final Color negativeColor =
+        isDarkCard ? const Color(0xFF82B1FF) : Colors.blue.shade700;
     final Color zeroColor = Colors.grey;
-    
+
     Color textColor;
     if (this > 0) {
       textColor = positiveColor;
@@ -206,7 +216,7 @@ extension NumberFormatter on num {
       style: (style ?? const TextStyle()).copyWith(color: textColor),
     );
   }
-  
+
   /// 외화 여부에 따라 원화(반올림 + 원) 또는 달러($) 문자열 반환
   String toCurrency({required bool isForeign}) {
     return isForeign ? toUSD() : round().toWon();
@@ -248,5 +258,15 @@ extension NumberFormatter on num {
       '\$$formattedNumber',
       style: (style ?? const TextStyle()).copyWith(color: textColor),
     );
+  }
+}
+
+// ==========================================
+// 3. [DateTime Extension] 날짜 포맷팅 헬퍼
+// ==========================================
+extension DateFormatter on DateTime {
+  /// yyyy.MM.dd 형식 날짜 문자열 반환 (예: 2026.11.22)
+  String toYmdDot() {
+    return DateFormat('yyyy.MM.dd').format(this);
   }
 }

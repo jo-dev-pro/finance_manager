@@ -12,14 +12,18 @@ import '../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 class StockAccountGrid extends ConsumerWidget {
   final String currentMonth;
   final String lastMonth;
+  final Set<String> lastAccountIds;
   final Function(String accountId)? onAccountTap;
 
   const StockAccountGrid({
     super.key,
     required this.currentMonth,
     required this.lastMonth,
+    this.lastAccountIds = const {},
     this.onAccountTap,
   });
+
+  static const String _lastAccountName = '지니';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -61,7 +65,28 @@ class StockAccountGrid extends ConsumerWidget {
       return const Center(child: Text('등록된 주식 계좌 데이터가 없습니다.'));
     }
 
-    final accountIds = accountGroups.keys.toList();
+    bool isGenieAccount(String accountId) {
+      if (lastAccountIds.contains(accountId)) return true;
+      final matchedAcc = accountMap[accountId];
+      final name =
+          matchedAcc != null
+              ? accountNameMap[matchedAcc.accountNameId]?.accountName.trim()
+              : null;
+      return name == _lastAccountName;
+    }
+
+    final rawAccountIds = accountGroups.keys.toList();
+    final originalIndexMap = {
+      for (var i = 0; i < rawAccountIds.length; i++) rawAccountIds[i]: i,
+    };
+    final accountIds = [...rawAccountIds]..sort((a, b) {
+      final aIsGenie = isGenieAccount(a);
+      final bIsGenie = isGenieAccount(b);
+      if (aIsGenie == bIsGenie) {
+        return (originalIndexMap[a] ?? 0).compareTo(originalIndexMap[b] ?? 0);
+      }
+      return aIsGenie ? 1 : -1;
+    });
 
     final accountBalanceObjMap = {
       for (var ab in accountBalances) ab.accountId: ab,
@@ -102,8 +127,8 @@ class StockAccountGrid extends ConsumerWidget {
 
         final cashBalance =
             ((accBalObj?.cashBalance ?? 0.0) * exchangeRate).roundToDouble();
-        final accountPrincipal =
-            ((accBalObj?.principal ?? 0.0) * exchangeRate).roundToDouble();
+        // 계좌 원금(principal)은 이미 원화 기준으로 저장되므로 환율을 곱하지 않음
+        final accountPrincipal = (accBalObj?.principal ?? 0.0).roundToDouble();
         final accountWithdrawal =
             ((accBalObj?.totalWithdrawal ?? 0.0) * exchangeRate)
                 .roundToDouble();
@@ -150,7 +175,7 @@ class StockAccountGrid extends ConsumerWidget {
 
         final institution = matchedAcc?.financialInstitution ?? '기타';
         final accountName = matchedAccountName?.accountName ?? accountId;
- 
+
         return AccountCard(
           logoUrl: matchedAcc?.logoUrl,
           institution: institution,

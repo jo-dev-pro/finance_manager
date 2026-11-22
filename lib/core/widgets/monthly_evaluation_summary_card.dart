@@ -50,13 +50,7 @@ class MonthlyEvaluationSummaryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: isMobile ? 13 : 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 15),
                 ),
               ),
 
@@ -119,7 +113,7 @@ class MonthlyEvaluationSummaryCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               JText(
-                principalText, 
+                principalText,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 13,

@@ -4,9 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'onpop_invoked_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class JOnPopInvoked extends _$JOnPopInvoked {
-  // 뒤로가기 기록을 저장할 변수
   DateTime? _backButtonPressedTime;
 
   @override
@@ -14,24 +13,26 @@ class JOnPopInvoked extends _$JOnPopInvoked {
     return false;
   }
 
-  void handlePopInvoked(BuildContext context) {
+  Future<void> handlePopInvoked(BuildContext context) async {
     final now = DateTime.now();
 
     if (_backButtonPressedTime == null ||
         now.difference(_backButtonPressedTime!) > const Duration(seconds: 2)) {
-      // 첫 번째 누름: 시간 기록 및 스낵바 표시
       _backButtonPressedTime = now;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('뒤로가기 버튼을 한 번 더 누르면 종료됩니다.'),
-          duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } else {
-      // 두 번째 누름: 곧바로 앱 종료 시스템 호출
-      SystemNavigator.pop();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text("'뒤로' 버튼을 한 번 더 누르면 앱이 종료됩니다."),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      return;
     }
+
+    _backButtonPressedTime = null;
+    await SystemNavigator.pop();
   }
 }

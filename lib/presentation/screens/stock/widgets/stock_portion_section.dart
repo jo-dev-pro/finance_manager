@@ -157,7 +157,7 @@ class StockPortionSection extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    '${accountTotal.toWon()} (${ratio.toStringAsFixed(1)}%)',
+                    '${accountTotal.round().toWon()} (${ratio.toStringAsFixed(1)}%)',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,

@@ -151,7 +151,7 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
               const SizedBox(height: 8),
 
               // 1. 날짜 선택
-              GestureDetector(
+              InkWell(
                 onTap: _pickDate,
                 child: AbsorbPointer(
                   child: TextFormField(
