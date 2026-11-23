@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/router/app_router.dart';
@@ -65,6 +66,17 @@ class MyApp extends ConsumerWidget {
       locale: const Locale('ko', 'KR'),
 
       routerConfig: router,
+      builder: (context, child) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        debugPrint(
+          '[Top MaterialApp PopScope] didPop=$didPop | canPop=${GoRouter.of(context).canPop()}',
+        );
+      },
+      child: child ?? const SizedBox.shrink(),
+    );
+  },
     );
   }
 }

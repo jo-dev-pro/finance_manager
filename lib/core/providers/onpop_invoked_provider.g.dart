@@ -6,7 +6,7 @@ part of 'onpop_invoked_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$jOnPopInvokedHash() => r'cf55a6751b4d9456ad290ad7240f55b989ad2ef0';
+String _$jOnPopInvokedHash() => r'7bae9f189139b0f851858ba6dd84633f85c11a0b';
 
 /// See also [JOnPopInvoked].
 @ProviderFor(JOnPopInvoked)

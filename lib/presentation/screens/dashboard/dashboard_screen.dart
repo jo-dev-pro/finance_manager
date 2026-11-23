@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/providers/onpop_invoked_provider.dart';
 import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/month_selector_header.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
@@ -30,55 +32,70 @@ class DashboardScreen extends ConsumerWidget {
     final selectedMonth = ref.watch(selectedYearMonthProvider);
     final summaryAsync = ref.watch(dashboardSummaryProvider);
 
-    return Scaffold(
-      appBar: MainAppBar(titleText: '대시보드'),
-      
-      body: monthsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),
-        data: (months) {
-          if (months.isEmpty) {
-            return const Center(child: Text('등록된 자산/기준월 데이터가 없습니다.'));
-          }
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
 
-          final String activeCurrentMonth =
-              (selectedMonth != null && months.contains(selectedMonth))
-                  ? selectedMonth
-                  : months.first;
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          router.pop(result);
+          return;
+        }
 
-          if (selectedMonth == null || !months.contains(selectedMonth)) {
-            Future.microtask(() {
-              ref
-                  .read(selectedYearMonthProvider.notifier)
-                  .select(activeCurrentMonth);
-            });
-          }
+        await ref
+            .read(jOnPopInvokedProvider.notifier)
+            .handlePopInvoked(context);
+      },
+      child: Scaffold(
+        appBar: MainAppBar(titleText: '대시보드'),
+        body: monthsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),
+          data: (months) {
+            if (months.isEmpty) {
+              return const Center(child: Text('등록된 자산/기준월 데이터가 없습니다.'));
+            }
 
-          final summary = summaryAsync.valueOrNull;
+            final String activeCurrentMonth =
+                (selectedMonth != null && months.contains(selectedMonth))
+                    ? selectedMonth
+                    : months.first;
 
-          return MainConstrainedBox(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                MonthSelectorHeader(
-                  months: months,
-                  currentMonth: activeCurrentMonth,
-                ),
-                const SizedBox(height: 16),
+            if (selectedMonth == null || !months.contains(selectedMonth)) {
+              Future.microtask(() {
+                ref
+                    .read(selectedYearMonthProvider.notifier)
+                    .select(activeCurrentMonth);
+              });
+            }
 
-                Expanded(
-                  child:
-                      summary == null
-                          ? const Padding(
-                            padding: EdgeInsets.only(top: 60),
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                          : BuildDashboardData(summary: summary),
-                ),
-              ],
-            ),
-          );
-        },
+            final summary = summaryAsync.valueOrNull;
+
+            return MainConstrainedBox(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MonthSelectorHeader(
+                    months: months,
+                    currentMonth: activeCurrentMonth,
+                  ),
+                  const SizedBox(height: 16),
+
+                  Expanded(
+                    child:
+                        summary == null
+                            ? const Padding(
+                              padding: EdgeInsets.only(top: 60),
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                            : BuildDashboardData(summary: summary),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

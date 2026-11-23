@@ -15,13 +15,42 @@ class ResponsiveScaffold extends ConsumerStatefulWidget {
 }
 
 class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
+  bool _initializedToDashboard = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _initializedToDashboard) return;
+      _initializedToDashboard = true;
+      if (widget.navigationShell.currentIndex != 0) {
+        widget.navigationShell.goBranch(0, initialLocation: true);
+      }
+    });
+  }
+
   void _onDestinationSelected(int index) {
     widget.navigationShell.goBranch(index, initialLocation: true);
   }
 
+  Future<void> _handleBackPressed(BuildContext context) async {
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+      return;
+    }
+
+    if (widget.navigationShell.currentIndex != 0) {
+      ref.read(jOnPopInvokedProvider.notifier).reset();
+      widget.navigationShell.goBranch(0, initialLocation: true);
+      return;
+    }
+
+    await ref.read(jOnPopInvokedProvider.notifier).handlePopInvoked(context);
+  }
+
   @override
   Widget build(BuildContext context) {
-    ref.watch(jOnPopInvokedProvider);
     final indicatorBgColor = context.primaryColor.withValues(alpha: 0.2);
 
     final destinations = const [
@@ -126,25 +155,24 @@ class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
                 size: 22,
               ),
               selectedLabelTextStyle: TextStyle(
-                fontSize: context.isMobile ? 11 : 14,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: context.primaryColor,
               ),
               unselectedLabelTextStyle: TextStyle(
-                fontSize: context.isMobile ? 11 : 13,
+                fontSize: 12,
                 fontWeight: FontWeight.normal,
                 color: context.unselectedColor,
               ),
-              destinations:
-                  destinations
-                      .map(
-                        (d) => NavigationRailDestination(
-                          icon: d.icon,
-                          selectedIcon: d.selectedIcon,
-                          label: Text(d.label),
-                        ),
-                      )
-                      .toList(),
+              destinations: destinations
+                  .map(
+                    (d) => NavigationRailDestination(
+                      icon: d.icon,
+                      selectedIcon: d.selectedIcon,
+                      label: Text(d.label),
+                    ),
+                  )
+                  .toList(),
             ),
             const VerticalDivider(thickness: 1, width: 1, color: Colors.grey),
             Expanded(child: widget.navigationShell),
@@ -157,16 +185,7 @@ class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          router.pop(result);
-          return;
-        }
-
-        await ref
-            .read(jOnPopInvokedProvider.notifier)
-            .handlePopInvoked(context);
+        await _handleBackPressed(context);
       },
       child: scaffoldContent,
     );

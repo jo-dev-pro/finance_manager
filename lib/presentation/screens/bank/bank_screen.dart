@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router_path.dart';
+import '../../../core/router/branches/tab_back_dashboard_scope.dart';
 import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
@@ -33,95 +34,97 @@ class BankScreen extends ConsumerWidget {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
     final selectedMonth = ref.watch(selectedYearMonthProvider);
 
-    return Scaffold(
-      appBar: MainAppBar(
-        titleText: '은행 자산 현황',
-        actions: [
-          ElevatedButton.icon(
-            onPressed: () {
-              context.push(
-                AppRoutePath.monthlyBankBalance,
-                extra: selectedMonth,
-              );
-            },
-            icon: const Icon(Icons.calendar_month, size: 18),
-            label: const Text('월말은행'),
-          ),
-        ],
-      ),
+    return TabBackToDashboardScope(
+      child: Scaffold(
+        appBar: MainAppBar(
+          titleText: '은행 자산 현황',
+          actions: [
+            ElevatedButton.icon(
+              onPressed: () {
+                context.push(
+                  AppRoutePath.monthlyBankBalance,
+                  extra: selectedMonth,
+                );
+              },
+              icon: const Icon(Icons.calendar_month, size: 18),
+              label: const Text('월말은행'),
+            ),
+          ],
+        ),
+        
+        body: availableMonthsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error:
+              (err, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '기준월 정보를 불러오지 못했습니다:\n$err',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed:
+                          () => ref.invalidate(availableYearMonthsProvider),
+                      child: const Text('다시 시도'),
+                    ),
+                  ],
+                ),
+              ),
+          data: (months) {
+            if (months.isEmpty) {
+              return const Center(child: Text('등록된 기준월 데이터가 없습니다.'));
+            }
       
-      body: availableMonthsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error:
-            (err, stack) => Center(
+            final String defaultTarget = months.first;
+            final String activeCurrentMonth =
+                (selectedMonth != null && months.contains(selectedMonth))
+                    ? selectedMonth
+                    : defaultTarget;
+      
+            if (selectedMonth == null || !months.contains(selectedMonth)) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref
+                    .read(selectedYearMonthProvider.notifier)
+                    .select(activeCurrentMonth);
+              });
+            }
+      
+            final lastYearMonth = _getLastYearMonth(activeCurrentMonth);
+      
+            final bankDataAsync = ref.watch(
+              bankScreenDataProvider(
+                currentYearMonth: activeCurrentMonth,
+                lastYearMonth: lastYearMonth,
+              ),
+            );
+      
+            return MainConstrainedBox(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '기준월 정보를 불러오지 못했습니다:\n$err',
-                    textAlign: TextAlign.center,
+                  MonthSelectorHeader(
+                    months: months,
+                    currentMonth: activeCurrentMonth,
                   ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed:
-                        () => ref.invalidate(availableYearMonthsProvider),
-                    child: const Text('다시 시도'),
+                  SizedBox(height: 16),
+      
+                  Expanded(
+                    child: bankDataAsync.when(
+                      loading:
+                          () => const Center(child: CircularProgressIndicator()),
+                      error: (err, _) => Center(child: Text('오류: $err')),
+                      data:
+                          (rawItems) =>
+                              BuildBankData(rawItems: rawItems), // 💡 분리된 위젯 호출
+                    ),
                   ),
                 ],
               ),
-            ),
-        data: (months) {
-          if (months.isEmpty) {
-            return const Center(child: Text('등록된 기준월 데이터가 없습니다.'));
-          }
-
-          final String defaultTarget = months.first;
-          final String activeCurrentMonth =
-              (selectedMonth != null && months.contains(selectedMonth))
-                  ? selectedMonth
-                  : defaultTarget;
-
-          if (selectedMonth == null || !months.contains(selectedMonth)) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ref
-                  .read(selectedYearMonthProvider.notifier)
-                  .select(activeCurrentMonth);
-            });
-          }
-
-          final lastYearMonth = _getLastYearMonth(activeCurrentMonth);
-
-          final bankDataAsync = ref.watch(
-            bankScreenDataProvider(
-              currentYearMonth: activeCurrentMonth,
-              lastYearMonth: lastYearMonth,
-            ),
-          );
-
-          return MainConstrainedBox(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                MonthSelectorHeader(
-                  months: months,
-                  currentMonth: activeCurrentMonth,
-                ),
-                SizedBox(height: 16),
-
-                Expanded(
-                  child: bankDataAsync.when(
-                    loading:
-                        () => const Center(child: CircularProgressIndicator()),
-                    error: (err, _) => Center(child: Text('오류: $err')),
-                    data:
-                        (rawItems) =>
-                            BuildBankData(rawItems: rawItems), // 💡 분리된 위젯 호출
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

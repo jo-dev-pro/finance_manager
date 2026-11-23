@@ -10,14 +10,20 @@ class JOnPopInvoked extends _$JOnPopInvoked {
 
   @override
   bool build() {
+    _backButtonPressedTime = null;
     return false;
+  }
+
+  void reset() {
+    _backButtonPressedTime = null;
   }
 
   Future<void> handlePopInvoked(BuildContext context) async {
     final now = DateTime.now();
+    final lastPressed = _backButtonPressedTime;
 
-    if (_backButtonPressedTime == null ||
-        now.difference(_backButtonPressedTime!) > const Duration(seconds: 2)) {
+    if (lastPressed == null ||
+        now.difference(lastPressed) > const Duration(seconds: 2)) {
       _backButtonPressedTime = now;
 
       if (!context.mounted) return;

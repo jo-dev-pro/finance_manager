@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/providers/onpop_invoked_provider.dart';
 import '../../presentation/responsive/responsive_scaffold.dart';
 import '../../presentation/screens/dashboard/dashboard_screen.dart';
 import 'app_router_path.dart';
@@ -22,10 +24,31 @@ GoRouter router(RouterRef ref) {
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return ResponsiveScaffold(navigationShell: navigationShell);
+          return Consumer(
+            builder: (context, consumerRef, _) {
+              return PopScope(
+                canPop: false,
+                onPopInvokedWithResult: (didPop, result) async {
+                  debugPrint(
+                    '[Shell PopScope] didPop=$didPop | canPop=${context.canPop()}',
+                  );
+                  if (didPop) return;
+
+                  if (context.canPop()) {
+                    context.pop(result);
+                    return;
+                  }
+
+                  await consumerRef
+                      .read(jOnPopInvokedProvider.notifier)
+                      .handlePopInvoked(context);
+                },
+                child: ResponsiveScaffold(navigationShell: navigationShell),
+              );
+            },
+          );
         },
         branches: [
-          // 1. 대시보드
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -34,17 +57,9 @@ GoRouter router(RouterRef ref) {
               ),
             ],
           ),
-
-          // 2. 은행 (별도 모듈)
           buildBankBranch(),
-
-          // 3. 증권 (별도 모듈)
           buildStockBranch(),
-
-          // 4. 연금 (별도 모듈)
           buildPensionBranch(),
-
-          // 5. 전체 메뉴 (별도 모듈)
           buildAllMenuBranch(),
         ],
       ),
