@@ -15,7 +15,10 @@ void main() async {
   // .env 파일 로드
   try {
     await dotenv.load(fileName: ".env");
-  } catch (e) { }
+  } catch (e, stackTrace) {
+    debugPrint('.env 로드 실패(무시하고 계속 진행): $e');
+    debugPrintStack(stackTrace: stackTrace);
+  }
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -67,16 +70,16 @@ class MyApp extends ConsumerWidget {
 
       routerConfig: router,
       builder: (context, child) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        debugPrint(
-          '[Top MaterialApp PopScope] didPop=$didPop | canPop=${GoRouter.of(context).canPop()}',
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            debugPrint(
+              '[Top MaterialApp PopScope] didPop=$didPop | canPop=${GoRouter.of(context).canPop()}',
+            );
+          },
+          child: child ?? const SizedBox.shrink(),
         );
       },
-      child: child ?? const SizedBox.shrink(),
-    );
-  },
     );
   }
 }

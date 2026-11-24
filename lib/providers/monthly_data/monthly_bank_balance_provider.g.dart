@@ -6,198 +6,152 @@ part of 'monthly_bank_balance_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$allMonthlyBankBalancesHash() =>
-    r'b2e7913c9b1e60df4f1e766666ba0941380c20be';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [allMonthlyBankBalances].
 @ProviderFor(allMonthlyBankBalances)
-final allMonthlyBankBalancesProvider =
-    AutoDisposeFutureProvider<List<MonthlyBankBalanceWithAccount>>.internal(
-      allMonthlyBankBalances,
-      name: r'allMonthlyBankBalancesProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$allMonthlyBankBalancesHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+const allMonthlyBankBalancesProvider = AllMonthlyBankBalancesProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AllMonthlyBankBalancesRef =
-    AutoDisposeFutureProviderRef<List<MonthlyBankBalanceWithAccount>>;
-String _$monthlyBankBalanceNotifierHash() =>
-    r'fb2e6be8645c916d16b54ec4b903838e728e1a7b';
-
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-abstract class _$MonthlyBankBalanceNotifier
-    extends BuildlessAsyncNotifier<List<MonthlyBankBalance>> {
-  late final String yearMonth;
-
-  FutureOr<List<MonthlyBankBalance>> build(String yearMonth);
-}
-
-/// See also [MonthlyBankBalanceNotifier].
-@ProviderFor(MonthlyBankBalanceNotifier)
-const monthlyBankBalanceNotifierProvider = MonthlyBankBalanceNotifierFamily();
-
-/// See also [MonthlyBankBalanceNotifier].
-class MonthlyBankBalanceNotifierFamily
-    extends Family<AsyncValue<List<MonthlyBankBalance>>> {
-  /// See also [MonthlyBankBalanceNotifier].
-  const MonthlyBankBalanceNotifierFamily();
-
-  /// See also [MonthlyBankBalanceNotifier].
-  MonthlyBankBalanceNotifierProvider call(String yearMonth) {
-    return MonthlyBankBalanceNotifierProvider(yearMonth);
-  }
-
-  @override
-  MonthlyBankBalanceNotifierProvider getProviderOverride(
-    covariant MonthlyBankBalanceNotifierProvider provider,
-  ) {
-    return call(provider.yearMonth);
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'monthlyBankBalanceNotifierProvider';
-}
-
-/// See also [MonthlyBankBalanceNotifier].
-class MonthlyBankBalanceNotifierProvider
+final class AllMonthlyBankBalancesProvider
     extends
-        AsyncNotifierProviderImpl<
+        $FunctionalProvider<
+          AsyncValue<List<MonthlyBankBalanceWithAccount>>,
+          List<MonthlyBankBalanceWithAccount>,
+          FutureOr<List<MonthlyBankBalanceWithAccount>>
+        >
+    with
+        $FutureModifier<List<MonthlyBankBalanceWithAccount>>,
+        $FutureProvider<List<MonthlyBankBalanceWithAccount>> {
+  const AllMonthlyBankBalancesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'allMonthlyBankBalancesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$allMonthlyBankBalancesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<MonthlyBankBalanceWithAccount>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<MonthlyBankBalanceWithAccount>> create(Ref ref) {
+    return allMonthlyBankBalances(ref);
+  }
+}
+
+String _$allMonthlyBankBalancesHash() =>
+    r'7283a2ad38521ca22f980d7282102b866306a9e5';
+
+@ProviderFor(MonthlyBankBalanceNotifier)
+const monthlyBankBalanceProvider = MonthlyBankBalanceNotifierFamily._();
+
+final class MonthlyBankBalanceNotifierProvider
+    extends
+        $AsyncNotifierProvider<
           MonthlyBankBalanceNotifier,
           List<MonthlyBankBalance>
         > {
-  /// See also [MonthlyBankBalanceNotifier].
-  MonthlyBankBalanceNotifierProvider(String yearMonth)
-    : this._internal(
-        () => MonthlyBankBalanceNotifier()..yearMonth = yearMonth,
-        from: monthlyBankBalanceNotifierProvider,
-        name: r'monthlyBankBalanceNotifierProvider',
-        debugGetCreateSourceHash:
-            const bool.fromEnvironment('dart.vm.product')
-                ? null
-                : _$monthlyBankBalanceNotifierHash,
-        dependencies: MonthlyBankBalanceNotifierFamily._dependencies,
-        allTransitiveDependencies:
-            MonthlyBankBalanceNotifierFamily._allTransitiveDependencies,
-        yearMonth: yearMonth,
-      );
-
-  MonthlyBankBalanceNotifierProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.yearMonth,
-  }) : super.internal();
-
-  final String yearMonth;
+  const MonthlyBankBalanceNotifierProvider._({
+    required MonthlyBankBalanceNotifierFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'monthlyBankBalanceProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
-  FutureOr<List<MonthlyBankBalance>> runNotifierBuild(
-    covariant MonthlyBankBalanceNotifier notifier,
-  ) {
-    return notifier.build(yearMonth);
-  }
+  String debugGetCreateSourceHash() => _$monthlyBankBalanceNotifierHash();
 
   @override
-  Override overrideWith(MonthlyBankBalanceNotifier Function() create) {
-    return ProviderOverride(
-      origin: this,
-      override: MonthlyBankBalanceNotifierProvider._internal(
-        () => create()..yearMonth = yearMonth,
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        yearMonth: yearMonth,
-      ),
-    );
+  String toString() {
+    return r'monthlyBankBalanceProvider'
+        ''
+        '($argument)';
   }
 
+  @$internal
   @override
-  AsyncNotifierProviderElement<
-    MonthlyBankBalanceNotifier,
-    List<MonthlyBankBalance>
-  >
-  createElement() {
-    return _MonthlyBankBalanceNotifierProviderElement(this);
-  }
+  MonthlyBankBalanceNotifier create() => MonthlyBankBalanceNotifier();
 
   @override
   bool operator ==(Object other) {
     return other is MonthlyBankBalanceNotifierProvider &&
-        other.yearMonth == yearMonth;
+        other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, yearMonth.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin MonthlyBankBalanceNotifierRef
-    on AsyncNotifierProviderRef<List<MonthlyBankBalance>> {
-  /// The parameter `yearMonth` of this provider.
-  String get yearMonth;
-}
+String _$monthlyBankBalanceNotifierHash() =>
+    r'38b29a61561a2e4802f4579f1c3bb00cc87995a4';
 
-class _MonthlyBankBalanceNotifierProviderElement
-    extends
-        AsyncNotifierProviderElement<
+final class MonthlyBankBalanceNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
           MonthlyBankBalanceNotifier,
-          List<MonthlyBankBalance>
-        >
-    with MonthlyBankBalanceNotifierRef {
-  _MonthlyBankBalanceNotifierProviderElement(super.provider);
+          AsyncValue<List<MonthlyBankBalance>>,
+          List<MonthlyBankBalance>,
+          FutureOr<List<MonthlyBankBalance>>,
+          String
+        > {
+  const MonthlyBankBalanceNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'monthlyBankBalanceProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  MonthlyBankBalanceNotifierProvider call(String yearMonth) =>
+      MonthlyBankBalanceNotifierProvider._(argument: yearMonth, from: this);
 
   @override
-  String get yearMonth =>
-      (origin as MonthlyBankBalanceNotifierProvider).yearMonth;
+  String toString() => r'monthlyBankBalanceProvider';
 }
 
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$MonthlyBankBalanceNotifier
+    extends $AsyncNotifier<List<MonthlyBankBalance>> {
+  late final _$args = ref.$arg as String;
+  String get yearMonth => _$args;
+
+  FutureOr<List<MonthlyBankBalance>> build(String yearMonth);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build(_$args);
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<List<MonthlyBankBalance>>,
+              List<MonthlyBankBalance>
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<List<MonthlyBankBalance>>,
+                List<MonthlyBankBalance>
+              >,
+              AsyncValue<List<MonthlyBankBalance>>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

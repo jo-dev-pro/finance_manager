@@ -6,60 +6,137 @@ part of 'dashboard_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$availableYearMonthsHash() =>
-    r'770d332183ce360da49391413a91aafcadef9a43';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [availableYearMonths].
 @ProviderFor(availableYearMonths)
-final availableYearMonthsProvider =
-    AutoDisposeFutureProvider<List<String>>.internal(
-      availableYearMonths,
-      name: r'availableYearMonthsProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$availableYearMonthsHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
+const availableYearMonthsProvider = AvailableYearMonthsProvider._();
+
+final class AvailableYearMonthsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<String>>,
+          List<String>,
+          FutureOr<List<String>>
+        >
+    with $FutureModifier<List<String>>, $FutureProvider<List<String>> {
+  const AvailableYearMonthsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'availableYearMonthsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$availableYearMonthsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<String>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<String>> create(Ref ref) {
+    return availableYearMonths(ref);
+  }
+}
+
+String _$availableYearMonthsHash() =>
+    r'58cfae7bb06b3f621b74a40308bccb4667821194';
+
+@ProviderFor(SelectedYearMonth)
+const selectedYearMonthProvider = SelectedYearMonthProvider._();
+
+final class SelectedYearMonthProvider
+    extends $NotifierProvider<SelectedYearMonth, String?> {
+  const SelectedYearMonthProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'selectedYearMonthProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$selectedYearMonthHash();
+
+  @$internal
+  @override
+  SelectedYearMonth create() => SelectedYearMonth();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
     );
+  }
+}
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AvailableYearMonthsRef = AutoDisposeFutureProviderRef<List<String>>;
-String _$dashboardSummaryHash() => r'5bb7d73f598c56b00eb121b344f3b431e50c2172';
-
-/// See also [dashboardSummary].
-@ProviderFor(dashboardSummary)
-final dashboardSummaryProvider = FutureProvider<DashboardSummary>.internal(
-  dashboardSummary,
-  name: r'dashboardSummaryProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$dashboardSummaryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DashboardSummaryRef = FutureProviderRef<DashboardSummary>;
 String _$selectedYearMonthHash() => r'85133661c1bd2b752288cf9e7f89dacb96847f79';
 
-/// See also [SelectedYearMonth].
-@ProviderFor(SelectedYearMonth)
-final selectedYearMonthProvider =
-    AutoDisposeNotifierProvider<SelectedYearMonth, String?>.internal(
-      SelectedYearMonth.new,
-      name: r'selectedYearMonthProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$selectedYearMonthHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+abstract class _$SelectedYearMonth extends $Notifier<String?> {
+  String? build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<String?, String?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String?, String?>,
+              String?,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
 
-typedef _$SelectedYearMonth = AutoDisposeNotifier<String?>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+@ProviderFor(dashboardSummary)
+const dashboardSummaryProvider = DashboardSummaryProvider._();
+
+final class DashboardSummaryProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<DashboardSummary>,
+          DashboardSummary,
+          FutureOr<DashboardSummary>
+        >
+    with $FutureModifier<DashboardSummary>, $FutureProvider<DashboardSummary> {
+  const DashboardSummaryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'dashboardSummaryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$dashboardSummaryHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<DashboardSummary> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<DashboardSummary> create(Ref ref) {
+    return dashboardSummary(ref);
+  }
+}
+
+String _$dashboardSummaryHash() => r'26bd3cc92c3816bb2e048d1891ef7aa6d67712e2';

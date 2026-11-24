@@ -4,7 +4,7 @@ part 'monthly_pension_account_balance.freezed.dart';
 part 'monthly_pension_account_balance.g.dart';
 
 @freezed
-class MonthlyPensionAccountBalance with _$MonthlyPensionAccountBalance {
+abstract class MonthlyPensionAccountBalance with _$MonthlyPensionAccountBalance {
   const MonthlyPensionAccountBalance._();
 
   const factory MonthlyPensionAccountBalance({

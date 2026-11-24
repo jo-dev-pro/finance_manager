@@ -59,8 +59,8 @@ class MonthlyPensionAccountBalanceNotifier
     String? resolvedAccountName = balance.accountName;
 
     try {
-      final accounts = await ref.read(accountNotifierProvider.future);
-      final accountNames = await ref.read(accountNameNotifierProvider.future);
+      final accounts = await ref.read(accountProvider.future);
+      final accountNames = await ref.read(accountNameProvider.future);
 
       if (resolvedAccountName == null || resolvedAccountName.isEmpty) {
         final matchedAcc = accounts.firstWhereOrNull(

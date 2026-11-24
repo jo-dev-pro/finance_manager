@@ -4,7 +4,7 @@ part 'pension_product.freezed.dart';
 part 'pension_product.g.dart';
 
 @freezed
-class PensionProduct with _$PensionProduct {
+abstract class PensionProduct with _$PensionProduct {
   const factory PensionProduct({
     String? id,
     @JsonKey(name: 'product_name') required String productName,

@@ -29,12 +29,10 @@ class _PensionHoldingProductScreenState
 
   @override
   Widget build(BuildContext context) {
-    final accountProductsAsync = ref.watch(
-      pensionHoldingProductNotifierProvider,
-    );
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final productsAsync = ref.watch(pensionProductNotifierProvider);
+    final accountProductsAsync = ref.watch(pensionHoldingProductProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
+    final productsAsync = ref.watch(pensionProductProvider);
 
     return Scaffold(
       appBar: MainAppBar(
@@ -385,7 +383,7 @@ class _PensionHoldingProductScreenState
       onDelete: () async {
         try {
           await ref
-              .read(pensionHoldingProductNotifierProvider.notifier)
+              .read(pensionHoldingProductProvider.notifier)
               .deletePensionHoldingProduct(item.id!);
 
           if (!context.mounted) return;

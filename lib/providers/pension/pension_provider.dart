@@ -20,16 +20,18 @@ class PensionAccountItem {
 
 @Riverpod(keepAlive: true)
 Future<List<PensionAccountItem>> pensionScreenData(
-  PensionScreenDataRef ref, {
+  Ref ref, {
   required String currentYearMonth,
   required String lastYearMonth,
 }) async {
-  final accounts = await ref.watch(accountNotifierProvider.future);
+  final accounts = await ref.watch(accountProvider.future);
 
   final currentBalances = await ref.watch(
-      monthlyPensionBalanceNotifierProvider(currentYearMonth).future);
+    monthlyPensionBalanceProvider(currentYearMonth).future,
+  );
   final lastBalances = await ref.watch(
-      monthlyPensionBalanceNotifierProvider(lastYearMonth).future);
+    monthlyPensionBalanceProvider(lastYearMonth).future,
+  );
 
   return accounts.map((account) {
     // 💡 evaluationAmount -> balance 로 변경
@@ -49,4 +51,18 @@ Future<List<PensionAccountItem>> pensionScreenData(
       diffFromLastMonth: diffFromLastMonth,
     );
   }).toList();
+}
+
+@riverpod
+class SelectedPensionAccountFilter extends _$SelectedPensionAccountFilter {
+  @override
+  String? build() => null;
+
+  void setFilter(String? accountId) {
+    state = accountId;
+  }
+
+  void clear() {
+    state = null;
+  }
 }

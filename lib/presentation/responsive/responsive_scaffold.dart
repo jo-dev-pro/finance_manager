@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/providers/onpop_invoked_provider.dart';
 import '../../core/utils/responsive_extension.dart';
 
 class ResponsiveScaffold extends ConsumerStatefulWidget {
@@ -31,22 +30,6 @@ class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
 
   void _onDestinationSelected(int index) {
     widget.navigationShell.goBranch(index, initialLocation: true);
-  }
-
-  Future<void> _handleBackPressed(BuildContext context) async {
-    final router = GoRouter.of(context);
-    if (router.canPop()) {
-      router.pop();
-      return;
-    }
-
-    if (widget.navigationShell.currentIndex != 0) {
-      ref.read(jOnPopInvokedProvider.notifier).reset();
-      widget.navigationShell.goBranch(0, initialLocation: true);
-      return;
-    }
-
-    await ref.read(jOnPopInvokedProvider.notifier).handlePopInvoked(context);
   }
 
   @override
@@ -81,10 +64,8 @@ class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
       ),
     ];
 
-    Widget scaffoldContent;
-
     if (context.isMobile) {
-      scaffoldContent = Scaffold(
+      return Scaffold(
         body: widget.navigationShell,
         bottomNavigationBar: NavigationBarTheme(
           data: NavigationBarThemeData(
@@ -121,73 +102,64 @@ class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
           ),
         ),
       );
-    } else {
-      scaffoldContent = Scaffold(
-        body: Row(
-          children: [
-            NavigationRail(
-              backgroundColor: context.backgroundColor,
-              minWidth: context.isMobile ? 120 : 150,
-              labelType: NavigationRailLabelType.all,
-              selectedIndex: widget.navigationShell.currentIndex,
-              onDestinationSelected: _onDestinationSelected,
-              indicatorColor: indicatorBgColor,
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  color: context.backgroundColor,
-                  child: Image.asset(
-                    'assets/logos/finance.png',
-                    width: 120,
-                    height: 120,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              selectedIconTheme: IconThemeData(
-                color: context.primaryColor,
-                size: 24,
-              ),
-              unselectedIconTheme: IconThemeData(
-                color: context.unselectedColor.withValues(alpha: 0.7),
-                size: 22,
-              ),
-              selectedLabelTextStyle: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: context.primaryColor,
-              ),
-              unselectedLabelTextStyle: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
-                color: context.unselectedColor,
-              ),
-              destinations: destinations
-                  .map(
-                    (d) => NavigationRailDestination(
-                      icon: d.icon,
-                      selectedIcon: d.selectedIcon,
-                      label: Text(d.label),
-                    ),
-                  )
-                  .toList(),
-            ),
-            const VerticalDivider(thickness: 1, width: 1, color: Colors.grey),
-            Expanded(child: widget.navigationShell),
-          ],
-        ),
-      );
     }
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        await _handleBackPressed(context);
-      },
-      child: scaffoldContent,
+    return Scaffold(
+      body: Row(
+        children: [
+          NavigationRail(
+            backgroundColor: context.backgroundColor,
+            minWidth: context.isMobile ? 120 : 150,
+            labelType: NavigationRailLabelType.all,
+            selectedIndex: widget.navigationShell.currentIndex,
+            onDestinationSelected: _onDestinationSelected,
+            indicatorColor: indicatorBgColor,
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: 120,
+                height: 120,
+                color: context.backgroundColor,
+                child: Image.asset(
+                  'assets/logos/finance.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            selectedIconTheme: IconThemeData(
+              color: context.primaryColor,
+              size: 24,
+            ),
+            unselectedIconTheme: IconThemeData(
+              color: context.unselectedColor.withValues(alpha: 0.7),
+              size: 22,
+            ),
+            selectedLabelTextStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: context.primaryColor,
+            ),
+            unselectedLabelTextStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.normal,
+              color: context.unselectedColor,
+            ),
+            destinations: destinations
+                .map(
+                  (d) => NavigationRailDestination(
+                    icon: d.icon,
+                    selectedIcon: d.selectedIcon,
+                    label: Text(d.label),
+                  ),
+                )
+                .toList(),
+          ),
+          const VerticalDivider(thickness: 1, width: 1, color: Colors.grey),
+          Expanded(child: widget.navigationShell),
+        ],
+      ),
     );
   }
 }

@@ -18,7 +18,7 @@ class InvestmentScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final investmentState = ref.watch(investmentNotifierProvider);
+    final investmentState = ref.watch(investmentProvider);
 
     return Scaffold(
       appBar: MainAppBar(
@@ -169,7 +169,7 @@ class InvestmentScreen extends ConsumerWidget {
       onDelete: () async {
         try {
           await ref
-              .read(investmentNotifierProvider.notifier)
+              .read(investmentProvider.notifier)
               .deleteInvestment(investment.id!);
 
           if (!context.mounted) return;

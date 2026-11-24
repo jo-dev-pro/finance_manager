@@ -6,198 +6,169 @@ part of 'monthly_stock_balance_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$allMonthlyStockBalancesHash() =>
-    r'4fad37d9b653c8570fd0a897d4440018c4d6b5c4';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [AllMonthlyStockBalances].
 @ProviderFor(AllMonthlyStockBalances)
-final allMonthlyStockBalancesProvider = AutoDisposeAsyncNotifierProvider<
-  AllMonthlyStockBalances,
-  List<MonthlyStockBalanceWithDetail>
->.internal(
-  AllMonthlyStockBalances.new,
-  name: r'allMonthlyStockBalancesProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$allMonthlyStockBalancesHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+const allMonthlyStockBalancesProvider = AllMonthlyStockBalancesProvider._();
 
-typedef _$AllMonthlyStockBalances =
-    AutoDisposeAsyncNotifier<List<MonthlyStockBalanceWithDetail>>;
-String _$monthlyStockBalanceNotifierHash() =>
-    r'899621f48260abc1cf9138acae3361430aef4cd4';
-
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-abstract class _$MonthlyStockBalanceNotifier
-    extends BuildlessAsyncNotifier<List<MonthlyStockBalance>> {
-  late final String yearMonth;
-
-  FutureOr<List<MonthlyStockBalance>> build(String yearMonth);
-}
-
-/// See also [MonthlyStockBalanceNotifier].
-@ProviderFor(MonthlyStockBalanceNotifier)
-const monthlyStockBalanceNotifierProvider = MonthlyStockBalanceNotifierFamily();
-
-/// See also [MonthlyStockBalanceNotifier].
-class MonthlyStockBalanceNotifierFamily
-    extends Family<AsyncValue<List<MonthlyStockBalance>>> {
-  /// See also [MonthlyStockBalanceNotifier].
-  const MonthlyStockBalanceNotifierFamily();
-
-  /// See also [MonthlyStockBalanceNotifier].
-  MonthlyStockBalanceNotifierProvider call(String yearMonth) {
-    return MonthlyStockBalanceNotifierProvider(yearMonth);
-  }
-
-  @override
-  MonthlyStockBalanceNotifierProvider getProviderOverride(
-    covariant MonthlyStockBalanceNotifierProvider provider,
-  ) {
-    return call(provider.yearMonth);
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'monthlyStockBalanceNotifierProvider';
-}
-
-/// See also [MonthlyStockBalanceNotifier].
-class MonthlyStockBalanceNotifierProvider
+final class AllMonthlyStockBalancesProvider
     extends
-        AsyncNotifierProviderImpl<
+        $AsyncNotifierProvider<
+          AllMonthlyStockBalances,
+          List<MonthlyStockBalanceWithDetail>
+        > {
+  const AllMonthlyStockBalancesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'allMonthlyStockBalancesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$allMonthlyStockBalancesHash();
+
+  @$internal
+  @override
+  AllMonthlyStockBalances create() => AllMonthlyStockBalances();
+}
+
+String _$allMonthlyStockBalancesHash() =>
+    r'bd1b43ce6122f69615e3a365c64e7757c398488f';
+
+abstract class _$AllMonthlyStockBalances
+    extends $AsyncNotifier<List<MonthlyStockBalanceWithDetail>> {
+  FutureOr<List<MonthlyStockBalanceWithDetail>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<List<MonthlyStockBalanceWithDetail>>,
+              List<MonthlyStockBalanceWithDetail>
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<List<MonthlyStockBalanceWithDetail>>,
+                List<MonthlyStockBalanceWithDetail>
+              >,
+              AsyncValue<List<MonthlyStockBalanceWithDetail>>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
+@ProviderFor(MonthlyStockBalanceNotifier)
+const monthlyStockBalanceProvider = MonthlyStockBalanceNotifierFamily._();
+
+final class MonthlyStockBalanceNotifierProvider
+    extends
+        $AsyncNotifierProvider<
           MonthlyStockBalanceNotifier,
           List<MonthlyStockBalance>
         > {
-  /// See also [MonthlyStockBalanceNotifier].
-  MonthlyStockBalanceNotifierProvider(String yearMonth)
-    : this._internal(
-        () => MonthlyStockBalanceNotifier()..yearMonth = yearMonth,
-        from: monthlyStockBalanceNotifierProvider,
-        name: r'monthlyStockBalanceNotifierProvider',
-        debugGetCreateSourceHash:
-            const bool.fromEnvironment('dart.vm.product')
-                ? null
-                : _$monthlyStockBalanceNotifierHash,
-        dependencies: MonthlyStockBalanceNotifierFamily._dependencies,
-        allTransitiveDependencies:
-            MonthlyStockBalanceNotifierFamily._allTransitiveDependencies,
-        yearMonth: yearMonth,
-      );
-
-  MonthlyStockBalanceNotifierProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.yearMonth,
-  }) : super.internal();
-
-  final String yearMonth;
+  const MonthlyStockBalanceNotifierProvider._({
+    required MonthlyStockBalanceNotifierFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'monthlyStockBalanceProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
-  FutureOr<List<MonthlyStockBalance>> runNotifierBuild(
-    covariant MonthlyStockBalanceNotifier notifier,
-  ) {
-    return notifier.build(yearMonth);
-  }
+  String debugGetCreateSourceHash() => _$monthlyStockBalanceNotifierHash();
 
   @override
-  Override overrideWith(MonthlyStockBalanceNotifier Function() create) {
-    return ProviderOverride(
-      origin: this,
-      override: MonthlyStockBalanceNotifierProvider._internal(
-        () => create()..yearMonth = yearMonth,
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        yearMonth: yearMonth,
-      ),
-    );
+  String toString() {
+    return r'monthlyStockBalanceProvider'
+        ''
+        '($argument)';
   }
 
+  @$internal
   @override
-  AsyncNotifierProviderElement<
-    MonthlyStockBalanceNotifier,
-    List<MonthlyStockBalance>
-  >
-  createElement() {
-    return _MonthlyStockBalanceNotifierProviderElement(this);
-  }
+  MonthlyStockBalanceNotifier create() => MonthlyStockBalanceNotifier();
 
   @override
   bool operator ==(Object other) {
     return other is MonthlyStockBalanceNotifierProvider &&
-        other.yearMonth == yearMonth;
+        other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, yearMonth.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin MonthlyStockBalanceNotifierRef
-    on AsyncNotifierProviderRef<List<MonthlyStockBalance>> {
-  /// The parameter `yearMonth` of this provider.
-  String get yearMonth;
-}
+String _$monthlyStockBalanceNotifierHash() =>
+    r'43859f27d0d765980c4a53c284aad7c15f9242b0';
 
-class _MonthlyStockBalanceNotifierProviderElement
-    extends
-        AsyncNotifierProviderElement<
+final class MonthlyStockBalanceNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
           MonthlyStockBalanceNotifier,
-          List<MonthlyStockBalance>
-        >
-    with MonthlyStockBalanceNotifierRef {
-  _MonthlyStockBalanceNotifierProviderElement(super.provider);
+          AsyncValue<List<MonthlyStockBalance>>,
+          List<MonthlyStockBalance>,
+          FutureOr<List<MonthlyStockBalance>>,
+          String
+        > {
+  const MonthlyStockBalanceNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'monthlyStockBalanceProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  MonthlyStockBalanceNotifierProvider call(String yearMonth) =>
+      MonthlyStockBalanceNotifierProvider._(argument: yearMonth, from: this);
 
   @override
-  String get yearMonth =>
-      (origin as MonthlyStockBalanceNotifierProvider).yearMonth;
+  String toString() => r'monthlyStockBalanceProvider';
 }
 
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$MonthlyStockBalanceNotifier
+    extends $AsyncNotifier<List<MonthlyStockBalance>> {
+  late final _$args = ref.$arg as String;
+  String get yearMonth => _$args;
+
+  FutureOr<List<MonthlyStockBalance>> build(String yearMonth);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build(_$args);
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<List<MonthlyStockBalance>>,
+              List<MonthlyStockBalance>
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<List<MonthlyStockBalance>>,
+                List<MonthlyStockBalance>
+              >,
+              AsyncValue<List<MonthlyStockBalance>>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

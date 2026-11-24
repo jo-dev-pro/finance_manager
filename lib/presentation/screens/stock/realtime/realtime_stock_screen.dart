@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -63,9 +62,8 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
 
       final latestMonth = months.first;
       final stockBalances =
-          ref.read(monthlyStockBalanceNotifierProvider(latestMonth)).value ??
-          [];
-      final stockItems = ref.read(stockItemNotifierProvider).value ?? [];
+          ref.read(monthlyStockBalanceProvider(latestMonth)).value ?? [];
+      final stockItems = ref.read(stockItemProvider).value ?? [];
       final stockItemMap = {for (var s in stockItems) s.id!: s};
 
       final List<String> tossCodes = [];
@@ -280,12 +278,13 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
-    final accounts = ref.watch(accountNotifierProvider).value ?? [];
-    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
-    final stockItems = ref.watch(stockItemNotifierProvider).value ?? [];
+    final accounts = ref.watch(accountProvider).value ?? [];
+    final accountNames = ref.watch(accountNameProvider).value ?? [];
+    final stockItems = ref.watch(stockItemProvider).value ?? [];
 
     final accountMap = {for (var a in accounts) a.id!: a};
     final accountNameMap = {for (var an in accountNames) an.id: an};
@@ -348,24 +347,17 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
 
           final baseMonth = months.first;
           final baseBalances =
-              ref.watch(monthlyStockBalanceNotifierProvider(baseMonth)).value ??
-              [];
+              ref.watch(monthlyStockBalanceProvider(baseMonth)).value ?? [];
           final baseAccountBalances =
-              ref
-                  .watch(monthlyStockAccountBalanceNotifierProvider(baseMonth))
-                  .value ??
+              ref.watch(monthlyStockAccountBalanceProvider(baseMonth)).value ??
               [];
 
           final prevMonthBalances =
-              ref
-                  .watch(monthlyStockBalanceNotifierProvider(prevMonthEndStr))
-                  .value ??
+              ref.watch(monthlyStockBalanceProvider(prevMonthEndStr)).value ??
               [];
           final prevMonthAccountBalances =
               ref
-                  .watch(
-                    monthlyStockAccountBalanceNotifierProvider(prevMonthEndStr),
-                  )
+                  .watch(monthlyStockAccountBalanceProvider(prevMonthEndStr))
                   .value ??
               [];
 
@@ -512,7 +504,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                         ),
                       ),
                       Text(
-                        '환율: ${formattedRate}원(기준일:$rateBaseDateStr)',
+                        '환율: $formattedRate원(기준일:$rateBaseDateStr)',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -779,9 +771,7 @@ class _RealtimeAssetScreenState extends ConsumerState<RealtimeStockScreen> {
                                     final monthItems =
                                         dialogRef
                                             .watch(
-                                              monthlyStockBalanceNotifierProvider(
-                                                ym,
-                                              ),
+                                              monthlyStockBalanceProvider(ym),
                                             )
                                             .value ??
                                         [];

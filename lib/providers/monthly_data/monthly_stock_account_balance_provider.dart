@@ -41,21 +41,22 @@ class AllMonthlyStockAccountBalances extends _$AllMonthlyStockAccountBalances {
     List<AccountName> accountNames = [];
 
     try {
-      accounts = await ref.watch(accountNotifierProvider.future);
+      accounts = await ref.watch(accountProvider.future);
     } catch (_) {}
 
     try {
-      accountNames = await ref.watch(accountNameNotifierProvider.future);
+      accountNames = await ref.watch(accountNameProvider.future);
     } catch (_) {}
 
     final snapshot =
         await firestore.collection(monthlyStockAccountBalanceDBName).get();
 
-    final balances = snapshot.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return MonthlyStockAccountBalance.fromJson(data);
-    }).toList();
+    final balances =
+        snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return MonthlyStockAccountBalance.fromJson(data);
+        }).toList();
 
     final accountMap = {for (var a in accounts) a.id!: a};
     final accountNameMap = {for (var an in accountNames) an.id: an};
@@ -123,8 +124,8 @@ class MonthlyStockAccountBalanceNotifier
     String? resolvedAccountName = balance.accountName;
 
     try {
-      final accounts = await ref.read(accountNotifierProvider.future);
-      final accountNames = await ref.read(accountNameNotifierProvider.future);
+      final accounts = await ref.read(accountProvider.future);
+      final accountNames = await ref.read(accountNameProvider.future);
 
       if (resolvedAccountName == null || resolvedAccountName.isEmpty) {
         final matchedAcc = accounts.firstWhereOrNull(

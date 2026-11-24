@@ -63,10 +63,10 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
           }
 
           final balancesAsync = ref.watch(
-            monthlyBankBalanceNotifierProvider(activeCurrentMonth),
+            monthlyBankBalanceProvider(activeCurrentMonth),
           );
-          final accountsAsync = ref.watch(accountNotifierProvider);
-          final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+          final accountsAsync = ref.watch(accountProvider);
+          final accountNamesAsync = ref.watch(accountNameProvider);
 
           return MainConstrainedBox(
             child: Column(
@@ -284,7 +284,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
           try {
             await ref
                 .read(
-                  monthlyBankBalanceNotifierProvider(item.yearMonth).notifier,
+                  monthlyBankBalanceProvider(item.yearMonth).notifier,
                 )
                 .deleteBalance(item.id!);
 

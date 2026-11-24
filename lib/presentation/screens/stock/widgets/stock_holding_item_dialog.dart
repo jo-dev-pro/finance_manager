@@ -67,7 +67,7 @@ class _StockHoldingItemDialogState
         isActive: _isActive,
       );
 
-      final notifier = ref.read(stockHoldingItemNotifierProvider.notifier);
+      final notifier = ref.read(stockHoldingItemProvider.notifier);
       if (_isEditing) {
         await notifier.updateStockHoldingItem(item);
       } else {
@@ -88,14 +88,14 @@ class _StockHoldingItemDialogState
 
   @override
   Widget build(BuildContext context) {
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final stockItemsAsync = ref.watch(stockItemNotifierProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
+    final stockItemsAsync = ref.watch(stockItemProvider);
 
     // 💡 바텀시트 레이아웃 안정성 개선 (SafeArea 및 가변 높이 대응)
     return SafeArea(
       child: Padding(
-       padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
+        padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -144,15 +144,16 @@ class _StockHoldingItemDialogState
                   error: (err, _) => Text('계좌 로딩 실패: $err'),
                   data: (accounts) {
                     final accountNames = accountNamesAsync.value ?? [];
-                    
-                    final targetAccounts = accounts
-                        .where(
-                          (a) =>
-                              a.accountType.toUpperCase().contains('증권') ||
-                              a.accountType.toUpperCase().contains('주식'),
-                        )
-                        .toList()
-                      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+                    final targetAccounts =
+                        accounts
+                            .where(
+                              (a) =>
+                                  a.accountType.toUpperCase().contains('증권') ||
+                                  a.accountType.toUpperCase().contains('주식'),
+                            )
+                            .toList()
+                          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
                     if (targetAccounts.isEmpty) {
                       return const Text('등록된 증권/주식 계좌가 없습니다.');
@@ -168,23 +169,25 @@ class _StockHoldingItemDialogState
                     }
 
                     return DropdownButtonFormField<String>(
-                      initialValue: targetAccounts.any((a) => a.id == _selectedAccountId)
-                          ? _selectedAccountId
-                          : null,
+                      initialValue:
+                          targetAccounts.any((a) => a.id == _selectedAccountId)
+                              ? _selectedAccountId
+                              : null,
                       decoration: const InputDecoration(
                         labelText: '증권 계좌 선택',
                         border: OutlineInputBorder(),
                       ),
-                      items: targetAccounts.map((acc) {
-                        final institution = acc.financialInstitution;
-                        final nameObj = accountNameMap[acc.accountNameId];
-                        return DropdownMenuItem(
-                          value: acc.id,
-                          child: Text(
-                            '$institution - ${nameObj?.accountName ?? '계좌'}',
-                          ),
-                        );
-                      }).toList(),
+                      items:
+                          targetAccounts.map((acc) {
+                            final institution = acc.financialInstitution;
+                            final nameObj = accountNameMap[acc.accountNameId];
+                            return DropdownMenuItem(
+                              value: acc.id,
+                              child: Text(
+                                '$institution - ${nameObj?.accountName ?? '계좌'}',
+                              ),
+                            );
+                          }).toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedAccountId = val;
@@ -209,23 +212,25 @@ class _StockHoldingItemDialogState
                     }
 
                     return DropdownButtonFormField<String>(
-                      initialValue: stockItems.any((s) => s.id == _selectedStockItemId)
-                          ? _selectedStockItemId
-                          : null,
+                      initialValue:
+                          stockItems.any((s) => s.id == _selectedStockItemId)
+                              ? _selectedStockItemId
+                              : null,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: '종목 선택',
                         border: OutlineInputBorder(),
                       ),
-                      items: stockItems.map((stock) {
-                        return DropdownMenuItem(
-                          value: stock.id,
-                          child: Text(
-                            '${stock.itemName} (${stock.stockCode})',
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
+                      items:
+                          stockItems.map((stock) {
+                            return DropdownMenuItem(
+                              value: stock.id,
+                              child: Text(
+                                '${stock.itemName} (${stock.stockCode})',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedStockItemId = val;
@@ -250,8 +255,9 @@ class _StockHoldingItemDialogState
                     DateTime initialDate = DateTime.now();
                     if (_dateController.text.trim().isNotEmpty) {
                       try {
-                        initialDate = DateFormat('yyyy-MM-dd')
-                            .parse(_dateController.text.trim());
+                        initialDate = DateFormat(
+                          'yyyy-MM-dd',
+                        ).parse(_dateController.text.trim());
                       } catch (_) {
                         initialDate = DateTime.now();
                       }
@@ -265,8 +271,9 @@ class _StockHoldingItemDialogState
                     );
                     if (picked != null) {
                       setState(() {
-                        _dateController.text =
-                            DateFormat('yyyy-MM-dd').format(picked);
+                        _dateController.text = DateFormat(
+                          'yyyy-MM-dd',
+                        ).format(picked);
                       });
                     }
                   },
@@ -297,20 +304,20 @@ class _StockHoldingItemDialogState
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-                 child: ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo.shade600,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  child: ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo.shade600,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      _isEditing ? '수정하기' : '등록하기',
+                      style: const TextStyle(fontSize: 16),
                     ),
                   ),
-                  child: Text(
-                    _isEditing ? '수정하기' : '등록하기',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
                 ),
               ],
             ),

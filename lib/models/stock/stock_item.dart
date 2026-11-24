@@ -4,7 +4,7 @@ part 'stock_item.freezed.dart';
 part 'stock_item.g.dart';
 
 @freezed
-class StockItem with _$StockItem {
+abstract class StockItem with _$StockItem {
   const factory StockItem({
     String? id, // 문서 ID (docId) 매핑용
     @JsonKey(name: 'itemName') required String itemName,     // 종목명 (예: 노바텍)

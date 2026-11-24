@@ -16,8 +16,8 @@ class AccountScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
 
     return Scaffold(
       appBar: MainAppBar(
@@ -247,7 +247,7 @@ class AccountScreen extends ConsumerWidget {
       onDelete: () async {
         try {
           await ref
-              .read(accountNotifierProvider.notifier)
+              .read(accountProvider.notifier)
               .deleteAccount(account.id!);
 
           if (!context.mounted) return;

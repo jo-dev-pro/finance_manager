@@ -50,15 +50,15 @@ class AllMonthlyStockBalances extends _$AllMonthlyStockBalances {
     List<StockItem> stockItems = [];
 
     try {
-      accounts = await ref.watch(accountNotifierProvider.future);
+      accounts = await ref.watch(accountProvider.future);
     } catch (_) {}
 
     try {
-      accountNames = await ref.watch(accountNameNotifierProvider.future);
+      accountNames = await ref.watch(accountNameProvider.future);
     } catch (_) {}
 
     try {
-      stockItems = await ref.watch(stockItemNotifierProvider.future);
+      stockItems = await ref.watch(stockItemProvider.future);
     } catch (_) {}
 
     final snapshot =
@@ -143,7 +143,7 @@ class MonthlyStockBalanceNotifier extends _$MonthlyStockBalanceNotifier {
     // 2. 계좌별 보유 종목(매수일 정보 포함) 목록 가져오기
     List<StockHoldingItem> holdingItems = [];
     try {
-      holdingItems = await ref.watch(stockHoldingItemNotifierProvider.future);
+      holdingItems = await ref.watch(stockHoldingItemProvider.future);
     } catch (_) {}
 
     // 3. '계좌ID_종목ID'를 키로 하고 purchaseDate를 값으로 하는 맵 생성
@@ -172,9 +172,9 @@ class MonthlyStockBalanceNotifier extends _$MonthlyStockBalanceNotifier {
     String? resolvedStockName = balance.stockItemName;
 
     try {
-      final accounts = await ref.read(accountNotifierProvider.future);
-      final accountNames = await ref.read(accountNameNotifierProvider.future);
-      final stockItems = await ref.read(stockItemNotifierProvider.future);
+      final accounts = await ref.read(accountProvider.future);
+      final accountNames = await ref.read(accountNameProvider.future);
+      final stockItems = await ref.read(stockItemProvider.future);
 
       if (resolvedAccountName == null || resolvedAccountName.isEmpty) {
         final matchedAcc = accounts.firstWhereOrNull(
@@ -237,7 +237,7 @@ class MonthlyStockBalanceNotifier extends _$MonthlyStockBalanceNotifier {
 
     for (var item in items) {
       final targetItem = await _enrichBalanceNames(item);
-      
+
       // 💡 일괄 저장 시에도 동일하게 기준년월_계정ID_종목ID 적용
       final docId =
           '${targetItem.yearMonth}_${targetItem.accountId}_${targetItem.stockItemId}';

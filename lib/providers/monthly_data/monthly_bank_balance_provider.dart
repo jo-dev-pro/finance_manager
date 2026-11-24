@@ -29,11 +29,11 @@ class MonthlyBankBalanceWithAccount {
 
 @riverpod
 Future<List<MonthlyBankBalanceWithAccount>> allMonthlyBankBalances(
-  AllMonthlyBankBalancesRef ref,
+  Ref ref,
 ) async {
   final firestore = ref.watch(firestoreProvider);
-  final accounts = await ref.watch(accountNotifierProvider.future);
-  final accountNames = await ref.watch(accountNameNotifierProvider.future);
+  final accounts = await ref.watch(accountProvider.future);
+  final accountNames = await ref.watch(accountNameProvider.future);
 
   final snapshot = await firestore.collection(monthlyBankBalanceDBName).get();
 
@@ -90,11 +90,15 @@ class MonthlyBankBalanceNotifier extends _$MonthlyBankBalanceNotifier {
     String? resolvedAccountName = balance.accountName;
     if (resolvedAccountName == null || resolvedAccountName.isEmpty) {
       try {
-        final accounts = await ref.read(accountNotifierProvider.future);
-        final accountNames = await ref.read(accountNameNotifierProvider.future);
+        final accounts = await ref.read(accountProvider.future);
+        final accountNames = await ref.read(accountNameProvider.future);
 
-        final matchedAccount = accounts.firstWhereOrNull((a) => a.id == balance.accountId);
-        final matchedNameObj = accountNames.firstWhereOrNull((an) => an.id == matchedAccount?.accountNameId);
+        final matchedAccount = accounts.firstWhereOrNull(
+          (a) => a.id == balance.accountId,
+        );
+        final matchedNameObj = accountNames.firstWhereOrNull(
+          (an) => an.id == matchedAccount?.accountNameId,
+        );
 
         if (matchedNameObj != null) {
           final institution = matchedAccount?.financialInstitution ?? '';
@@ -117,7 +121,7 @@ class MonthlyBankBalanceNotifier extends _$MonthlyBankBalanceNotifier {
         .collection(monthlyBankBalanceDBName)
         .doc(docId)
         .set(data, SetOptions(merge: true));
-    
+
     ref.invalidateSelf();
     ref.invalidate(allMonthlyBankBalancesProvider);
   }

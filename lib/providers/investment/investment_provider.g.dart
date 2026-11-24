@@ -6,25 +6,52 @@ part of 'investment_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(InvestmentNotifier)
+const investmentProvider = InvestmentNotifierProvider._();
+
+final class InvestmentNotifierProvider
+    extends $AsyncNotifierProvider<InvestmentNotifier, List<Investment>> {
+  const InvestmentNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'investmentProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$investmentNotifierHash();
+
+  @$internal
+  @override
+  InvestmentNotifier create() => InvestmentNotifier();
+}
+
 String _$investmentNotifierHash() =>
     r'e23a174356245b5f14ef53475f57e793b359606a';
 
-/// See also [InvestmentNotifier].
-@ProviderFor(InvestmentNotifier)
-final investmentNotifierProvider = AutoDisposeAsyncNotifierProvider<
-  InvestmentNotifier,
-  List<Investment>
->.internal(
-  InvestmentNotifier.new,
-  name: r'investmentNotifierProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$investmentNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$InvestmentNotifier = AutoDisposeAsyncNotifier<List<Investment>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$InvestmentNotifier extends $AsyncNotifier<List<Investment>> {
+  FutureOr<List<Investment>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref =
+        this.ref as $Ref<AsyncValue<List<Investment>>, List<Investment>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<Investment>>, List<Investment>>,
+              AsyncValue<List<Investment>>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

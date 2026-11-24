@@ -4,7 +4,7 @@ part 'account.freezed.dart';
 part 'account.g.dart';
 
 @freezed
-class Account with _$Account {
+abstract class Account with _$Account {
   // 💡 커스텀 겟터/메서드를 사용하기 위한 명시적 생성자 선언
   const Account._();
 

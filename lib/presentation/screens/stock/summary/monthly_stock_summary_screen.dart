@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -19,11 +18,8 @@ import '../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
 import '../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 import '../../../../providers/stock/stock_item_provider.dart';
+import '../../../../providers/stock/stock_provider.dart';
 import 'widgets/monthly_stock_account_summary_list.dart';
-
-final selectedStockAccountFilterProvider = StateProvider.autoDispose<String?>(
-  (ref) => null,
-);
 
 class MonthlyStockSummaryScreen extends ConsumerStatefulWidget {
   final Object? extra;
@@ -76,11 +72,7 @@ class _MonthlyStockSummaryScreenState
             ),
           )
         else
-          Icon(
-            Icons.account_balance,
-            size: 15,
-            color: Colors.grey.shade600,
-          ),
+          Icon(Icons.account_balance, size: 15, color: Colors.grey.shade600),
         const SizedBox(width: 6),
         Flexible(
           child: Text(
@@ -115,8 +107,9 @@ class _MonthlyStockSummaryScreenState
       Future.microtask(() {
         if (!mounted || _initializedFromExtra) return;
         _initializedFromExtra = true;
-        ref.read(selectedStockAccountFilterProvider.notifier).state =
-            initialAccountId;
+        ref
+            .read(selectedStockAccountFilterProvider.notifier)
+            .setFilter(initialAccountId);
       });
     } else {
       _initializedFromExtra = true;
@@ -128,9 +121,9 @@ class _MonthlyStockSummaryScreenState
     final selectedMonth = ref.watch(selectedYearMonthProvider);
     final selectedAccountId = ref.watch(selectedStockAccountFilterProvider);
 
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final stockItemsAsync = ref.watch(stockItemNotifierProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
+    final stockItemsAsync = ref.watch(stockItemProvider);
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
 
     return Scaffold(
@@ -163,28 +156,19 @@ class _MonthlyStockSummaryScreenState
 
           final items =
               ref
-                  .watch(
-                    monthlyStockBalanceNotifierProvider(activeCurrentMonth),
-                  )
+                  .watch(monthlyStockBalanceProvider(activeCurrentMonth))
                   .value ??
               [];
           final lastItems =
-              ref.watch(monthlyStockBalanceNotifierProvider(lastMonth)).value ??
-              [];
+              ref.watch(monthlyStockBalanceProvider(lastMonth)).value ?? [];
 
           final accountBalances =
               ref
-                  .watch(
-                    monthlyStockAccountBalanceNotifierProvider(
-                      activeCurrentMonth,
-                    ),
-                  )
+                  .watch(monthlyStockAccountBalanceProvider(activeCurrentMonth))
                   .value ??
               [];
           final lastAccountBalances =
-              ref
-                  .watch(monthlyStockAccountBalanceNotifierProvider(lastMonth))
-                  .value ??
+              ref.watch(monthlyStockAccountBalanceProvider(lastMonth)).value ??
               [];
 
           final accounts = accountsAsync.value ?? [];
@@ -322,9 +306,7 @@ class _MonthlyStockSummaryScreenState
               (grandTotalBalance + totalPayout + totalCumulativeWithdrawal) -
               totalPrincipal;
           final totalReturnRate =
-              totalPrincipal > 0
-                  ? (totalProfit / totalPrincipal) * 100
-                  : 0.0;
+              totalPrincipal > 0 ? (totalProfit / totalPrincipal) * 100 : 0.0;
 
           final lastTotalStockBalance = lastFilteredStockItems.fold<double>(
             0.0,
@@ -372,7 +354,7 @@ class _MonthlyStockSummaryScreenState
                     onAccountChanged:
                         (val) => ref
                             .read(selectedStockAccountFilterProvider.notifier)
-                            .state = val,
+                            .setFilter(val),
                   ),
                   const SizedBox(height: 16),
 
@@ -465,7 +447,8 @@ class _MonthlyStockSummaryScreenState
                                 ? accountNameMap[matchedAcc.accountNameId]
                                 : null;
                         final accountName = nameObj?.accountName ?? '주식계좌';
-                        final isForeign = matchedAcc?.isForeignCurrency ?? false;
+                        final isForeign =
+                            matchedAcc?.isForeignCurrency ?? false;
 
                         final stock = stockItemMap[item.stockItemId];
                         final stockNameOnly = stock?.itemName ?? '알 수 없는 종목';
@@ -490,40 +473,52 @@ class _MonthlyStockSummaryScreenState
                           clipBehavior: Clip.antiAlias,
                           child: InkWell(
                             onTap:
-                               () => MonthlyReturnRateChartDialog.show(
-      context,
-      titleText: '$displayName 월별 수익률 (%)',
-      accountName: accountName,
-      logoUrl: matchedAcc?.logoUrl,
-      rateCalculator: (dialogRef, ym) {
-        final monthItems =
-            dialogRef.watch(monthlyStockBalanceNotifierProvider(ym)).value ?? [];
-        final matchedItems = monthItems.where(
-          (prev) =>
-              prev.accountId == item.accountId &&
-              prev.stockItemId == item.stockItemId,
-        );
-        final totalBal = matchedItems.fold<double>(
-          0.0,
-          (sum, prev) => sum + prev.balance,
-        );
-        final totalPayout = matchedItems.fold<double>(
-          0.0,
-          (sum, prev) => sum + prev.totalPayout,
-        );
-        final totalWithdrawal = matchedItems.fold<double>(
-          0.0,
-          (sum, prev) => sum + prev.totalWithdrawal,
-        );
-        final totalPrin = matchedItems.fold<double>(
-          0.0,
-          (sum, prev) => sum + prev.principal,
-        );
-        if (totalPrin <= 0) return 0.0;
-        final profit = (totalBal + totalPayout + totalWithdrawal) - totalPrin;
-        return (profit / totalPrin) * 100;
-      },
-    ),
+                                () => MonthlyReturnRateChartDialog.show(
+                                  context,
+                                  titleText: '$displayName 월별 수익률 (%)',
+                                  accountName: accountName,
+                                  logoUrl: matchedAcc?.logoUrl,
+                                  rateCalculator: (dialogRef, ym) {
+                                    final monthItems =
+                                        dialogRef
+                                            .watch(
+                                              monthlyStockBalanceProvider(ym),
+                                            )
+                                            .value ??
+                                        [];
+                                    final matchedItems = monthItems.where(
+                                      (prev) =>
+                                          prev.accountId == item.accountId &&
+                                          prev.stockItemId == item.stockItemId,
+                                    );
+                                    final totalBal = matchedItems.fold<double>(
+                                      0.0,
+                                      (sum, prev) => sum + prev.balance,
+                                    );
+                                    final totalPayout = matchedItems
+                                        .fold<double>(
+                                          0.0,
+                                          (sum, prev) => sum + prev.totalPayout,
+                                        );
+                                    final totalWithdrawal = matchedItems
+                                        .fold<double>(
+                                          0.0,
+                                          (sum, prev) =>
+                                              sum + prev.totalWithdrawal,
+                                        );
+                                    final totalPrin = matchedItems.fold<double>(
+                                      0.0,
+                                      (sum, prev) => sum + prev.principal,
+                                    );
+                                    if (totalPrin <= 0) return 0.0;
+                                    final profit =
+                                        (totalBal +
+                                            totalPayout +
+                                            totalWithdrawal) -
+                                        totalPrin;
+                                    return (profit / totalPrin) * 100;
+                                  },
+                                ),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Column(

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers/firestore_provider.dart';
@@ -98,7 +99,7 @@ class PensionProductNotifier extends _$PensionProductNotifier {
         await batch.commit();
       }
     } catch (e) {
-      print('하위 연금 상품명 동기화 중 오류 발생: $e');
+      debugPrint('하위 연금 상품명 동기화 중 오류 발생: $e');
     }
     
     ref.invalidateSelf();

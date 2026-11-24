@@ -4,7 +4,7 @@ part 'stock_holding_item.freezed.dart';
 part 'stock_holding_item.g.dart';
 
 @freezed
-class StockHoldingItem with _$StockHoldingItem {
+abstract class StockHoldingItem with _$StockHoldingItem {
   const StockHoldingItem._();
 
   const factory StockHoldingItem({

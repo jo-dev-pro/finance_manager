@@ -40,19 +40,12 @@ class _PensionReturnRateChartState
           height: 20,
           fit: BoxFit.cover,
           errorBuilder:
-              (_, __, ___) => Icon(
-                Icons.account_balance,
-                size: 14,
-                color: fallbackColor,
-              ),
+              (_, __, ___) =>
+                  Icon(Icons.account_balance, size: 14, color: fallbackColor),
         ),
       );
     }
-    return Icon(
-      Icons.account_balance,
-      size: 14,
-      color: fallbackColor,
-    );
+    return Icon(Icons.account_balance, size: 14, color: fallbackColor);
   }
 
   @override
@@ -60,19 +53,15 @@ class _PensionReturnRateChartState
     final allBalances =
         ref.watch(allMonthlyPensionBalancesProvider).value ?? [];
     final currentBalances =
-        ref
-            .watch(monthlyPensionBalanceNotifierProvider(widget.currentMonth))
-            .value ??
+        ref.watch(monthlyPensionBalanceProvider(widget.currentMonth)).value ??
         [];
     final currentAccountBalances =
         ref
-            .watch(
-              monthlyPensionAccountBalanceNotifierProvider(widget.currentMonth),
-            )
+            .watch(monthlyPensionAccountBalanceProvider(widget.currentMonth))
             .value ??
         [];
-    final accounts = ref.watch(accountNotifierProvider).value ?? [];
-    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
+    final accounts = ref.watch(accountProvider).value ?? [];
+    final accountNames = ref.watch(accountNameProvider).value ?? [];
 
     // 현재 선택 월 기준 계좌 ID 목록 추출
     final accountIdSet = <String>{
@@ -88,9 +77,7 @@ class _PensionReturnRateChartState
     // 월별 계좌 데이터 맵 캐싱 (연월 -> 계좌리스트)
     final monthlyAccountBalanceMap = {
       for (var ym in sortedMonths)
-        ym:
-            ref.watch(monthlyPensionAccountBalanceNotifierProvider(ym)).value ??
-            [],
+        ym: ref.watch(monthlyPensionAccountBalanceProvider(ym)).value ?? [],
     };
 
     final seriesAccountNames =
@@ -160,9 +147,10 @@ class _PensionReturnRateChartState
 
                   double tooltipLeft = (_touchLocalPosition?.dx ?? 0) + 12;
                   if (tooltipLeft + 175 > constraints.maxWidth) {
-                    tooltipLeft =
-                        ((_touchLocalPosition?.dx ?? 0) - 185)
-                            .clamp(0.0, constraints.maxWidth - 175);
+                    tooltipLeft = ((_touchLocalPosition?.dx ?? 0) - 185).clamp(
+                      0.0,
+                      constraints.maxWidth - 175,
+                    );
                   }
                   final tooltipTop = ((_touchLocalPosition?.dy ?? 0) - 24)
                       .clamp(0.0, constraints.maxHeight - 130);
@@ -201,20 +189,15 @@ class _PensionReturnRateChartState
                                 return;
                               }
                               setState(() {
-                                _touchedSpots =
-                                    List<LineBarSpot>.from(
-                                      response.lineBarSpots!,
-                                    )
-                                      ..sort(
-                                        (a, b) => b.y.compareTo(a.y),
-                                      );
+                                _touchedSpots = List<LineBarSpot>.from(
+                                  response.lineBarSpots!,
+                                )..sort((a, b) => b.y.compareTo(a.y));
                                 _touchLocalPosition = event.localPosition;
                               });
                             },
                             touchTooltipData: LineTouchTooltipData(
                               getTooltipItems:
-                                  (spots) =>
-                                      spots.map((_) => null).toList(),
+                                  (spots) => spots.map((_) => null).toList(),
                             ),
                           ),
                           titlesData: FlTitlesData(
@@ -287,7 +270,8 @@ class _PensionReturnRateChartState
                                       );
                                       final productBal = items.fold<double>(
                                         0.0,
-                                        (s, item) => s + item.balanceItem.balance,
+                                        (s, item) =>
+                                            s + item.balanceItem.balance,
                                       );
 
                                       final accBalObj =

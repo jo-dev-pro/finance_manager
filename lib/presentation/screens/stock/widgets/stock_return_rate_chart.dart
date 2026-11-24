@@ -38,19 +38,12 @@ class _StockReturnRateChartState extends ConsumerState<StockReturnRateChart> {
           height: 16,
           fit: BoxFit.cover,
           errorBuilder:
-              (_, __, ___) => Icon(
-                Icons.account_balance,
-                size: 14,
-                color: fallbackColor,
-              ),
+              (_, __, ___) =>
+                  Icon(Icons.account_balance, size: 14, color: fallbackColor),
         ),
       );
     }
-    return Icon(
-      Icons.account_balance,
-      size: 14,
-      color: fallbackColor,
-    );
+    return Icon(Icons.account_balance, size: 14, color: fallbackColor);
   }
 
   @override
@@ -58,19 +51,14 @@ class _StockReturnRateChartState extends ConsumerState<StockReturnRateChart> {
     // 💡 프로바이더를 통한 데이터 직접 구독
     final allBalances = ref.watch(allMonthlyStockBalancesProvider).value ?? [];
     final currentBalances =
-        ref
-            .watch(monthlyStockBalanceNotifierProvider(widget.currentMonth))
-            .value ??
-        [];
+        ref.watch(monthlyStockBalanceProvider(widget.currentMonth)).value ?? [];
     final currentAccountBalances =
         ref
-            .watch(
-              monthlyStockAccountBalanceNotifierProvider(widget.currentMonth),
-            )
+            .watch(monthlyStockAccountBalanceProvider(widget.currentMonth))
             .value ??
         [];
-    final accounts = ref.watch(accountNotifierProvider).value ?? [];
-    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
+    final accounts = ref.watch(accountProvider).value ?? [];
+    final accountNames = ref.watch(accountNameProvider).value ?? [];
 
     // 현재 선택 월 기준 계좌 ID 목록 동적 추출
     final accountIdSet = <String>{
@@ -151,9 +139,10 @@ class _StockReturnRateChartState extends ConsumerState<StockReturnRateChart> {
                   // 툴팁이 차트 영역 밖으로 넘어가지 않도록 위치 보정
                   double tooltipLeft = (_touchLocalPosition?.dx ?? 0) + 12;
                   if (tooltipLeft + 175 > constraints.maxWidth) {
-                    tooltipLeft =
-                        ((_touchLocalPosition?.dx ?? 0) - 185)
-                            .clamp(0.0, constraints.maxWidth - 175);
+                    tooltipLeft = ((_touchLocalPosition?.dx ?? 0) - 185).clamp(
+                      0.0,
+                      constraints.maxWidth - 175,
+                    );
                   }
                   final tooltipTop = ((_touchLocalPosition?.dy ?? 0) - 24)
                       .clamp(0.0, constraints.maxHeight - 130);
@@ -192,21 +181,16 @@ class _StockReturnRateChartState extends ConsumerState<StockReturnRateChart> {
                                 return;
                               }
                               setState(() {
-                                _touchedSpots =
-                                    List<LineBarSpot>.from(
-                                      response.lineBarSpots!,
-                                    )
-                                      ..sort(
-                                        (a, b) => b.y.compareTo(a.y),
-                                      );
+                                _touchedSpots = List<LineBarSpot>.from(
+                                  response.lineBarSpots!,
+                                )..sort((a, b) => b.y.compareTo(a.y));
                                 _touchLocalPosition = event.localPosition;
                               });
                             },
                             touchTooltipData: LineTouchTooltipData(
                               // 커스텀 툴팁 박스를 사용하므로 기본 텍스트 툴팁은 숨김
                               getTooltipItems:
-                                  (spots) =>
-                                      spots.map((_) => null).toList(),
+                                  (spots) => spots.map((_) => null).toList(),
                             ),
                           ),
                           titlesData: FlTitlesData(
@@ -279,7 +263,8 @@ class _StockReturnRateChartState extends ConsumerState<StockReturnRateChart> {
                                       );
                                       final totalBal = items.fold<double>(
                                         0.0,
-                                        (s, item) => s + item.balanceItem.balance,
+                                        (s, item) =>
+                                            s + item.balanceItem.balance,
                                       );
                                       final totalPrin = items.fold<double>(
                                         0.0,
@@ -291,11 +276,15 @@ class _StockReturnRateChartState extends ConsumerState<StockReturnRateChart> {
                                         (s, item) =>
                                             s + item.balanceItem.totalPayout,
                                       );
-                                      final totalWithdrawal = items.fold<double>(
-                                        0.0,
-                                        (s, item) =>
-                                            s + item.balanceItem.totalWithdrawal,
-                                      );
+                                      final totalWithdrawal = items
+                                          .fold<double>(
+                                            0.0,
+                                            (s, item) =>
+                                                s +
+                                                item
+                                                    .balanceItem
+                                                    .totalWithdrawal,
+                                          );
 
                                       final rate =
                                           totalPrin > 0

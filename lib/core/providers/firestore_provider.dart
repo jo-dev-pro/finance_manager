@@ -5,11 +5,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'firestore_provider.g.dart';
 
 @riverpod
-FirebaseFirestore firestore(FirestoreRef ref) {
+FirebaseFirestore firestore(Ref ref) {
   return FirebaseFirestore.instance;
 }
 
 @riverpod
-FirebaseStorage firebaseStorage(FirebaseStorageRef ref) {
+FirebaseStorage firebaseStorage(Ref ref) {
   return FirebaseStorage.instance;
 }

@@ -22,15 +22,12 @@ class PensionPortionSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final balances =
-        ref.watch(monthlyPensionBalanceNotifierProvider(currentMonth)).value ??
-        [];
+        ref.watch(monthlyPensionBalanceProvider(currentMonth)).value ?? [];
     final accountBalances =
-        ref
-            .watch(monthlyPensionAccountBalanceNotifierProvider(currentMonth))
-            .value ??
+        ref.watch(monthlyPensionAccountBalanceProvider(currentMonth)).value ??
         [];
-    final accounts = ref.watch(accountNotifierProvider).value ?? [];
-    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
+    final accounts = ref.watch(accountProvider).value ?? [];
+    final accountNames = ref.watch(accountNameProvider).value ?? [];
 
     final accountNameMap = {for (var an in accountNames) an.id: an};
     final accountMap = {for (var a in accounts) a.id!: a};

@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,7 +7,6 @@ import '../../../../../core/widgets/jtext.dart';
 import '../../../../../core/widgets/monthly_return_rate_chart_dialog.dart';
 import '../../../../../models/account/account_name.dart';
 import '../../../../../models/monthly_data/monthly_pension_account_balance.dart';
-import '../../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
 import '../../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 
@@ -129,11 +127,7 @@ class MonthlyPensionAccountSummaryList extends ConsumerWidget {
                         );
                         final accBalList =
                             dialogRef
-                                .watch(
-                                  monthlyPensionAccountBalanceNotifierProvider(
-                                    ym,
-                                  ),
-                                )
+                                .watch(monthlyPensionAccountBalanceProvider(ym))
                                 .value ??
                             [];
                         final accBal = accBalList.firstWhereOrNull(

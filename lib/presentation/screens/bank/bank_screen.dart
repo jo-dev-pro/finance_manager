@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/providers/onpop_invoked_provider.dart';
 import '../../../core/router/app_router_path.dart';
-import '../../../core/router/branches/tab_back_dashboard_scope.dart';
 import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
@@ -29,12 +29,34 @@ class BankScreen extends ConsumerWidget {
     }
   }
 
+  void _backToDashboard(BuildContext context, WidgetRef ref) {
+    ref.read(jOnPopInvokedProvider.notifier).reset();
+    final shell = StatefulNavigationShell.maybeOf(context);
+    if (shell != null) {
+      shell.goBranch(0, initialLocation: true);
+    } else {
+      context.go(AppRoutePath.dashboard);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
     final selectedMonth = ref.watch(selectedYearMonthProvider);
 
-    return TabBackToDashboardScope(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          router.pop(result);
+          return;
+        }
+
+        _backToDashboard(context, ref);
+      },
       child: Scaffold(
         appBar: MainAppBar(
           titleText: '은행 자산 현황',
@@ -51,38 +73,35 @@ class BankScreen extends ConsumerWidget {
             ),
           ],
         ),
-        
         body: availableMonthsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error:
-              (err, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '기준월 정보를 불러오지 못했습니다:\n$err',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed:
-                          () => ref.invalidate(availableYearMonthsProvider),
-                      child: const Text('다시 시도'),
-                    ),
-                  ],
+          error: (err, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '기준월 정보를 불러오지 못했습니다:\n$err',
+                  textAlign: TextAlign.center,
                 ),
-              ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () => ref.invalidate(availableYearMonthsProvider),
+                  child: const Text('다시 시도'),
+                ),
+              ],
+            ),
+          ),
           data: (months) {
             if (months.isEmpty) {
               return const Center(child: Text('등록된 기준월 데이터가 없습니다.'));
             }
-      
+
             final String defaultTarget = months.first;
             final String activeCurrentMonth =
                 (selectedMonth != null && months.contains(selectedMonth))
                     ? selectedMonth
                     : defaultTarget;
-      
+
             if (selectedMonth == null || !months.contains(selectedMonth)) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 ref
@@ -90,16 +109,16 @@ class BankScreen extends ConsumerWidget {
                     .select(activeCurrentMonth);
               });
             }
-      
+
             final lastYearMonth = _getLastYearMonth(activeCurrentMonth);
-      
+
             final bankDataAsync = ref.watch(
               bankScreenDataProvider(
                 currentYearMonth: activeCurrentMonth,
                 lastYearMonth: lastYearMonth,
               ),
             );
-      
+
             return MainConstrainedBox(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,16 +127,13 @@ class BankScreen extends ConsumerWidget {
                     months: months,
                     currentMonth: activeCurrentMonth,
                   ),
-                  SizedBox(height: 16),
-      
+                  const SizedBox(height: 16),
                   Expanded(
                     child: bankDataAsync.when(
-                      loading:
-                          () => const Center(child: CircularProgressIndicator()),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
                       error: (err, _) => Center(child: Text('오류: $err')),
-                      data:
-                          (rawItems) =>
-                              BuildBankData(rawItems: rawItems), // 💡 분리된 위젯 호출
+                      data: (rawItems) => BuildBankData(rawItems: rawItems),
                     ),
                   ),
                 ],

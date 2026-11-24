@@ -66,8 +66,7 @@ class _MonthlyStockBalanceDialogState
       TextEditingController();
   final TextEditingController _accountMonthlyWithdrawalController =
       TextEditingController();
-  final TextEditingController _exchangeRateController =
-      TextEditingController();
+  final TextEditingController _exchangeRateController = TextEditingController();
 
   final Map<String, bool> _isLoadingPriceMap = {};
   bool _isAllLoading = false;
@@ -122,8 +121,9 @@ class _MonthlyStockBalanceDialogState
   Future<void> _fetchExchangeRate() async {
     setState(() => _isExchangeRateLoading = true);
     try {
-      final rate =
-          await TossDirectApiService.getMonthlyExchangeRate(_selectedYearMonth);
+      final rate = await TossDirectApiService.getMonthlyExchangeRate(
+        _selectedYearMonth,
+      );
       if (rate != null && mounted) {
         setState(() {
           _exchangeRateController.text = rate.toStringAsFixed(2);
@@ -225,24 +225,24 @@ class _MonthlyStockBalanceDialogState
 
   @override
   Widget build(BuildContext context) {
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final holdingItemsAsync = ref.watch(stockHoldingItemNotifierProvider);
-    final stockItemsAsync = ref.watch(stockItemNotifierProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
+    final holdingItemsAsync = ref.watch(stockHoldingItemProvider);
+    final stockItemsAsync = ref.watch(stockItemProvider);
 
     final existingCurrentBalancesAsync = ref.watch(
-      monthlyStockBalanceNotifierProvider(_selectedYearMonth),
+      monthlyStockBalanceProvider(_selectedYearMonth),
     );
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
     final existingPrevBalancesAsync = ref.watch(
-      monthlyStockBalanceNotifierProvider(prevYearMonth),
+      monthlyStockBalanceProvider(prevYearMonth),
     );
 
     final currentAccountBalancesAsync = ref.watch(
-      monthlyStockAccountBalanceNotifierProvider(_selectedYearMonth),
+      monthlyStockAccountBalanceProvider(_selectedYearMonth),
     );
     final prevAccountBalancesAsync = ref.watch(
-      monthlyStockAccountBalanceNotifierProvider(prevYearMonth),
+      monthlyStockAccountBalanceProvider(prevYearMonth),
     );
 
     return Container(
@@ -368,8 +368,8 @@ class _MonthlyStockBalanceDialogState
                         prevAccData?.exchangeRate ??
                         1.0;
                     if (defaultRate > 1.0) {
-                      _exchangeRateController.text =
-                          defaultRate.toStringAsFixed(2);
+                      _exchangeRateController.text = defaultRate
+                          .toStringAsFixed(2);
                     }
                   }
 
@@ -411,8 +411,7 @@ class _MonthlyStockBalanceDialogState
                                   setState(() {
                                     _selectedAccountId = val;
                                     _accountCashBalanceController.clear();
-                                    _accountMonthlyWithdrawalController
-                                        .clear();
+                                    _accountMonthlyWithdrawalController.clear();
                                     _exchangeRateController.clear();
                                   });
                                 },
@@ -601,7 +600,10 @@ class _MonthlyStockBalanceDialogState
                                               color: Colors.white,
                                             ),
                                           )
-                                          : const Icon(Icons.flash_on, size: 16),
+                                          : const Icon(
+                                            Icons.flash_on,
+                                            size: 16,
+                                          ),
                                   label: Text(
                                     _isAllLoading
                                         ? '전체 조회 중...'
@@ -642,21 +644,20 @@ class _MonthlyStockBalanceDialogState
                                         isTargetEdit
                                             ? widget.editItem!.quantity
                                             : (currentData != null &&
-                                                    currentData.quantity > 0)
-                                                ? currentData.quantity
-                                                : (prevBalanceMap[key]
-                                                        ?.quantity ??
-                                                    0.0);
+                                                currentData.quantity > 0)
+                                            ? currentData.quantity
+                                            : (prevBalanceMap[key]?.quantity ??
+                                                0.0);
 
                                     final currentPriceVal =
                                         isTargetEdit
                                             ? widget.editItem!.currentPrice
                                             : (currentData != null &&
-                                                    currentData.currentPrice > 0)
-                                                ? currentData.currentPrice
-                                                : (prevBalanceMap[key]
-                                                        ?.currentPrice ??
-                                                    0.0);
+                                                currentData.currentPrice > 0)
+                                            ? currentData.currentPrice
+                                            : (prevBalanceMap[key]
+                                                    ?.currentPrice ??
+                                                0.0);
 
                                     final monthlyPrinVal =
                                         isTargetEdit
@@ -673,8 +674,7 @@ class _MonthlyStockBalanceDialogState
                                     final monthlyWithVal =
                                         isTargetEdit
                                             ? widget.editItem!.monthlyWithdrawal
-                                            : (currentData
-                                                    ?.monthlyWithdrawal ??
+                                            : (currentData?.monthlyWithdrawal ??
                                                 0.0);
 
                                     _quantityControllers[key] =
@@ -1028,18 +1028,16 @@ class _MonthlyStockBalanceDialogState
     if (_selectedAccountId == null) return;
 
     final stockNotifier = ref.read(
-      monthlyStockBalanceNotifierProvider(_selectedYearMonth).notifier,
+      monthlyStockBalanceProvider(_selectedYearMonth).notifier,
     );
     final accountBalanceNotifier = ref.read(
-      monthlyStockAccountBalanceNotifierProvider(_selectedYearMonth).notifier,
+      monthlyStockAccountBalanceProvider(_selectedYearMonth).notifier,
     );
 
     try {
       final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
       final prevAccountBalances =
-          ref
-              .read(monthlyStockAccountBalanceNotifierProvider(prevYearMonth))
-              .value ??
+          ref.read(monthlyStockAccountBalanceProvider(prevYearMonth)).value ??
           [];
 
       final prevAccountBalance = prevAccountBalances.firstWhereOrNull(
@@ -1066,7 +1064,8 @@ class _MonthlyStockBalanceDialogState
           ) ??
           0.0;
 
-      final finalTotalWithdrawal = prevTotalWithdrawal + currentMonthlyWithdrawal;
+      final finalTotalWithdrawal =
+          prevTotalWithdrawal + currentMonthlyWithdrawal;
 
       final accountBalanceItem = MonthlyStockAccountBalance(
         yearMonth: _selectedYearMonth,
@@ -1078,12 +1077,11 @@ class _MonthlyStockBalanceDialogState
       );
       await accountBalanceNotifier.saveBalance(accountBalanceItem);
 
-      final holdingItems = ref.read(stockHoldingItemNotifierProvider).value ?? [];
+      final holdingItems = ref.read(stockHoldingItemProvider).value ?? [];
       final Map<String, _GroupedStockItem> groupedMap = {};
 
       final prevBalances =
-          ref.read(monthlyStockBalanceNotifierProvider(prevYearMonth)).value ??
-          [];
+          ref.read(monthlyStockBalanceProvider(prevYearMonth)).value ?? [];
       final prevBalanceMap = {
         for (var b in prevBalances) '${b.accountId}_${b.stockItemId}': b,
       };
@@ -1145,8 +1143,7 @@ class _MonthlyStockBalanceDialogState
 
           final monthlyPayoutVal =
               double.tryParse(
-                monthlyPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ??
-                    '',
+                monthlyPayoutCtrl?.text.replaceAll(RegExp(r'[^0-9]'), '') ?? '',
               ) ??
               0.0;
 
@@ -1193,7 +1190,8 @@ class _MonthlyStockBalanceDialogState
               monthlyWithdrawal: monthlyWithVal,
               purchaseDate:
                   isTargetEdit
-                      ? (widget.editItem!.purchaseDate ?? groupItem.purchaseDate)
+                      ? (widget.editItem!.purchaseDate ??
+                          groupItem.purchaseDate)
                       : groupItem.purchaseDate,
             ),
           );

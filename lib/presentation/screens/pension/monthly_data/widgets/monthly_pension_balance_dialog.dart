@@ -97,26 +97,26 @@ class _MonthlyPensionBalanceDialogState
 
   @override
   Widget build(BuildContext context) {
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
     final holdingProductsAsync = ref.watch(
-      pensionHoldingProductNotifierProvider,
+      pensionHoldingProductProvider,
     );
-    final pensionProductsAsync = ref.watch(pensionProductNotifierProvider);
+    final pensionProductsAsync = ref.watch(pensionProductProvider);
 
     final existingCurrentBalancesAsync = ref.watch(
-      monthlyPensionBalanceNotifierProvider(_selectedYearMonth),
+      monthlyPensionBalanceProvider(_selectedYearMonth),
     );
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
     final existingPrevBalancesAsync = ref.watch(
-      monthlyPensionBalanceNotifierProvider(prevYearMonth),
+      monthlyPensionBalanceProvider(prevYearMonth),
     );
 
     final currentAccountBalancesAsync = ref.watch(
-      monthlyPensionAccountBalanceNotifierProvider(_selectedYearMonth),
+      monthlyPensionAccountBalanceProvider(_selectedYearMonth),
     );
     final prevAccountBalancesAsync = ref.watch(
-      monthlyPensionAccountBalanceNotifierProvider(prevYearMonth),
+      monthlyPensionAccountBalanceProvider(prevYearMonth),
     );
 
     return Container(
@@ -790,17 +790,17 @@ class _MonthlyPensionBalanceDialogState
     if (_selectedAccountId == null) return;
 
     final pensionNotifier = ref.read(
-      monthlyPensionBalanceNotifierProvider(_selectedYearMonth).notifier,
+      monthlyPensionBalanceProvider(_selectedYearMonth).notifier,
     );
     final accountBalanceNotifier = ref.read(
-      monthlyPensionAccountBalanceNotifierProvider(_selectedYearMonth).notifier,
+      monthlyPensionAccountBalanceProvider(_selectedYearMonth).notifier,
     );
 
     try {
       final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
       final prevAccountBalances =
           ref
-              .read(monthlyPensionAccountBalanceNotifierProvider(prevYearMonth))
+              .read(monthlyPensionAccountBalanceProvider(prevYearMonth))
               .value ??
           [];
 
@@ -849,10 +849,10 @@ class _MonthlyPensionBalanceDialogState
       await accountBalanceNotifier.saveBalance(accountBalanceItem);
 
       final holdingProducts =
-          ref.read(pensionHoldingProductNotifierProvider).value ?? [];
+          ref.read(pensionHoldingProductProvider).value ?? [];
 
       final prevBalances =
-          ref.read(monthlyPensionBalanceNotifierProvider(prevYearMonth)).value ??
+          ref.read(monthlyPensionBalanceProvider(prevYearMonth)).value ??
           [];
       final prevBalanceMap = {
         for (var b in prevBalances) '${b.accountId}_${b.productId}': b,

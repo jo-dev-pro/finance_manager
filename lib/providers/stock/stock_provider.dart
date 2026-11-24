@@ -20,18 +20,20 @@ class StockAccountItem {
 
 @Riverpod(keepAlive: true)
 Future<List<StockAccountItem>> stockScreenData(
-  StockScreenDataRef ref, {
+  Ref ref, {
   required String currentYearMonth,
   required String lastYearMonth,
 }) async {
   // 1. 전체 계좌 목록 불러오기
-  final accounts = await ref.watch(accountNotifierProvider.future);
+  final accounts = await ref.watch(accountProvider.future);
 
   // 2. 현재 월과 직전 월의 주식 월말 잔액 데이터 불러오기
   final currentBalances = await ref.watch(
-      monthlyStockBalanceNotifierProvider(currentYearMonth).future);
+    monthlyStockBalanceProvider(currentYearMonth).future,
+  );
   final lastBalances = await ref.watch(
-      monthlyStockBalanceNotifierProvider(lastYearMonth).future);
+    monthlyStockBalanceProvider(lastYearMonth).future,
+  );
 
   // 3. 주식 유형 계좌('주식')만 필터링하거나 전체 계좌에 대해 매핑
   // (필요에 따라 .where((account) => account.accountType == '주식') 등으로 필터링 가능)
@@ -54,4 +56,18 @@ Future<List<StockAccountItem>> stockScreenData(
       diffFromLastMonth: diffFromLastMonth,
     );
   }).toList();
+}
+
+@riverpod
+class SelectedStockAccountFilter extends _$SelectedStockAccountFilter {
+  @override
+  String? build() => null;
+
+  void setFilter(String? accountId) {
+    state = accountId;
+  }
+
+  void clear() {
+    state = null;
+  }
 }

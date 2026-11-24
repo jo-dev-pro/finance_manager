@@ -112,7 +112,7 @@ class _PensionHoldingProductDialogState
         initialPurchaseDate: finalPurchaseDate,
       );
 
-      final notifier = ref.read(pensionHoldingProductNotifierProvider.notifier);
+      final notifier = ref.read(pensionHoldingProductProvider.notifier);
       if (_isEditing) {
         await notifier.updatePensionHoldingProduct(item);
       } else {
@@ -133,9 +133,9 @@ class _PensionHoldingProductDialogState
 
   @override
   Widget build(BuildContext context) {
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final productsAsync = ref.watch(pensionProductNotifierProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
+    final productsAsync = ref.watch(pensionProductProvider);
 
     return Container(
       width: double.infinity,
@@ -326,20 +326,20 @@ class _PensionHoldingProductDialogState
                   SizedBox(
                     width: double.infinity,
                     height: 50,
-                  child: ElevatedButton(
-                  onPressed: () => _submit(products),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo.shade600,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    child: ElevatedButton(
+                      onPressed: () => _submit(products),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.indigo.shade600,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        _isEditing ? '수정하기' : '등록하기',
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    _isEditing ? '수정하기' : '등록하기',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
                   ),
                 ],
               );

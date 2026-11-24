@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:intl/intl.dart';
 
@@ -13,7 +12,7 @@ import '../monthly_data/monthly_stock_account_balance_provider.dart';
 part 'dashboard_provider.g.dart';
 
 @riverpod
-Future<List<String>> availableYearMonths(AvailableYearMonthsRef ref) async {
+Future<List<String>> availableYearMonths(Ref ref) async {
   final firestore = ref.watch(firestoreProvider);
 
   final bankSnap = await firestore.collection(monthlyBankBalanceDBName).get();
@@ -73,13 +72,14 @@ class DashboardSummary {
   final double stockBalance;
   final double pensionBalance;
   final double diffFromLastMonth;
-  
+
   // 💡 자산별 전월 대비 증감액 필드 추가
   final double bankDiffFromLastMonth;
   final double stockDiffFromLastMonth;
   final double pensionDiffFromLastMonth;
 
-  double get totalValuation => bankBalance + stockBalance + pensionBalance; // 연금 포함 여부에 맞게 조정
+  double get totalValuation =>
+      bankBalance + stockBalance + pensionBalance; // 연금 포함 여부에 맞게 조정
   double get profitOrLoss => totalValuation - totalInvested;
   double get returnRate =>
       totalInvested > 0 ? (profitOrLoss / totalInvested) * 100 : 0.0;
@@ -121,17 +121,14 @@ String _getLastYearMonth(String currentYearMonth) {
   }
 }
 
-Future _calculateStockAssets(
-  Ref ref,
-  String yearMonth,
-) async {
+Future _calculateStockAssets(Ref ref, String yearMonth) async {
   final firestore = ref.read(firestoreProvider);
-  
+
   final accountBalances = await ref.watch(
-    monthlyStockAccountBalanceNotifierProvider(yearMonth).future,
+    monthlyStockAccountBalanceProvider(yearMonth).future,
   );
-  
-  final accounts = await ref.watch(accountNotifierProvider.future);
+
+  final accounts = await ref.watch(accountProvider.future);
   final accountMap = {for (var a in accounts) a.id!: a};
 
   final Map<String, double> exchangeRateMap = {};
@@ -139,17 +136,18 @@ Future _calculateStockAssets(
 
   for (var ab in accountBalances) {
     final acc = accountMap[ab.accountId];
-    
+
     // 💡 Account 모델의 currency 기반 isForeignCurrency 필드 참조
     final isOverseas = acc?.isForeignCurrency ?? false;
     if (isOverseas) {
       overseasAccountIds.add(ab.accountId);
-      exchangeRateMap[ab.accountId] = (ab.exchangeRate > 1.0) ? ab.exchangeRate : 1300.0;
+      exchangeRateMap[ab.accountId] =
+          (ab.exchangeRate > 1.0) ? ab.exchangeRate : 1300.0;
     } else {
       exchangeRateMap[ab.accountId] = 1.0;
     }
   }
-  
+
   double cashTotal = 0;
   for (var ab in accountBalances) {
     final cash = ab.cashBalance;
@@ -187,13 +185,11 @@ Future _calculateStockAssets(
   // 💡 소수점 반올림 처리 적용
   final finalStockBalance = (stockBalanceTotal + cashTotal).roundToDouble();
 
-  return {
-    'stockBalance': finalStockBalance,
-  };
+  return <String, double>{'stockBalance': finalStockBalance};
 }
 
 @Riverpod(keepAlive: true)
-Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
+Future<DashboardSummary> dashboardSummary(Ref ref) async {
   String? selectedMonth = ref.watch(selectedYearMonthProvider);
 
   if (selectedMonth == null) {
@@ -201,7 +197,7 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
     if (availableMonths.isNotEmpty) {
       selectedMonth = availableMonths.first;
     } else {
-     return DashboardSummary(
+      return DashboardSummary(
         yearMonth: '',
         totalInvested: 0,
         bankBalance: 0,
@@ -225,24 +221,28 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
 
   // --- 1. 현재 월 자산 계산 ---
   final bankBalances = await ref.watch(
-    monthlyBankBalanceNotifierProvider(selectedMonth).future,
+    monthlyBankBalanceProvider(selectedMonth).future,
   );
-  final bankBalance = bankBalances.fold<double>(0.0, (sum, item) => sum + item.balance);
+  final bankBalance = bankBalances.fold<double>(
+    0.0,
+    (sum, item) => sum + item.balance,
+  );
 
   final stockAssets = await _calculateStockAssets(ref, selectedMonth);
   final stockBalance = stockAssets['stockBalance'] ?? 0.0;
 
-  final pensionSnap = await firestore
-      .collection(monthlyPensionBalanceDBName)
-      .where('year_month', isEqualTo: selectedMonth)
-      .get();
+  final pensionSnap =
+      await firestore
+          .collection(monthlyPensionBalanceDBName)
+          .where('year_month', isEqualTo: selectedMonth)
+          .get();
   final pensionProductBalance = pensionSnap.docs.fold<double>(
     0,
     (sum, doc) => sum + ((doc.data()['balance'] ?? 0) as num).toDouble(),
   );
 
   final pensionAccountBalances = await ref.watch(
-    monthlyPensionAccountBalanceNotifierProvider(selectedMonth).future,
+    monthlyPensionAccountBalanceProvider(selectedMonth).future,
   );
   final pensionCashBalance = pensionAccountBalances.fold<double>(
     0.0,
@@ -252,26 +252,30 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
 
   // --- 2. 전월 자산 계산 ---
   final lastMonth = _getLastYearMonth(selectedMonth);
-  
+
   final lastBankBalances = await ref.watch(
-    monthlyBankBalanceNotifierProvider(lastMonth).future,
+    monthlyBankBalanceProvider(lastMonth).future,
   );
-  final lastBankBalance = lastBankBalances.fold<double>(0.0, (sum, item) => sum + item.balance);
+  final lastBankBalance = lastBankBalances.fold<double>(
+    0.0,
+    (sum, item) => sum + item.balance,
+  );
 
   final lastStockAssets = await _calculateStockAssets(ref, lastMonth);
   final lastStockBalance = lastStockAssets['stockBalance'] ?? 0.0;
 
-  final lastPensionSnap = await firestore
-      .collection(monthlyPensionBalanceDBName)
-      .where('year_month', isEqualTo: lastMonth)
-      .get();
+  final lastPensionSnap =
+      await firestore
+          .collection(monthlyPensionBalanceDBName)
+          .where('year_month', isEqualTo: lastMonth)
+          .get();
   final lastPensionProductBalance = lastPensionSnap.docs.fold<double>(
     0,
     (sum, doc) => sum + ((doc.data()['balance'] ?? 0) as num).toDouble(),
   );
 
   final lastPensionAccountBalances = await ref.watch(
-    monthlyPensionAccountBalanceNotifierProvider(lastMonth).future,
+    monthlyPensionAccountBalanceProvider(lastMonth).future,
   );
   final lastPensionCashBalance = lastPensionAccountBalances.fold<double>(
     0.0,
@@ -285,7 +289,8 @@ Future<DashboardSummary> dashboardSummary(DashboardSummaryRef ref) async {
   final pensionDiff = pensionBalance - lastPensionBalance;
 
   final totalValuation = bankBalance + stockBalance + pensionBalance;
-  final lastTotalValuation = lastBankBalance + lastStockBalance + lastPensionBalance;
+  final lastTotalValuation =
+      lastBankBalance + lastStockBalance + lastPensionBalance;
   final diffFromLastMonth = totalValuation - lastTotalValuation;
 
   return DashboardSummary(

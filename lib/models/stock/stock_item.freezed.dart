@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,280 +9,289 @@ part of 'stock_item.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
-
-StockItem _$StockItemFromJson(Map<String, dynamic> json) {
-  return _StockItem.fromJson(json);
-}
 
 /// @nodoc
 mixin _$StockItem {
-  String? get id => throw _privateConstructorUsedError; // 문서 ID (docId) 매핑용
-  @JsonKey(name: 'itemName')
-  String get itemName => throw _privateConstructorUsedError; // 종목명 (예: 노바텍)
-  @JsonKey(name: 'otherName')
-  String get otherName => throw _privateConstructorUsedError; // 기타 이름
-  @JsonKey(name: 'stockCode')
-  String get stockCode => throw _privateConstructorUsedError; // 종목 코드 (예: 285490)
-  @JsonKey(name: 'yahooName')
-  String? get yahooName => throw _privateConstructorUsedError;
+
+ String? get id;// 문서 ID (docId) 매핑용
+@JsonKey(name: 'itemName') String get itemName;// 종목명 (예: 노바텍)
+@JsonKey(name: 'otherName') String get otherName;// 기타 이름
+@JsonKey(name: 'stockCode') String get stockCode;// 종목 코드 (예: 285490)
+@JsonKey(name: 'yahooName') String? get yahooName;
+/// Create a copy of StockItem
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$StockItemCopyWith<StockItem> get copyWith => _$StockItemCopyWithImpl<StockItem>(this as StockItem, _$identity);
 
   /// Serializes this StockItem to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of StockItem
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $StockItemCopyWith<StockItem> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StockItem&&(identical(other.id, id) || other.id == id)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.otherName, otherName) || other.otherName == otherName)&&(identical(other.stockCode, stockCode) || other.stockCode == stockCode)&&(identical(other.yahooName, yahooName) || other.yahooName == yahooName));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,itemName,otherName,stockCode,yahooName);
+
+@override
+String toString() {
+  return 'StockItem(id: $id, itemName: $itemName, otherName: $otherName, stockCode: $stockCode, yahooName: $yahooName)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $StockItemCopyWith<$Res> {
-  factory $StockItemCopyWith(StockItem value, $Res Function(StockItem) then) =
-      _$StockItemCopyWithImpl<$Res, StockItem>;
-  @useResult
-  $Res call({
-    String? id,
-    @JsonKey(name: 'itemName') String itemName,
-    @JsonKey(name: 'otherName') String otherName,
-    @JsonKey(name: 'stockCode') String stockCode,
-    @JsonKey(name: 'yahooName') String? yahooName,
-  });
-}
+abstract mixin class $StockItemCopyWith<$Res>  {
+  factory $StockItemCopyWith(StockItem value, $Res Function(StockItem) _then) = _$StockItemCopyWithImpl;
+@useResult
+$Res call({
+ String? id,@JsonKey(name: 'itemName') String itemName,@JsonKey(name: 'otherName') String otherName,@JsonKey(name: 'stockCode') String stockCode,@JsonKey(name: 'yahooName') String? yahooName
+});
 
+
+
+
+}
 /// @nodoc
-class _$StockItemCopyWithImpl<$Res, $Val extends StockItem>
+class _$StockItemCopyWithImpl<$Res>
     implements $StockItemCopyWith<$Res> {
-  _$StockItemCopyWithImpl(this._value, this._then);
+  _$StockItemCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final StockItem _self;
+  final $Res Function(StockItem) _then;
 
-  /// Create a copy of StockItem
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? id = freezed,
-    Object? itemName = null,
-    Object? otherName = null,
-    Object? stockCode = null,
-    Object? yahooName = freezed,
-  }) {
-    return _then(
-      _value.copyWith(
-            id:
-                freezed == id
-                    ? _value.id
-                    : id // ignore: cast_nullable_to_non_nullable
-                        as String?,
-            itemName:
-                null == itemName
-                    ? _value.itemName
-                    : itemName // ignore: cast_nullable_to_non_nullable
-                        as String,
-            otherName:
-                null == otherName
-                    ? _value.otherName
-                    : otherName // ignore: cast_nullable_to_non_nullable
-                        as String,
-            stockCode:
-                null == stockCode
-                    ? _value.stockCode
-                    : stockCode // ignore: cast_nullable_to_non_nullable
-                        as String,
-            yahooName:
-                freezed == yahooName
-                    ? _value.yahooName
-                    : yahooName // ignore: cast_nullable_to_non_nullable
-                        as String?,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of StockItem
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? itemName = null,Object? otherName = null,Object? stockCode = null,Object? yahooName = freezed,}) {
+  return _then(_self.copyWith(
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,itemName: null == itemName ? _self.itemName : itemName // ignore: cast_nullable_to_non_nullable
+as String,otherName: null == otherName ? _self.otherName : otherName // ignore: cast_nullable_to_non_nullable
+as String,stockCode: null == stockCode ? _self.stockCode : stockCode // ignore: cast_nullable_to_non_nullable
+as String,yahooName: freezed == yahooName ? _self.yahooName : yahooName // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
 }
 
-/// @nodoc
-abstract class _$$StockItemImplCopyWith<$Res>
-    implements $StockItemCopyWith<$Res> {
-  factory _$$StockItemImplCopyWith(
-    _$StockItemImpl value,
-    $Res Function(_$StockItemImpl) then,
-  ) = __$$StockItemImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({
-    String? id,
-    @JsonKey(name: 'itemName') String itemName,
-    @JsonKey(name: 'otherName') String otherName,
-    @JsonKey(name: 'stockCode') String stockCode,
-    @JsonKey(name: 'yahooName') String? yahooName,
-  });
 }
 
-/// @nodoc
-class __$$StockItemImplCopyWithImpl<$Res>
-    extends _$StockItemCopyWithImpl<$Res, _$StockItemImpl>
-    implements _$$StockItemImplCopyWith<$Res> {
-  __$$StockItemImplCopyWithImpl(
-    _$StockItemImpl _value,
-    $Res Function(_$StockItemImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of StockItem
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? id = freezed,
-    Object? itemName = null,
-    Object? otherName = null,
-    Object? stockCode = null,
-    Object? yahooName = freezed,
-  }) {
-    return _then(
-      _$StockItemImpl(
-        id:
-            freezed == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                    as String?,
-        itemName:
-            null == itemName
-                ? _value.itemName
-                : itemName // ignore: cast_nullable_to_non_nullable
-                    as String,
-        otherName:
-            null == otherName
-                ? _value.otherName
-                : otherName // ignore: cast_nullable_to_non_nullable
-                    as String,
-        stockCode:
-            null == stockCode
-                ? _value.stockCode
-                : stockCode // ignore: cast_nullable_to_non_nullable
-                    as String,
-        yahooName:
-            freezed == yahooName
-                ? _value.yahooName
-                : yahooName // ignore: cast_nullable_to_non_nullable
-                    as String?,
-      ),
-    );
-  }
+/// Adds pattern-matching-related methods to [StockItem].
+extension StockItemPatterns on StockItem {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _StockItem value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _StockItem() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _StockItem value)  $default,){
+final _that = this;
+switch (_that) {
+case _StockItem():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _StockItem value)?  $default,){
+final _that = this;
+switch (_that) {
+case _StockItem() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id, @JsonKey(name: 'itemName')  String itemName, @JsonKey(name: 'otherName')  String otherName, @JsonKey(name: 'stockCode')  String stockCode, @JsonKey(name: 'yahooName')  String? yahooName)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _StockItem() when $default != null:
+return $default(_that.id,_that.itemName,_that.otherName,_that.stockCode,_that.yahooName);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id, @JsonKey(name: 'itemName')  String itemName, @JsonKey(name: 'otherName')  String otherName, @JsonKey(name: 'stockCode')  String stockCode, @JsonKey(name: 'yahooName')  String? yahooName)  $default,) {final _that = this;
+switch (_that) {
+case _StockItem():
+return $default(_that.id,_that.itemName,_that.otherName,_that.stockCode,_that.yahooName);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id, @JsonKey(name: 'itemName')  String itemName, @JsonKey(name: 'otherName')  String otherName, @JsonKey(name: 'stockCode')  String stockCode, @JsonKey(name: 'yahooName')  String? yahooName)?  $default,) {final _that = this;
+switch (_that) {
+case _StockItem() when $default != null:
+return $default(_that.id,_that.itemName,_that.otherName,_that.stockCode,_that.yahooName);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$StockItemImpl implements _StockItem {
-  const _$StockItemImpl({
-    this.id,
-    @JsonKey(name: 'itemName') required this.itemName,
-    @JsonKey(name: 'otherName') this.otherName = '',
-    @JsonKey(name: 'stockCode') required this.stockCode,
-    @JsonKey(name: 'yahooName') this.yahooName,
-  });
 
-  factory _$StockItemImpl.fromJson(Map<String, dynamic> json) =>
-      _$$StockItemImplFromJson(json);
+class _StockItem implements StockItem {
+  const _StockItem({this.id, @JsonKey(name: 'itemName') required this.itemName, @JsonKey(name: 'otherName') this.otherName = '', @JsonKey(name: 'stockCode') required this.stockCode, @JsonKey(name: 'yahooName') this.yahooName});
+  factory _StockItem.fromJson(Map<String, dynamic> json) => _$StockItemFromJson(json);
 
-  @override
-  final String? id;
-  // 문서 ID (docId) 매핑용
-  @override
-  @JsonKey(name: 'itemName')
-  final String itemName;
-  // 종목명 (예: 노바텍)
-  @override
-  @JsonKey(name: 'otherName')
-  final String otherName;
-  // 기타 이름
-  @override
-  @JsonKey(name: 'stockCode')
-  final String stockCode;
-  // 종목 코드 (예: 285490)
-  @override
-  @JsonKey(name: 'yahooName')
-  final String? yahooName;
+@override final  String? id;
+// 문서 ID (docId) 매핑용
+@override@JsonKey(name: 'itemName') final  String itemName;
+// 종목명 (예: 노바텍)
+@override@JsonKey(name: 'otherName') final  String otherName;
+// 기타 이름
+@override@JsonKey(name: 'stockCode') final  String stockCode;
+// 종목 코드 (예: 285490)
+@override@JsonKey(name: 'yahooName') final  String? yahooName;
 
-  @override
-  String toString() {
-    return 'StockItem(id: $id, itemName: $itemName, otherName: $otherName, stockCode: $stockCode, yahooName: $yahooName)';
-  }
+/// Create a copy of StockItem
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$StockItemCopyWith<_StockItem> get copyWith => __$StockItemCopyWithImpl<_StockItem>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$StockItemImpl &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.itemName, itemName) ||
-                other.itemName == itemName) &&
-            (identical(other.otherName, otherName) ||
-                other.otherName == otherName) &&
-            (identical(other.stockCode, stockCode) ||
-                other.stockCode == stockCode) &&
-            (identical(other.yahooName, yahooName) ||
-                other.yahooName == yahooName));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, itemName, otherName, stockCode, yahooName);
-
-  /// Create a copy of StockItem
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$StockItemImplCopyWith<_$StockItemImpl> get copyWith =>
-      __$$StockItemImplCopyWithImpl<_$StockItemImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$StockItemImplToJson(this);
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$StockItemToJson(this, );
 }
 
-abstract class _StockItem implements StockItem {
-  const factory _StockItem({
-    final String? id,
-    @JsonKey(name: 'itemName') required final String itemName,
-    @JsonKey(name: 'otherName') final String otherName,
-    @JsonKey(name: 'stockCode') required final String stockCode,
-    @JsonKey(name: 'yahooName') final String? yahooName,
-  }) = _$StockItemImpl;
-
-  factory _StockItem.fromJson(Map<String, dynamic> json) =
-      _$StockItemImpl.fromJson;
-
-  @override
-  String? get id; // 문서 ID (docId) 매핑용
-  @override
-  @JsonKey(name: 'itemName')
-  String get itemName; // 종목명 (예: 노바텍)
-  @override
-  @JsonKey(name: 'otherName')
-  String get otherName; // 기타 이름
-  @override
-  @JsonKey(name: 'stockCode')
-  String get stockCode; // 종목 코드 (예: 285490)
-  @override
-  @JsonKey(name: 'yahooName')
-  String? get yahooName;
-
-  /// Create a copy of StockItem
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$StockItemImplCopyWith<_$StockItemImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StockItem&&(identical(other.id, id) || other.id == id)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.otherName, otherName) || other.otherName == otherName)&&(identical(other.stockCode, stockCode) || other.stockCode == stockCode)&&(identical(other.yahooName, yahooName) || other.yahooName == yahooName));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,itemName,otherName,stockCode,yahooName);
+
+@override
+String toString() {
+  return 'StockItem(id: $id, itemName: $itemName, otherName: $otherName, stockCode: $stockCode, yahooName: $yahooName)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$StockItemCopyWith<$Res> implements $StockItemCopyWith<$Res> {
+  factory _$StockItemCopyWith(_StockItem value, $Res Function(_StockItem) _then) = __$StockItemCopyWithImpl;
+@override @useResult
+$Res call({
+ String? id,@JsonKey(name: 'itemName') String itemName,@JsonKey(name: 'otherName') String otherName,@JsonKey(name: 'stockCode') String stockCode,@JsonKey(name: 'yahooName') String? yahooName
+});
+
+
+
+
+}
+/// @nodoc
+class __$StockItemCopyWithImpl<$Res>
+    implements _$StockItemCopyWith<$Res> {
+  __$StockItemCopyWithImpl(this._self, this._then);
+
+  final _StockItem _self;
+  final $Res Function(_StockItem) _then;
+
+/// Create a copy of StockItem
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? itemName = null,Object? otherName = null,Object? stockCode = null,Object? yahooName = freezed,}) {
+  return _then(_StockItem(
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,itemName: null == itemName ? _self.itemName : itemName // ignore: cast_nullable_to_non_nullable
+as String,otherName: null == otherName ? _self.otherName : otherName // ignore: cast_nullable_to_non_nullable
+as String,stockCode: null == stockCode ? _self.stockCode : stockCode // ignore: cast_nullable_to_non_nullable
+as String,yahooName: freezed == yahooName ? _self.yahooName : yahooName // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+// dart format on

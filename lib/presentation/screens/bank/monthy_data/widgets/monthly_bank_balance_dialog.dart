@@ -67,15 +67,15 @@ class _MonthlyBankBalanceDialogState
 
   @override
   Widget build(BuildContext context) {
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
 
     final existingCurrentBalancesAsync = ref.watch(
-      monthlyBankBalanceNotifierProvider(_selectedYearMonth),
+      monthlyBankBalanceProvider(_selectedYearMonth),
     );
     final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
     final existingPrevBalancesAsync = ref.watch(
-      monthlyBankBalanceNotifierProvider(prevYearMonth),
+      monthlyBankBalanceProvider(prevYearMonth),
     );
 
     return Container(
@@ -272,10 +272,10 @@ class _MonthlyBankBalanceDialogState
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final notifier = ref.read(
-      monthlyBankBalanceNotifierProvider(_selectedYearMonth).notifier,
+      monthlyBankBalanceProvider(_selectedYearMonth).notifier,
     );
-    final accountNotifier = ref.read(accountNotifierProvider.notifier);
-    final accountNames = ref.read(accountNameNotifierProvider).value ?? [];
+    final accountNotifier = ref.read(accountProvider.notifier);
+    final accountNames = ref.read(accountNameProvider).value ?? [];
 
     final targetAccounts =
         _isEditing
@@ -321,7 +321,7 @@ class _MonthlyBankBalanceDialogState
         }
       }
 
-      ref.invalidate(monthlyBankBalanceNotifierProvider(_selectedYearMonth));
+      ref.invalidate(monthlyBankBalanceProvider(_selectedYearMonth));
       ref.invalidate(dashboardSummaryProvider);
       ref.invalidate(availableYearMonthsProvider);
 

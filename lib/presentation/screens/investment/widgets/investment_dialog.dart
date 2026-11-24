@@ -94,7 +94,7 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
         createdAt: _selectedDateStr,
       );
 
-      final notifier = ref.read(investmentNotifierProvider.notifier);
+      final notifier = ref.read(investmentProvider.notifier);
       if (_isEditing) {
         await notifier.updateInvestment(investment);
       } else {

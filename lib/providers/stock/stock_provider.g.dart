@@ -6,176 +6,154 @@ part of 'stock_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$stockScreenDataHash() => r'fad9e40c693b202b01aa271951c8f2d08aa26b02';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-/// See also [stockScreenData].
 @ProviderFor(stockScreenData)
-const stockScreenDataProvider = StockScreenDataFamily();
+const stockScreenDataProvider = StockScreenDataFamily._();
 
-/// See also [stockScreenData].
-class StockScreenDataFamily extends Family<AsyncValue<List<StockAccountItem>>> {
-  /// See also [stockScreenData].
-  const StockScreenDataFamily();
-
-  /// See also [stockScreenData].
-  StockScreenDataProvider call({
-    required String currentYearMonth,
-    required String lastYearMonth,
-  }) {
-    return StockScreenDataProvider(
-      currentYearMonth: currentYearMonth,
-      lastYearMonth: lastYearMonth,
-    );
-  }
-
-  @override
-  StockScreenDataProvider getProviderOverride(
-    covariant StockScreenDataProvider provider,
-  ) {
-    return call(
-      currentYearMonth: provider.currentYearMonth,
-      lastYearMonth: provider.lastYearMonth,
-    );
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'stockScreenDataProvider';
-}
-
-/// See also [stockScreenData].
-class StockScreenDataProvider extends FutureProvider<List<StockAccountItem>> {
-  /// See also [stockScreenData].
-  StockScreenDataProvider({
-    required String currentYearMonth,
-    required String lastYearMonth,
-  }) : this._internal(
-         (ref) => stockScreenData(
-           ref as StockScreenDataRef,
-           currentYearMonth: currentYearMonth,
-           lastYearMonth: lastYearMonth,
-         ),
-         from: stockScreenDataProvider,
+final class StockScreenDataProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<StockAccountItem>>,
+          List<StockAccountItem>,
+          FutureOr<List<StockAccountItem>>
+        >
+    with
+        $FutureModifier<List<StockAccountItem>>,
+        $FutureProvider<List<StockAccountItem>> {
+  const StockScreenDataProvider._({
+    required StockScreenDataFamily super.from,
+    required ({String currentYearMonth, String lastYearMonth}) super.argument,
+  }) : super(
+         retry: null,
          name: r'stockScreenDataProvider',
-         debugGetCreateSourceHash:
-             const bool.fromEnvironment('dart.vm.product')
-                 ? null
-                 : _$stockScreenDataHash,
-         dependencies: StockScreenDataFamily._dependencies,
-         allTransitiveDependencies:
-             StockScreenDataFamily._allTransitiveDependencies,
-         currentYearMonth: currentYearMonth,
-         lastYearMonth: lastYearMonth,
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
        );
 
-  StockScreenDataProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.currentYearMonth,
-    required this.lastYearMonth,
-  }) : super.internal();
-
-  final String currentYearMonth;
-  final String lastYearMonth;
+  @override
+  String debugGetCreateSourceHash() => _$stockScreenDataHash();
 
   @override
-  Override overrideWith(
-    FutureOr<List<StockAccountItem>> Function(StockScreenDataRef provider)
-    create,
-  ) {
-    return ProviderOverride(
-      origin: this,
-      override: StockScreenDataProvider._internal(
-        (ref) => create(ref as StockScreenDataRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        currentYearMonth: currentYearMonth,
-        lastYearMonth: lastYearMonth,
-      ),
-    );
+  String toString() {
+    return r'stockScreenDataProvider'
+        ''
+        '$argument';
   }
 
+  @$internal
   @override
-  FutureProviderElement<List<StockAccountItem>> createElement() {
-    return _StockScreenDataProviderElement(this);
+  $FutureProviderElement<List<StockAccountItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<StockAccountItem>> create(Ref ref) {
+    final argument =
+        this.argument as ({String currentYearMonth, String lastYearMonth});
+    return stockScreenData(
+      ref,
+      currentYearMonth: argument.currentYearMonth,
+      lastYearMonth: argument.lastYearMonth,
+    );
   }
 
   @override
   bool operator ==(Object other) {
-    return other is StockScreenDataProvider &&
-        other.currentYearMonth == currentYearMonth &&
-        other.lastYearMonth == lastYearMonth;
+    return other is StockScreenDataProvider && other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, currentYearMonth.hashCode);
-    hash = _SystemHash.combine(hash, lastYearMonth.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin StockScreenDataRef on FutureProviderRef<List<StockAccountItem>> {
-  /// The parameter `currentYearMonth` of this provider.
-  String get currentYearMonth;
+String _$stockScreenDataHash() => r'fd29fe273b357a0c78814c289223da9b55728fb7';
 
-  /// The parameter `lastYearMonth` of this provider.
-  String get lastYearMonth;
-}
+final class StockScreenDataFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<StockAccountItem>>,
+          ({String currentYearMonth, String lastYearMonth})
+        > {
+  const StockScreenDataFamily._()
+    : super(
+        retry: null,
+        name: r'stockScreenDataProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
 
-class _StockScreenDataProviderElement
-    extends FutureProviderElement<List<StockAccountItem>>
-    with StockScreenDataRef {
-  _StockScreenDataProviderElement(super.provider);
+  StockScreenDataProvider call({
+    required String currentYearMonth,
+    required String lastYearMonth,
+  }) => StockScreenDataProvider._(
+    argument: (
+      currentYearMonth: currentYearMonth,
+      lastYearMonth: lastYearMonth,
+    ),
+    from: this,
+  );
 
   @override
-  String get currentYearMonth =>
-      (origin as StockScreenDataProvider).currentYearMonth;
-  @override
-  String get lastYearMonth => (origin as StockScreenDataProvider).lastYearMonth;
+  String toString() => r'stockScreenDataProvider';
 }
 
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+@ProviderFor(SelectedStockAccountFilter)
+const selectedStockAccountFilterProvider =
+    SelectedStockAccountFilterProvider._();
+
+final class SelectedStockAccountFilterProvider
+    extends $NotifierProvider<SelectedStockAccountFilter, String?> {
+  const SelectedStockAccountFilterProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'selectedStockAccountFilterProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$selectedStockAccountFilterHash();
+
+  @$internal
+  @override
+  SelectedStockAccountFilter create() => SelectedStockAccountFilter();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$selectedStockAccountFilterHash() =>
+    r'768701527ff92e800eee1bd7beb4f5de82b9b1a6';
+
+abstract class _$SelectedStockAccountFilter extends $Notifier<String?> {
+  String? build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<String?, String?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String?, String?>,
+              String?,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

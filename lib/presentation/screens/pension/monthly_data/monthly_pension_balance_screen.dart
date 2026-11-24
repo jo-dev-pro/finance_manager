@@ -15,11 +15,8 @@ import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../../providers/pension/pension_product_provider.dart';
+import '../../../../providers/pension/pension_provider.dart';
 import 'widgets/monthly_pension_balance_dialog.dart';
-
-final selectedPensionAccountFilterProvider = StateProvider.autoDispose<String?>(
-  (ref) => null,
-);
 
 class MonthlyPensionBalanceScreen extends ConsumerWidget {
   final String? initialYearMonth;
@@ -36,12 +33,10 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
 
     final selectedAccountId = ref.watch(selectedPensionAccountFilterProvider);
 
-    final balancesAsync = ref.watch(
-      monthlyPensionBalanceNotifierProvider(targetMonth),
-    );
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final productsAsync = ref.watch(pensionProductNotifierProvider);
+    final balancesAsync = ref.watch(monthlyPensionBalanceProvider(targetMonth));
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
+    final productsAsync = ref.watch(pensionProductProvider);
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
 
     return Scaffold(
@@ -132,12 +127,9 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                     selectedAccountValue: currentDropdownValue,
                     accountItems: accountFilterItems,
                     onAccountChanged:
-                        (val) =>
-                            ref
-                                .read(
-                                  selectedPensionAccountFilterProvider.notifier,
-                                )
-                                .state = val,
+                        (val) => ref
+                            .read(selectedPensionAccountFilterProvider.notifier)
+                            .setFilter(val),
                   ),
 
                   const SizedBox(height: 12),
@@ -323,7 +315,7 @@ class MonthlyPensionBalanceScreen extends ConsumerWidget {
                   if (item.id != null) {
                     await ref
                         .read(
-                          monthlyPensionBalanceNotifierProvider(
+                          monthlyPensionBalanceProvider(
                             item.yearMonth,
                           ).notifier,
                         )

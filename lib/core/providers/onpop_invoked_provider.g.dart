@@ -6,21 +6,58 @@ part of 'onpop_invoked_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(JOnPopInvoked)
+const jOnPopInvokedProvider = JOnPopInvokedProvider._();
+
+final class JOnPopInvokedProvider
+    extends $NotifierProvider<JOnPopInvoked, bool> {
+  const JOnPopInvokedProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'jOnPopInvokedProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$jOnPopInvokedHash();
+
+  @$internal
+  @override
+  JOnPopInvoked create() => JOnPopInvoked();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
 String _$jOnPopInvokedHash() => r'7bae9f189139b0f851858ba6dd84633f85c11a0b';
 
-/// See also [JOnPopInvoked].
-@ProviderFor(JOnPopInvoked)
-final jOnPopInvokedProvider = NotifierProvider<JOnPopInvoked, bool>.internal(
-  JOnPopInvoked.new,
-  name: r'jOnPopInvokedProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$jOnPopInvokedHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$JOnPopInvoked = Notifier<bool>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$JOnPopInvoked extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

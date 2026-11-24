@@ -4,7 +4,7 @@ part 'investment.freezed.dart';
 part 'investment.g.dart';
 
 @freezed
-class Investment with _$Investment {
+abstract class Investment with _$Investment {
   const factory Investment({
     String? id,
     required String description,

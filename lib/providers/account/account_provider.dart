@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -84,7 +85,7 @@ class AccountNotifier extends _$AccountNotifier {
             final oldStorageRef = storage.refFromURL(account.logoUrl!);
             await oldStorageRef.delete();
           } catch (e) {
-            print('이전 이미지 삭제 중 오류 발생 (무시 가능): $e');
+            debugPrint('이전 이미지 삭제 중 오류 발생 (무시 가능): $e');
           }
         }
 
@@ -161,7 +162,7 @@ class AccountNotifier extends _$AccountNotifier {
           await batch.commit();
         }
       } catch (e) {
-        print('하위 계좌명 동기화 중 오류 발생: $e');
+        debugPrint('하위 계좌명 동기화 중 오류 발생: $e');
       }
 
       return _fetchAccounts();
@@ -201,7 +202,7 @@ class AccountNotifier extends _$AccountNotifier {
             final storageRef = storage.refFromURL(logoUrl);
             await storageRef.delete();
           } catch (e) {
-            print('Storage 이미지 삭제 중 오류 발생 (무시 가능): $e');
+            debugPrint('Storage 이미지 삭제 중 오류 발생 (무시 가능): $e');
           }
         }
       }

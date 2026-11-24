@@ -4,7 +4,7 @@ part 'monthly_bank_balance.freezed.dart';
 part 'monthly_bank_balance.g.dart';
 
 @freezed
-class MonthlyBankBalance with _$MonthlyBankBalance {
+abstract class MonthlyBankBalance with _$MonthlyBankBalance {
   const factory MonthlyBankBalance({
     String? id,
     @JsonKey(name: 'year_month') required String yearMonth,

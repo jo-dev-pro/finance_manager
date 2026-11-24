@@ -6,9 +6,9 @@ part of 'monthly_pension_balance.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$MonthlyPensionBalanceImpl _$$MonthlyPensionBalanceImplFromJson(
+_MonthlyPensionBalance _$MonthlyPensionBalanceFromJson(
   Map<String, dynamic> json,
-) => _$MonthlyPensionBalanceImpl(
+) => _MonthlyPensionBalance(
   id: json['id'] as String?,
   yearMonth: json['year_month'] as String,
   accountId: json['account_id'] as String,
@@ -23,8 +23,8 @@ _$MonthlyPensionBalanceImpl _$$MonthlyPensionBalanceImplFromJson(
   purchaseDate: json['purchase_date'] as String?,
 );
 
-Map<String, dynamic> _$$MonthlyPensionBalanceImplToJson(
-  _$MonthlyPensionBalanceImpl instance,
+Map<String, dynamic> _$MonthlyPensionBalanceToJson(
+  _MonthlyPensionBalance instance,
 ) => <String, dynamic>{
   'id': instance.id,
   'year_month': instance.yearMonth,

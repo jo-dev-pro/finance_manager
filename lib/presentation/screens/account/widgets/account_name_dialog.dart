@@ -54,7 +54,7 @@ class _AccountNameDialogState extends ConsumerState<AccountNameDialog> {
 
     try {
       await ref
-          .read(accountNameNotifierProvider.notifier)
+          .read(accountNameProvider.notifier)
           .saveAccountName(newAccountName);
 
       if (!mounted) return;

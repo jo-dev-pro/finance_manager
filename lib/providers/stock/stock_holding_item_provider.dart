@@ -33,13 +33,17 @@ class StockHoldingItemNotifier extends _$StockHoldingItemNotifier {
     String? resolvedStockName = item.stockItemName;
 
     try {
-      final accounts = await ref.read(accountNotifierProvider.future);
-      final accountNames = await ref.read(accountNameNotifierProvider.future);
-      final stockItems = await ref.read(stockItemNotifierProvider.future);
+      final accounts = await ref.read(accountProvider.future);
+      final accountNames = await ref.read(accountNameProvider.future);
+      final stockItems = await ref.read(stockItemProvider.future);
 
       if (resolvedAccountName == null || resolvedAccountName.isEmpty) {
-        final matchedAcc = accounts.firstWhereOrNull((a) => a.id == item.accountId);
-        final matchedNameObj = accountNames.firstWhereOrNull((an) => an.id == matchedAcc?.accountNameId);
+        final matchedAcc = accounts.firstWhereOrNull(
+          (a) => a.id == item.accountId,
+        );
+        final matchedNameObj = accountNames.firstWhereOrNull(
+          (an) => an.id == matchedAcc?.accountNameId,
+        );
         if (matchedNameObj != null) {
           final inst = matchedAcc?.financialInstitution ?? '';
           resolvedAccountName = '[$inst] ${matchedNameObj.accountName}';
@@ -47,9 +51,12 @@ class StockHoldingItemNotifier extends _$StockHoldingItemNotifier {
       }
 
       if (resolvedStockName == null || resolvedStockName.isEmpty) {
-        final matchedStock = stockItems.firstWhereOrNull((s) => s.id == item.stockItemId);
+        final matchedStock = stockItems.firstWhereOrNull(
+          (s) => s.id == item.stockItemId,
+        );
         if (matchedStock != null) {
-          resolvedStockName = '${matchedStock.itemName} (${matchedStock.stockCode})';
+          resolvedStockName =
+              '${matchedStock.itemName} (${matchedStock.stockCode})';
         }
       }
     } catch (_) {}
@@ -75,7 +82,10 @@ class StockHoldingItemNotifier extends _$StockHoldingItemNotifier {
     final targetItem = await _enrichNames(item);
     final data = targetItem.toJson()..remove('id');
 
-    await firestore.collection(stockHoldingItemDBName).doc(item.id).update(data);
+    await firestore
+        .collection(stockHoldingItemDBName)
+        .doc(item.id)
+        .update(data);
     ref.invalidateSelf();
   }
 

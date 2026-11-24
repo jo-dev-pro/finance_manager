@@ -1,17 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/router/app_router_path.dart';
-import '../../core/router/branches/tab_back_dashboard_scope.dart';
-import '../../core/widgets/main_appbar.dart';
-import '../../core/widgets/main_constrainedbox.dart';
+import '../../../core/providers/onpop_invoked_provider.dart';
+import '../../../core/router/app_router_path.dart';
+import '../../../core/widgets/main_appbar.dart';
+import '../../../core/widgets/main_constrainedbox.dart';
 
-class AllMenuScreen extends StatelessWidget {
+class AllMenuScreen extends ConsumerWidget {
   const AllMenuScreen({super.key});
 
+  void _backToDashboard(BuildContext context, WidgetRef ref) {
+    ref.read(jOnPopInvokedProvider.notifier).reset();
+    final shell = StatefulNavigationShell.maybeOf(context);
+    if (shell != null) {
+      shell.goBranch(0, initialLocation: true);
+    } else {
+      context.go(AppRoutePath.dashboard);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return TabBackToDashboardScope(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          router.pop(result);
+          return;
+        }
+
+        _backToDashboard(context, ref);
+      },
       child: Scaffold(
         appBar: const MainAppBar(titleText: '전체 메뉴'),
         body: MainConstrainedBox(
@@ -40,7 +63,7 @@ class AllMenuScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-      
+
                 _MenuSectionCard(
                   sectionTitle: '계좌 설정',
                   items: [
@@ -61,7 +84,7 @@ class AllMenuScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-      
+
                 _MenuSectionCard(
                   sectionTitle: '주식 관리',
                   items: [
@@ -82,7 +105,7 @@ class AllMenuScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-      
+
                 _MenuSectionCard(
                   sectionTitle: '연금 관리',
                   items: [
@@ -98,29 +121,12 @@ class AllMenuScreen extends StatelessWidget {
                       iconColor: Colors.green.shade700,
                       title: '연금 계좌별 보유상품 관리',
                       subtitle: '연금 계좌에 보유 중인 상품 설정',
-                      onTap: () => context.push(AppRoutePath.pensionAccountProduct),
+                      onTap:
+                          () =>
+                              context.push(AppRoutePath.pensionAccountProduct),
                     ),
                   ],
                 ),
-                // const SizedBox(height: 16),
-      
-                // _MenuSectionCard(
-                //   sectionTitle: '시스템',
-                //   items: [
-                //     _MenuItemData(
-                //       icon: Icons.storage_outlined,
-                //       iconColor: Colors.grey.shade700,
-                //       title: 'Firestore DB 마이그레이션',
-                //       subtitle: '데이터베이스 구조 이전 및 점검 도구',
-                //       onTap: () => Navigator.push(
-                //         context,
-                //         MaterialPageRoute(
-                //           builder: (context) => const FirestoreDBMigrateScreen(),
-                //         ),
-                //       ),
-                //     ),
-                //   ],
-                // ),
                 const SizedBox(height: 24),
               ],
             ),
@@ -151,10 +157,7 @@ class _MenuSectionCard extends StatelessWidget {
   final String sectionTitle;
   final List<_MenuItemData> items;
 
-  const _MenuSectionCard({
-    required this.sectionTitle,
-    required this.items,
-  });
+  const _MenuSectionCard({required this.sectionTitle, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -216,22 +219,13 @@ class _MenuTile extends StatelessWidget {
       ),
       title: Text(
         item.title,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
         item.subtitle,
-        style: TextStyle(
-          fontSize: 12,
-          color: Colors.grey.shade600,
-        ),
+        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
       ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: Colors.grey.shade400,
-      ),
+      trailing: Icon(Icons.chevron_right, color: Colors.grey.shade400),
       onTap: item.onTap,
     );
   }

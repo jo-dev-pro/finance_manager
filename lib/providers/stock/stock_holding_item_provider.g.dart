@@ -6,25 +6,61 @@ part of 'stock_holding_item_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$stockHoldingItemNotifierHash() =>
-    r'e08174cdb7cd616d9575798b87f4a977bd32917e';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [StockHoldingItemNotifier].
 @ProviderFor(StockHoldingItemNotifier)
-final stockHoldingItemNotifierProvider = AsyncNotifierProvider<
-  StockHoldingItemNotifier,
-  List<StockHoldingItem>
->.internal(
-  StockHoldingItemNotifier.new,
-  name: r'stockHoldingItemNotifierProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$stockHoldingItemNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+const stockHoldingItemProvider = StockHoldingItemNotifierProvider._();
 
-typedef _$StockHoldingItemNotifier = AsyncNotifier<List<StockHoldingItem>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class StockHoldingItemNotifierProvider
+    extends
+        $AsyncNotifierProvider<
+          StockHoldingItemNotifier,
+          List<StockHoldingItem>
+        > {
+  const StockHoldingItemNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'stockHoldingItemProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$stockHoldingItemNotifierHash();
+
+  @$internal
+  @override
+  StockHoldingItemNotifier create() => StockHoldingItemNotifier();
+}
+
+String _$stockHoldingItemNotifierHash() =>
+    r'4d6186d5f8b7e8ca9b16aae5040de4d4f8f022b3';
+
+abstract class _$StockHoldingItemNotifier
+    extends $AsyncNotifier<List<StockHoldingItem>> {
+  FutureOr<List<StockHoldingItem>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<List<StockHoldingItem>>, List<StockHoldingItem>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<List<StockHoldingItem>>,
+                List<StockHoldingItem>
+              >,
+              AsyncValue<List<StockHoldingItem>>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

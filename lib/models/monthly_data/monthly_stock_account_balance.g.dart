@@ -6,9 +6,9 @@ part of 'monthly_stock_account_balance.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$MonthlyStockAccountBalanceImpl _$$MonthlyStockAccountBalanceImplFromJson(
+_MonthlyStockAccountBalance _$MonthlyStockAccountBalanceFromJson(
   Map<String, dynamic> json,
-) => _$MonthlyStockAccountBalanceImpl(
+) => _MonthlyStockAccountBalance(
   id: json['id'] as String?,
   yearMonth: json['year_month'] as String,
   accountId: json['account_id'] as String,
@@ -21,8 +21,8 @@ _$MonthlyStockAccountBalanceImpl _$$MonthlyStockAccountBalanceImplFromJson(
   monthlyWithdrawal: (json['monthly_withdrawal'] as num?)?.toDouble() ?? 0.0,
 );
 
-Map<String, dynamic> _$$MonthlyStockAccountBalanceImplToJson(
-  _$MonthlyStockAccountBalanceImpl instance,
+Map<String, dynamic> _$MonthlyStockAccountBalanceToJson(
+  _MonthlyStockAccountBalance instance,
 ) => <String, dynamic>{
   'id': instance.id,
   'year_month': instance.yearMonth,

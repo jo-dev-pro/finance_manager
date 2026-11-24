@@ -25,19 +25,19 @@ class PensionAccountGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 💡 필요한 데이터를 위젯 내부에서 직접 Provider로 구독
     final balancesAsync = ref.watch(
-      monthlyPensionBalanceNotifierProvider(currentMonth),
+      monthlyPensionBalanceProvider(currentMonth),
     );
     final lastBalancesAsync = ref.watch(
-      monthlyPensionBalanceNotifierProvider(lastMonth),
+      monthlyPensionBalanceProvider(lastMonth),
     );
     final accountBalancesAsync = ref.watch(
-      monthlyPensionAccountBalanceNotifierProvider(currentMonth),
+      monthlyPensionAccountBalanceProvider(currentMonth),
     );
     final lastAccountBalancesAsync = ref.watch(
-      monthlyPensionAccountBalanceNotifierProvider(lastMonth),
+      monthlyPensionAccountBalanceProvider(lastMonth),
     );
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
 
     // 데이터 추출
     final balances = balancesAsync.value ?? [];
@@ -69,7 +69,7 @@ class PensionAccountGrid extends ConsumerWidget {
     }
 
     final accountIds = accountGroups.keys.toList();
-    
+
     // 💡 월말 계좌 DB의 누적 원금 매핑[cite: 9]
     final accountPrincipalMap = {
       for (var ab in accountBalances) ab.accountId: ab.principal,

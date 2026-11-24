@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/onpop_invoked_provider.dart';
 import '../../../core/widgets/main_appbar.dart';
-import '../../../core/widgets/month_selector_header.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
+import '../../../core/widgets/month_selector_header.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import 'widgets/build_dashboard_data.dart';
 
@@ -51,7 +51,8 @@ class DashboardScreen extends ConsumerWidget {
         appBar: MainAppBar(titleText: '대시보드'),
         body: monthsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),
+          error:
+              (err, stack) => Center(child: Text('기준월 정보를 불러올 수 없습니다: $err')),
           data: (months) {
             if (months.isEmpty) {
               return const Center(child: Text('등록된 자산/기준월 데이터가 없습니다.'));
@@ -70,7 +71,7 @@ class DashboardScreen extends ConsumerWidget {
               });
             }
 
-            final summary = summaryAsync.valueOrNull;
+            final summary = summaryAsync.value;
 
             return MainConstrainedBox(
               child: Column(
@@ -81,7 +82,6 @@ class DashboardScreen extends ConsumerWidget {
                     currentMonth: activeCurrentMonth,
                   ),
                   const SizedBox(height: 16),
-
                   Expanded(
                     child:
                         summary == null

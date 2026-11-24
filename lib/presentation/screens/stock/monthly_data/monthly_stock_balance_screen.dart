@@ -15,12 +15,8 @@ import '../../../../providers/account/account_provider.dart';
 import '../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../providers/monthly_data/monthly_stock_balance_provider.dart';
 import '../../../../providers/stock/stock_item_provider.dart';
+import '../../../../providers/stock/stock_provider.dart';
 import 'widgets/monthly_stock_balance_dialog.dart';
-
-// 💡 월말주식 화면 전용 계좌 필터 Provider (자동 dispose)
-final selectedStockAccountFilterProvider = StateProvider.autoDispose<String?>(
-  (ref) => null,
-);
 
 class MonthlyStockBalanceScreen extends ConsumerWidget {
   final String? initialYearMonth;
@@ -37,12 +33,10 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
 
     final selectedAccountId = ref.watch(selectedStockAccountFilterProvider);
 
-    final balancesAsync = ref.watch(
-      monthlyStockBalanceNotifierProvider(targetMonth),
-    );
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final stockItemsAsync = ref.watch(stockItemNotifierProvider);
+    final balancesAsync = ref.watch(monthlyStockBalanceProvider(targetMonth));
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
+    final stockItemsAsync = ref.watch(stockItemProvider);
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
 
     return Scaffold(
@@ -135,7 +129,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                     onAccountChanged:
                         (val) => ref
                             .read(selectedStockAccountFilterProvider.notifier)
-                            .state = val,
+                            .setFilter(val),
                   ),
 
                   const SizedBox(height: 12),
@@ -339,9 +333,7 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
                   if (item.id != null) {
                     await ref
                         .read(
-                          monthlyStockBalanceNotifierProvider(
-                            item.yearMonth,
-                          ).notifier,
+                          monthlyStockBalanceProvider(item.yearMonth).notifier,
                         )
                         .deleteBalance(item.id!);
                   }

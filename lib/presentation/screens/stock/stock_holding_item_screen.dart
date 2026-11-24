@@ -29,10 +29,10 @@ class _StockHoldingItemScreenState
 
   @override
   Widget build(BuildContext context) {
-    final holdingItemsState = ref.watch(stockHoldingItemNotifierProvider);
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final stockItemsAsync = ref.watch(stockItemNotifierProvider);
+    final holdingItemsState = ref.watch(stockHoldingItemProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
+    final stockItemsAsync = ref.watch(stockItemProvider);
 
     return Scaffold(
       appBar: MainAppBar(
@@ -266,7 +266,8 @@ class _StockHoldingItemScreenState
                                   const SizedBox(height: 4),
 
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Column(
                                         children: [
@@ -425,7 +426,7 @@ class _StockHoldingItemScreenState
       onDelete: () async {
         try {
           await ref
-              .read(stockHoldingItemNotifierProvider.notifier)
+              .read(stockHoldingItemProvider.notifier)
               .deleteStockHoldingItem(item.id!);
 
           if (!context.mounted) return;

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/providers/onpop_invoked_provider.dart';
 import '../../presentation/responsive/responsive_scaffold.dart';
 import '../../presentation/screens/dashboard/dashboard_screen.dart';
 import 'app_router_path.dart';
@@ -17,36 +15,14 @@ part 'app_router.g.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 @riverpod
-GoRouter router(RouterRef ref) {
+GoRouter router(Ref ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutePath.dashboard,
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return Consumer(
-            builder: (context, consumerRef, _) {
-              return PopScope(
-                canPop: false,
-                onPopInvokedWithResult: (didPop, result) async {
-                  debugPrint(
-                    '[Shell PopScope] didPop=$didPop | canPop=${context.canPop()}',
-                  );
-                  if (didPop) return;
-
-                  if (context.canPop()) {
-                    context.pop(result);
-                    return;
-                  }
-
-                  await consumerRef
-                      .read(jOnPopInvokedProvider.notifier)
-                      .handlePopInvoked(context);
-                },
-                child: ResponsiveScaffold(navigationShell: navigationShell),
-              );
-            },
-          );
+          return ResponsiveScaffold(navigationShell: navigationShell);
         },
         branches: [
           StatefulShellBranch(

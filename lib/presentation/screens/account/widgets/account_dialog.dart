@@ -93,7 +93,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
     final number = _numberController.text.trim();
     final sortOrder = int.tryParse(_sortOrderController.text.trim()) ?? 0;
 
-    final existingAccounts = ref.read(accountNotifierProvider).value ?? [];
+    final existingAccounts = ref.read(accountProvider).value ?? [];
 
     final isDuplicate = existingAccounts.any(
       (acc) =>
@@ -118,7 +118,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
           currency: _selectedCurrency,
         );
         await ref
-            .read(accountNotifierProvider.notifier)
+            .read(accountProvider.notifier)
             .updateAccount(updatedAccount, _selectedImage);
       } else {
         final newAccount = Account(
@@ -131,7 +131,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
           currency: _selectedCurrency,
         );
         await ref
-            .read(accountNotifierProvider.notifier)
+            .read(accountProvider.notifier)
             .addAccount(newAccount, _selectedImage);
       }
 
@@ -149,7 +149,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
   @override
   Widget build(BuildContext context) {
     final existingLogoUrl = widget.initialAccount?.logoUrl;
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
 
     return Container(
       width: double.infinity,

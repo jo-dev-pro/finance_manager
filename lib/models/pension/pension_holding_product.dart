@@ -4,7 +4,7 @@ part 'pension_holding_product.freezed.dart';
 part 'pension_holding_product.g.dart';
 
 @freezed
-class PensionHoldingProduct with _$PensionHoldingProduct {
+abstract class PensionHoldingProduct with _$PensionHoldingProduct {
   const PensionHoldingProduct._();
 
   const factory PensionHoldingProduct({

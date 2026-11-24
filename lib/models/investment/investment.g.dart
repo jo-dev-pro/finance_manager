@@ -6,15 +6,14 @@ part of 'investment.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$InvestmentImpl _$$InvestmentImplFromJson(Map<String, dynamic> json) =>
-    _$InvestmentImpl(
-      id: json['id'] as String?,
-      description: json['description'] as String,
-      amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      createdAt: json['created_at'] as String?,
-    );
+_Investment _$InvestmentFromJson(Map<String, dynamic> json) => _Investment(
+  id: json['id'] as String?,
+  description: json['description'] as String,
+  amount: (json['amount'] as num?)?.toDouble() ?? 0,
+  createdAt: json['created_at'] as String?,
+);
 
-Map<String, dynamic> _$$InvestmentImplToJson(_$InvestmentImpl instance) =>
+Map<String, dynamic> _$InvestmentToJson(_Investment instance) =>
     <String, dynamic>{
       'id': instance.id,
       'description': instance.description,

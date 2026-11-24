@@ -4,7 +4,7 @@ part 'monthly_stock_account_balance.freezed.dart';
 part 'monthly_stock_account_balance.g.dart';
 
 @freezed
-class MonthlyStockAccountBalance with _$MonthlyStockAccountBalance {
+abstract class MonthlyStockAccountBalance with _$MonthlyStockAccountBalance {
   const MonthlyStockAccountBalance._();
 
   const factory MonthlyStockAccountBalance({

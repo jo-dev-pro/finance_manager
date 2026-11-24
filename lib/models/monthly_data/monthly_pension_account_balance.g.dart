@@ -6,9 +6,9 @@ part of 'monthly_pension_account_balance.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$MonthlyPensionAccountBalanceImpl _$$MonthlyPensionAccountBalanceImplFromJson(
+_MonthlyPensionAccountBalance _$MonthlyPensionAccountBalanceFromJson(
   Map<String, dynamic> json,
-) => _$MonthlyPensionAccountBalanceImpl(
+) => _MonthlyPensionAccountBalance(
   id: json['id'] as String?,
   yearMonth: json['year_month'] as String,
   accountId: json['account_id'] as String,
@@ -20,8 +20,8 @@ _$MonthlyPensionAccountBalanceImpl _$$MonthlyPensionAccountBalanceImplFromJson(
   totalWithdrawal: (json['total_withdrawal'] as num?)?.toDouble() ?? 0.0,
 );
 
-Map<String, dynamic> _$$MonthlyPensionAccountBalanceImplToJson(
-  _$MonthlyPensionAccountBalanceImpl instance,
+Map<String, dynamic> _$MonthlyPensionAccountBalanceToJson(
+  _MonthlyPensionAccountBalance instance,
 ) => <String, dynamic>{
   'id': instance.id,
   'year_month': instance.yearMonth,

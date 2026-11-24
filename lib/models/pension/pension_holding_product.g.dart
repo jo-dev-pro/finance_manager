@@ -6,9 +6,9 @@ part of 'pension_holding_product.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PensionHoldingProductImpl _$$PensionHoldingProductImplFromJson(
+_PensionHoldingProduct _$PensionHoldingProductFromJson(
   Map<String, dynamic> json,
-) => _$PensionHoldingProductImpl(
+) => _PensionHoldingProduct(
   id: json['id'] as String?,
   accountId: json['account_id'] as String,
   productId: json['product_id'] as String,
@@ -18,8 +18,8 @@ _$PensionHoldingProductImpl _$$PensionHoldingProductImplFromJson(
   initialPurchaseDate: json['initial_purchase_date'] as String?,
 );
 
-Map<String, dynamic> _$$PensionHoldingProductImplToJson(
-  _$PensionHoldingProductImpl instance,
+Map<String, dynamic> _$PensionHoldingProductToJson(
+  _PensionHoldingProduct instance,
 ) => <String, dynamic>{
   'id': instance.id,
   'account_id': instance.accountId,

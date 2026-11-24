@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -18,7 +17,7 @@ import '../../../../providers/dashboard/dashboard_provider.dart';
 import '../../../../providers/monthly_data/monthly_pension_account_balance_provider.dart';
 import '../../../../providers/monthly_data/monthly_pension_balance_provider.dart';
 import '../../../../providers/pension/pension_product_provider.dart';
-import '../monthly_data/monthly_pension_balance_screen.dart';
+import '../../../../providers/pension/pension_provider.dart';
 import 'widgets/monthly_pension_account_summary_list.dart';
 
 class MonthlyPensionSummaryScreen extends ConsumerWidget {
@@ -93,8 +92,7 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
       final currentFilter = ref.read(selectedPensionAccountFilterProvider);
       if (currentFilter == null) {
         Future.microtask(() {
-          ref.read(selectedPensionAccountFilterProvider.notifier).state =
-              initialAccountId;
+          ref.read(selectedPensionAccountFilterProvider.notifier).setFilter(initialAccountId);
         });
       }
     }
@@ -102,9 +100,9 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
     final selectedMonth = ref.watch(selectedYearMonthProvider);
     final selectedAccountId = ref.watch(selectedPensionAccountFilterProvider);
 
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNamesAsync = ref.watch(accountNameNotifierProvider);
-    final productsAsync = ref.watch(pensionProductNotifierProvider);
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNamesAsync = ref.watch(accountNameProvider);
+    final productsAsync = ref.watch(pensionProductProvider);
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
 
     return Scaffold(
@@ -134,31 +132,22 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
 
           final items =
               ref
-                  .watch(
-                    monthlyPensionBalanceNotifierProvider(activeCurrentMonth),
-                  )
+                  .watch(monthlyPensionBalanceProvider(activeCurrentMonth))
                   .value ??
               [];
           final lastItems =
-              ref
-                  .watch(monthlyPensionBalanceNotifierProvider(lastMonth))
-                  .value ??
-              [];
+              ref.watch(monthlyPensionBalanceProvider(lastMonth)).value ?? [];
 
           final accountBalances =
               ref
                   .watch(
-                    monthlyPensionAccountBalanceNotifierProvider(
-                      activeCurrentMonth,
-                    ),
+                    monthlyPensionAccountBalanceProvider(activeCurrentMonth),
                   )
                   .value ??
               [];
           final lastAccountBalances =
               ref
-                  .watch(
-                    monthlyPensionAccountBalanceNotifierProvider(lastMonth),
-                  )
+                  .watch(monthlyPensionAccountBalanceProvider(lastMonth))
                   .value ??
               [];
 
@@ -280,12 +269,9 @@ class MonthlyPensionSummaryScreen extends ConsumerWidget {
                     selectedAccountValue: currentDropdownValue,
                     accountItems: accountFilterItems,
                     onAccountChanged:
-                        (val) =>
-                            ref
-                                .read(
-                                  selectedPensionAccountFilterProvider.notifier,
-                                )
-                                .state = val,
+                        (val) => ref
+                            .read(selectedPensionAccountFilterProvider.notifier)
+                            .setFilter(val),
                   ),
                   const SizedBox(height: 16),
 

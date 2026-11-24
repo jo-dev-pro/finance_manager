@@ -19,7 +19,8 @@ class PensionHoldingProductNotifier extends _$PensionHoldingProductNotifier {
 
   Future<List<PensionHoldingProduct>> fetchPensionHoldingProducts() async {
     final firestore = ref.read(firestoreProvider);
-    final snapshot = await firestore.collection(pensionHoldingProductDBName).get();
+    final snapshot =
+        await firestore.collection(pensionHoldingProductDBName).get();
 
     return snapshot.docs.map((doc) {
       final data = doc.data();
@@ -33,13 +34,17 @@ class PensionHoldingProductNotifier extends _$PensionHoldingProductNotifier {
     String? resolvedProductName = item.productName;
 
     try {
-      final accounts = await ref.read(accountNotifierProvider.future);
-      final accountNames = await ref.read(accountNameNotifierProvider.future);
-      final products = await ref.read(pensionProductNotifierProvider.future);
+      final accounts = await ref.read(accountProvider.future);
+      final accountNames = await ref.read(accountNameProvider.future);
+      final products = await ref.read(pensionProductProvider.future);
 
       if (resolvedAccountName == null || resolvedAccountName.isEmpty) {
-        final matchedAcc = accounts.firstWhereOrNull((a) => a.id == item.accountId);
-        final matchedNameObj = accountNames.firstWhereOrNull((an) => an.id == matchedAcc?.accountNameId);
+        final matchedAcc = accounts.firstWhereOrNull(
+          (a) => a.id == item.accountId,
+        );
+        final matchedNameObj = accountNames.firstWhereOrNull(
+          (an) => an.id == matchedAcc?.accountNameId,
+        );
         if (matchedNameObj != null) {
           final inst = matchedAcc?.financialInstitution ?? '';
           resolvedAccountName = '[$inst] ${matchedNameObj.accountName}';
@@ -47,7 +52,9 @@ class PensionHoldingProductNotifier extends _$PensionHoldingProductNotifier {
       }
 
       if (resolvedProductName == null || resolvedProductName.isEmpty) {
-        final matchedProd = products.firstWhereOrNull((p) => p.id == item.productId);
+        final matchedProd = products.firstWhereOrNull(
+          (p) => p.id == item.productId,
+        );
         if (matchedProd != null) {
           resolvedProductName = matchedProd.productName;
         }
@@ -75,7 +82,10 @@ class PensionHoldingProductNotifier extends _$PensionHoldingProductNotifier {
     final targetItem = await _enrichNames(item);
     final data = targetItem.toJson()..remove('id');
 
-    await firestore.collection(pensionHoldingProductDBName).doc(item.id).update(data);
+    await firestore
+        .collection(pensionHoldingProductDBName)
+        .doc(item.id)
+        .update(data);
     ref.invalidateSelf();
   }
 

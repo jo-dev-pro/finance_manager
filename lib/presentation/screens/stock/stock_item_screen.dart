@@ -15,7 +15,7 @@ class StockItemScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stockItemsState = ref.watch(stockItemNotifierProvider);
+    final stockItemsState = ref.watch(stockItemProvider);
 
     return Scaffold(
       appBar: MainAppBar(
@@ -89,7 +89,7 @@ class StockItemScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       const SizedBox(width: 12),
-                              
+
                                       // 💡 종목 정보 (itemName, stockCode, otherName 반영)
                                       Expanded(
                                         child: Column(
@@ -115,7 +115,7 @@ class StockItemScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       const SizedBox(width: 16),
-                              
+
                                       // 수정 & 삭제 버튼
                                       EditDeleteButtons(
                                         onEdit:
@@ -165,9 +165,7 @@ class StockItemScreen extends ConsumerWidget {
       content: '\'${item.itemName}\' 종목을 삭제하시겠습니까?',
       onDelete: () async {
         try {
-          await ref
-              .read(stockItemNotifierProvider.notifier)
-              .deleteStockItem(item.id!);
+          await ref.read(stockItemProvider.notifier).deleteStockItem(item.id!);
 
           if (!context.mounted) return;
           AppSnackBar.showInfo(context, '종목이 삭제되었습니다.');

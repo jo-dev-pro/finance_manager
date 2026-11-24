@@ -6,23 +6,52 @@ part of 'account_name_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(AccountNameNotifier)
+const accountNameProvider = AccountNameNotifierProvider._();
+
+final class AccountNameNotifierProvider
+    extends $AsyncNotifierProvider<AccountNameNotifier, List<AccountName>> {
+  const AccountNameNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'accountNameProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$accountNameNotifierHash();
+
+  @$internal
+  @override
+  AccountNameNotifier create() => AccountNameNotifier();
+}
+
 String _$accountNameNotifierHash() =>
     r'b58c9ae929e565c306a4add945dfcd488bd96e47';
 
-/// See also [AccountNameNotifier].
-@ProviderFor(AccountNameNotifier)
-final accountNameNotifierProvider =
-    AsyncNotifierProvider<AccountNameNotifier, List<AccountName>>.internal(
-      AccountNameNotifier.new,
-      name: r'accountNameNotifierProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$accountNameNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
-
-typedef _$AccountNameNotifier = AsyncNotifier<List<AccountName>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$AccountNameNotifier extends $AsyncNotifier<List<AccountName>> {
+  FutureOr<List<AccountName>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref =
+        this.ref as $Ref<AsyncValue<List<AccountName>>, List<AccountName>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<AccountName>>, List<AccountName>>,
+              AsyncValue<List<AccountName>>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

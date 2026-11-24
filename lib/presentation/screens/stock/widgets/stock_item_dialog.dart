@@ -19,7 +19,7 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
   late TextEditingController _codeController;
   late TextEditingController _nameController;
   late TextEditingController _otherNameController;
-  
+
   // 💡 야후 파이낸스 접미사 기준에 맞춘 시장 구분 값 설정 (KS: 코스피, KQ: 코스닥, 빈값: 미국/기타)
   String _selectedYahooName = 'KS';
 
@@ -35,13 +35,21 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
   @override
   void initState() {
     super.initState();
-    _codeController = TextEditingController(text: widget.initialData?.stockCode ?? '');
-    _nameController = TextEditingController(text: widget.initialData?.itemName ?? '');
-    _otherNameController = TextEditingController(text: widget.initialData?.otherName ?? '');
-    
+    _codeController = TextEditingController(
+      text: widget.initialData?.stockCode ?? '',
+    );
+    _nameController = TextEditingController(
+      text: widget.initialData?.itemName ?? '',
+    );
+    _otherNameController = TextEditingController(
+      text: widget.initialData?.otherName ?? '',
+    );
+
     if (widget.initialData != null && widget.initialData!.yahooName != null) {
       // 기존 저장된 값이 목록에 있다면 반영, 없으면 기본값 유지
-      final match = _yahooMarkets.any((m) => m['value'] == widget.initialData!.yahooName);
+      final match = _yahooMarkets.any(
+        (m) => m['value'] == widget.initialData!.yahooName,
+      );
       if (match) {
         _selectedYahooName = widget.initialData!.yahooName!;
       }
@@ -65,10 +73,13 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
         stockCode: _codeController.text.trim(),
         itemName: _nameController.text.trim(),
         yahooName: _selectedYahooName,
-        otherName: _otherNameController.text.trim().isEmpty ? '' : _otherNameController.text.trim(),
+        otherName:
+            _otherNameController.text.trim().isEmpty
+                ? ''
+                : _otherNameController.text.trim(),
       );
 
-      final notifier = ref.read(stockItemNotifierProvider.notifier);
+      final notifier = ref.read(stockItemProvider.notifier);
       if (_isEditing) {
         await notifier.updateStockItem(stockItem);
       } else {
@@ -89,7 +100,6 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),
@@ -163,12 +173,13 @@ class _StockItemDialogState extends ConsumerState<StockItemDialog> {
                   helperText: '야후 파이낸스 자동 시세 조회 시 티커 뒤에 붙는 구분자입니다.',
                   helperMaxLines: 2,
                 ),
-                items: _yahooMarkets.map((market) {
-                  return DropdownMenuItem(
-                    value: market['value'],
-                    child: Text(market['label']!),
-                  );
-                }).toList(),
+                items:
+                    _yahooMarkets.map((market) {
+                      return DropdownMenuItem(
+                        value: market['value'],
+                        child: Text(market['label']!),
+                      );
+                    }).toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedYahooName = val);
                 },

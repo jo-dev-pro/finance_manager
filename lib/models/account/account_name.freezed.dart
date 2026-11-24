@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,187 +9,272 @@ part of 'account_name.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
-
-AccountName _$AccountNameFromJson(Map<String, dynamic> json) {
-  return _AccountName.fromJson(json);
-}
 
 /// @nodoc
 mixin _$AccountName {
-  String? get id => throw _privateConstructorUsedError;
-  @JsonKey(name: 'account_name')
-  String get accountName => throw _privateConstructorUsedError;
+
+ String? get id;@JsonKey(name: 'account_name') String get accountName;
+/// Create a copy of AccountName
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AccountNameCopyWith<AccountName> get copyWith => _$AccountNameCopyWithImpl<AccountName>(this as AccountName, _$identity);
 
   /// Serializes this AccountName to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of AccountName
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $AccountNameCopyWith<AccountName> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AccountName&&(identical(other.id, id) || other.id == id)&&(identical(other.accountName, accountName) || other.accountName == accountName));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,accountName);
+
+@override
+String toString() {
+  return 'AccountName(id: $id, accountName: $accountName)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $AccountNameCopyWith<$Res> {
-  factory $AccountNameCopyWith(
-    AccountName value,
-    $Res Function(AccountName) then,
-  ) = _$AccountNameCopyWithImpl<$Res, AccountName>;
-  @useResult
-  $Res call({String? id, @JsonKey(name: 'account_name') String accountName});
-}
+abstract mixin class $AccountNameCopyWith<$Res>  {
+  factory $AccountNameCopyWith(AccountName value, $Res Function(AccountName) _then) = _$AccountNameCopyWithImpl;
+@useResult
+$Res call({
+ String? id,@JsonKey(name: 'account_name') String accountName
+});
 
+
+
+
+}
 /// @nodoc
-class _$AccountNameCopyWithImpl<$Res, $Val extends AccountName>
+class _$AccountNameCopyWithImpl<$Res>
     implements $AccountNameCopyWith<$Res> {
-  _$AccountNameCopyWithImpl(this._value, this._then);
+  _$AccountNameCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final AccountName _self;
+  final $Res Function(AccountName) _then;
 
-  /// Create a copy of AccountName
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? id = freezed, Object? accountName = null}) {
-    return _then(
-      _value.copyWith(
-            id:
-                freezed == id
-                    ? _value.id
-                    : id // ignore: cast_nullable_to_non_nullable
-                        as String?,
-            accountName:
-                null == accountName
-                    ? _value.accountName
-                    : accountName // ignore: cast_nullable_to_non_nullable
-                        as String,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of AccountName
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? accountName = null,}) {
+  return _then(_self.copyWith(
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,accountName: null == accountName ? _self.accountName : accountName // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-abstract class _$$AccountNameImplCopyWith<$Res>
-    implements $AccountNameCopyWith<$Res> {
-  factory _$$AccountNameImplCopyWith(
-    _$AccountNameImpl value,
-    $Res Function(_$AccountNameImpl) then,
-  ) = __$$AccountNameImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String? id, @JsonKey(name: 'account_name') String accountName});
 }
 
-/// @nodoc
-class __$$AccountNameImplCopyWithImpl<$Res>
-    extends _$AccountNameCopyWithImpl<$Res, _$AccountNameImpl>
-    implements _$$AccountNameImplCopyWith<$Res> {
-  __$$AccountNameImplCopyWithImpl(
-    _$AccountNameImpl _value,
-    $Res Function(_$AccountNameImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of AccountName
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? id = freezed, Object? accountName = null}) {
-    return _then(
-      _$AccountNameImpl(
-        id:
-            freezed == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                    as String?,
-        accountName:
-            null == accountName
-                ? _value.accountName
-                : accountName // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
+/// Adds pattern-matching-related methods to [AccountName].
+extension AccountNamePatterns on AccountName {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AccountName value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AccountName() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AccountName value)  $default,){
+final _that = this;
+switch (_that) {
+case _AccountName():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AccountName value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AccountName() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id, @JsonKey(name: 'account_name')  String accountName)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AccountName() when $default != null:
+return $default(_that.id,_that.accountName);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id, @JsonKey(name: 'account_name')  String accountName)  $default,) {final _that = this;
+switch (_that) {
+case _AccountName():
+return $default(_that.id,_that.accountName);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id, @JsonKey(name: 'account_name')  String accountName)?  $default,) {final _that = this;
+switch (_that) {
+case _AccountName() when $default != null:
+return $default(_that.id,_that.accountName);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$AccountNameImpl implements _AccountName {
-  const _$AccountNameImpl({
-    this.id,
-    @JsonKey(name: 'account_name') required this.accountName,
-  });
 
-  factory _$AccountNameImpl.fromJson(Map<String, dynamic> json) =>
-      _$$AccountNameImplFromJson(json);
+class _AccountName implements AccountName {
+  const _AccountName({this.id, @JsonKey(name: 'account_name') required this.accountName});
+  factory _AccountName.fromJson(Map<String, dynamic> json) => _$AccountNameFromJson(json);
 
-  @override
-  final String? id;
-  @override
-  @JsonKey(name: 'account_name')
-  final String accountName;
+@override final  String? id;
+@override@JsonKey(name: 'account_name') final  String accountName;
 
-  @override
-  String toString() {
-    return 'AccountName(id: $id, accountName: $accountName)';
-  }
+/// Create a copy of AccountName
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AccountNameCopyWith<_AccountName> get copyWith => __$AccountNameCopyWithImpl<_AccountName>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AccountNameImpl &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.accountName, accountName) ||
-                other.accountName == accountName));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, id, accountName);
-
-  /// Create a copy of AccountName
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AccountNameImplCopyWith<_$AccountNameImpl> get copyWith =>
-      __$$AccountNameImplCopyWithImpl<_$AccountNameImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$AccountNameImplToJson(this);
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$AccountNameToJson(this, );
 }
 
-abstract class _AccountName implements AccountName {
-  const factory _AccountName({
-    final String? id,
-    @JsonKey(name: 'account_name') required final String accountName,
-  }) = _$AccountNameImpl;
-
-  factory _AccountName.fromJson(Map<String, dynamic> json) =
-      _$AccountNameImpl.fromJson;
-
-  @override
-  String? get id;
-  @override
-  @JsonKey(name: 'account_name')
-  String get accountName;
-
-  /// Create a copy of AccountName
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AccountNameImplCopyWith<_$AccountNameImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AccountName&&(identical(other.id, id) || other.id == id)&&(identical(other.accountName, accountName) || other.accountName == accountName));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,accountName);
+
+@override
+String toString() {
+  return 'AccountName(id: $id, accountName: $accountName)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AccountNameCopyWith<$Res> implements $AccountNameCopyWith<$Res> {
+  factory _$AccountNameCopyWith(_AccountName value, $Res Function(_AccountName) _then) = __$AccountNameCopyWithImpl;
+@override @useResult
+$Res call({
+ String? id,@JsonKey(name: 'account_name') String accountName
+});
+
+
+
+
+}
+/// @nodoc
+class __$AccountNameCopyWithImpl<$Res>
+    implements _$AccountNameCopyWith<$Res> {
+  __$AccountNameCopyWithImpl(this._self, this._then);
+
+  final _AccountName _self;
+  final $Res Function(_AccountName) _then;
+
+/// Create a copy of AccountName
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? accountName = null,}) {
+  return _then(_AccountName(
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,accountName: null == accountName ? _self.accountName : accountName // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+// dart format on

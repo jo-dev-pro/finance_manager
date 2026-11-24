@@ -15,7 +15,7 @@ class PensionProductScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsState = ref.watch(pensionProductNotifierProvider);
+    final productsState = ref.watch(pensionProductProvider);
 
     return Scaffold(
       appBar: MainAppBar(
@@ -75,9 +75,9 @@ class PensionProductScreen extends ConsumerWidget {
                                           ),
                                         ),
                                       ),
-                                  
+
                                       const SizedBox(width: 16),
-                                  
+
                                       // 수정 & 삭제 버튼
                                       EditDeleteButtons(
                                         onEdit:
@@ -132,7 +132,7 @@ class PensionProductScreen extends ConsumerWidget {
       onDelete: () async {
         try {
           await ref
-              .read(pensionProductNotifierProvider.notifier)
+              .read(pensionProductProvider.notifier)
               .deletePensionProduct(product.id!);
 
           if (!context.mounted) return;

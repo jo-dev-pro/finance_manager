@@ -45,7 +45,7 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
         productName: _productNameController.text.trim(),
       );
 
-      final notifier = ref.read(pensionProductNotifierProvider.notifier);
+      final notifier = ref.read(pensionProductProvider.notifier);
       if (_isEditing) {
         await notifier.updatePensionProduct(product);
       } else {
@@ -66,7 +66,6 @@ class _PensionProductDialogState extends ConsumerState<PensionProductDialog> {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(20, 20, 20, context.bottomInset + 20),

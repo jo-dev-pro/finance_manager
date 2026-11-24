@@ -6,175 +6,99 @@ part of 'bank_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$bankScreenDataHash() => r'b73f7a1c0c23ea8aeb08f5f25acd7401968d9612';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-/// See also [bankScreenData].
 @ProviderFor(bankScreenData)
-const bankScreenDataProvider = BankScreenDataFamily();
+const bankScreenDataProvider = BankScreenDataFamily._();
 
-/// See also [bankScreenData].
-class BankScreenDataFamily extends Family<AsyncValue<List<BankAccountItem>>> {
-  /// See also [bankScreenData].
-  const BankScreenDataFamily();
-
-  /// See also [bankScreenData].
-  BankScreenDataProvider call({
-    required String currentYearMonth,
-    required String lastYearMonth,
-  }) {
-    return BankScreenDataProvider(
-      currentYearMonth: currentYearMonth,
-      lastYearMonth: lastYearMonth,
-    );
-  }
-
-  @override
-  BankScreenDataProvider getProviderOverride(
-    covariant BankScreenDataProvider provider,
-  ) {
-    return call(
-      currentYearMonth: provider.currentYearMonth,
-      lastYearMonth: provider.lastYearMonth,
-    );
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'bankScreenDataProvider';
-}
-
-/// See also [bankScreenData].
-class BankScreenDataProvider extends FutureProvider<List<BankAccountItem>> {
-  /// See also [bankScreenData].
-  BankScreenDataProvider({
-    required String currentYearMonth,
-    required String lastYearMonth,
-  }) : this._internal(
-         (ref) => bankScreenData(
-           ref as BankScreenDataRef,
-           currentYearMonth: currentYearMonth,
-           lastYearMonth: lastYearMonth,
-         ),
-         from: bankScreenDataProvider,
+final class BankScreenDataProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<BankAccountItem>>,
+          List<BankAccountItem>,
+          FutureOr<List<BankAccountItem>>
+        >
+    with
+        $FutureModifier<List<BankAccountItem>>,
+        $FutureProvider<List<BankAccountItem>> {
+  const BankScreenDataProvider._({
+    required BankScreenDataFamily super.from,
+    required ({String currentYearMonth, String lastYearMonth}) super.argument,
+  }) : super(
+         retry: null,
          name: r'bankScreenDataProvider',
-         debugGetCreateSourceHash:
-             const bool.fromEnvironment('dart.vm.product')
-                 ? null
-                 : _$bankScreenDataHash,
-         dependencies: BankScreenDataFamily._dependencies,
-         allTransitiveDependencies:
-             BankScreenDataFamily._allTransitiveDependencies,
-         currentYearMonth: currentYearMonth,
-         lastYearMonth: lastYearMonth,
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
        );
 
-  BankScreenDataProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.currentYearMonth,
-    required this.lastYearMonth,
-  }) : super.internal();
-
-  final String currentYearMonth;
-  final String lastYearMonth;
+  @override
+  String debugGetCreateSourceHash() => _$bankScreenDataHash();
 
   @override
-  Override overrideWith(
-    FutureOr<List<BankAccountItem>> Function(BankScreenDataRef provider) create,
-  ) {
-    return ProviderOverride(
-      origin: this,
-      override: BankScreenDataProvider._internal(
-        (ref) => create(ref as BankScreenDataRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        currentYearMonth: currentYearMonth,
-        lastYearMonth: lastYearMonth,
-      ),
-    );
+  String toString() {
+    return r'bankScreenDataProvider'
+        ''
+        '$argument';
   }
 
+  @$internal
   @override
-  FutureProviderElement<List<BankAccountItem>> createElement() {
-    return _BankScreenDataProviderElement(this);
+  $FutureProviderElement<List<BankAccountItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<BankAccountItem>> create(Ref ref) {
+    final argument =
+        this.argument as ({String currentYearMonth, String lastYearMonth});
+    return bankScreenData(
+      ref,
+      currentYearMonth: argument.currentYearMonth,
+      lastYearMonth: argument.lastYearMonth,
+    );
   }
 
   @override
   bool operator ==(Object other) {
-    return other is BankScreenDataProvider &&
-        other.currentYearMonth == currentYearMonth &&
-        other.lastYearMonth == lastYearMonth;
+    return other is BankScreenDataProvider && other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, currentYearMonth.hashCode);
-    hash = _SystemHash.combine(hash, lastYearMonth.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin BankScreenDataRef on FutureProviderRef<List<BankAccountItem>> {
-  /// The parameter `currentYearMonth` of this provider.
-  String get currentYearMonth;
+String _$bankScreenDataHash() => r'0b0aad58167c047e333cc3073dc54435687fc9d0';
 
-  /// The parameter `lastYearMonth` of this provider.
-  String get lastYearMonth;
-}
+final class BankScreenDataFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<BankAccountItem>>,
+          ({String currentYearMonth, String lastYearMonth})
+        > {
+  const BankScreenDataFamily._()
+    : super(
+        retry: null,
+        name: r'bankScreenDataProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
 
-class _BankScreenDataProviderElement
-    extends FutureProviderElement<List<BankAccountItem>>
-    with BankScreenDataRef {
-  _BankScreenDataProviderElement(super.provider);
+  BankScreenDataProvider call({
+    required String currentYearMonth,
+    required String lastYearMonth,
+  }) => BankScreenDataProvider._(
+    argument: (
+      currentYearMonth: currentYearMonth,
+      lastYearMonth: lastYearMonth,
+    ),
+    from: this,
+  );
 
   @override
-  String get currentYearMonth =>
-      (origin as BankScreenDataProvider).currentYearMonth;
-  @override
-  String get lastYearMonth => (origin as BankScreenDataProvider).lastYearMonth;
+  String toString() => r'bankScreenDataProvider';
 }
-
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/providers/onpop_invoked_provider.dart';
 import '../../../core/router/app_router_path.dart';
-import '../../../core/router/branches/tab_back_dashboard_scope.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/widgets/jtext.dart';
 import '../../../core/widgets/main_appbar.dart';
@@ -17,7 +17,7 @@ import '../../../providers/account/account_provider.dart';
 import '../../../providers/dashboard/dashboard_provider.dart';
 import '../../../providers/monthly_data/monthly_stock_account_balance_provider.dart';
 import '../../../providers/monthly_data/monthly_stock_balance_provider.dart';
-import 'summary/monthly_stock_summary_screen.dart';
+import '../../../providers/stock/stock_provider.dart';
 import 'widgets/stock_account_grid.dart';
 import 'widgets/stock_portion_section.dart';
 import 'widgets/stock_return_rate_chart.dart';
@@ -53,14 +53,36 @@ class _StockScreenState extends ConsumerState<StockScreen> {
     }
   }
 
+  void _backToDashboard() {
+    ref.read(jOnPopInvokedProvider.notifier).reset();
+    final shell = StatefulNavigationShell.maybeOf(context);
+    if (shell != null) {
+      shell.goBranch(0, initialLocation: true);
+    } else {
+      context.go(AppRoutePath.dashboard);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
     final selectedMonth = ref.watch(selectedYearMonthProvider);
-    final accountsAsync = ref.watch(accountNotifierProvider);
-    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
+    final accountsAsync = ref.watch(accountProvider);
+    final accountNames = ref.watch(accountNameProvider).value ?? [];
 
-    return TabBackToDashboardScope(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          router.pop(result);
+          return;
+        }
+
+        _backToDashboard();
+      },
       child: Scaffold(
         appBar: MainAppBar(
           titleText: '주식 자산 현황',
@@ -96,28 +118,28 @@ class _StockScreenState extends ConsumerState<StockScreen> {
             if (months.isEmpty) {
               return const Center(child: Text('등록된 주식 데이터가 없습니다.'));
             }
-      
+
             final activeCurrentMonth =
                 (selectedMonth != null && months.contains(selectedMonth))
                     ? selectedMonth
                     : months.first;
-      
+
             final lastMonth = _getLastYearMonth(activeCurrentMonth);
-      
+
             final balancesAsync = ref.watch(
-              monthlyStockBalanceNotifierProvider(activeCurrentMonth),
+              monthlyStockBalanceProvider(activeCurrentMonth),
             );
             final lastBalancesAsync = ref.watch(
-              monthlyStockBalanceNotifierProvider(lastMonth),
+              monthlyStockBalanceProvider(lastMonth),
             );
-      
+
             final accountBalancesAsync = ref.watch(
-              monthlyStockAccountBalanceNotifierProvider(activeCurrentMonth),
+              monthlyStockAccountBalanceProvider(activeCurrentMonth),
             );
             final lastAccountBalancesAsync = ref.watch(
-              monthlyStockAccountBalanceNotifierProvider(lastMonth),
+              monthlyStockAccountBalanceProvider(lastMonth),
             );
-      
+
             final accounts = accountsAsync.value ?? [];
             final accountNameMap = {for (var an in accountNames) an.id: an};
             final genieAccountIds =
@@ -130,7 +152,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                     )
                     .map((a) => a.id!)
                     .toSet();
-      
+
             return MainConstrainedBox(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,25 +177,30 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                             data: (balances) {
                               final accountBalances =
                                   accountBalancesAsync.value ?? [];
-                              final lastBalances = lastBalancesAsync.value ?? [];
+                              final lastBalances =
+                                  lastBalancesAsync.value ?? [];
                               final lastAccountBalances =
                                   lastAccountBalancesAsync.value ?? [];
                               final accountMap = {
                                 for (var a in accounts) a.id!: a,
                               };
-      
+
                               final summaryAccountBalances =
                                   accountBalances
                                       .where(
                                         (ab) =>
-                                            !genieAccountIds.contains(ab.accountId),
+                                            !genieAccountIds.contains(
+                                              ab.accountId,
+                                            ),
                                       )
                                       .toList();
                               final summaryBalances =
                                   balances
                                       .where(
                                         (b) =>
-                                            !genieAccountIds.contains(b.accountId),
+                                            !genieAccountIds.contains(
+                                              b.accountId,
+                                            ),
                                       )
                                       .toList();
                               final lastSummaryAccountBalances =
@@ -189,10 +216,12 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                   lastBalances
                                       .where(
                                         (lb) =>
-                                            !genieAccountIds.contains(lb.accountId),
+                                            !genieAccountIds.contains(
+                                              lb.accountId,
+                                            ),
                                       )
                                       .toList();
-      
+
                               final accountExchangeRateMap = {
                                 for (var ab in summaryAccountBalances)
                                   ab.accountId:
@@ -213,12 +242,12 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                           ? lab.exchangeRate
                                           : 1.0,
                               };
-      
+
                               // 계좌별 현금성 잔액(예수금), 누적 원금(principal), 누적 인출액 합산 (환율 적용)
                               double totalCashBalance = 0;
                               double accountPrincipalSum = 0;
                               double totalAccountWithdrawalSum = 0;
-      
+
                               for (var ab in summaryAccountBalances) {
                                 final rate =
                                     accountExchangeRateMap[ab.accountId] ?? 1.0;
@@ -227,45 +256,44 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                 totalAccountWithdrawalSum +=
                                     ab.totalWithdrawal * rate;
                               }
-      
+
                               // 종목별 평가액 및 누적 배당금 합산 (환율 적용)
-                              final stockBalanceSum = summaryBalances.fold<double>(
-                                0.0,
-                                (sum, item) {
-                                  final rate =
-                                      accountExchangeRateMap[item.accountId] ??
-                                      1.0;
-                                  return sum + (item.balance * rate);
-                                },
-                              );
-      
-                              final totalPayoutSum = summaryBalances.fold<double>(
-                                0.0,
-                                (sum, item) {
-                                  final rate =
-                                      accountExchangeRateMap[item.accountId] ??
-                                      1.0;
-                                  return sum + (item.totalPayout * rate);
-                                },
-                              );
-      
+                              final stockBalanceSum = summaryBalances
+                                  .fold<double>(0.0, (sum, item) {
+                                    final rate =
+                                        accountExchangeRateMap[item
+                                            .accountId] ??
+                                        1.0;
+                                    return sum + (item.balance * rate);
+                                  });
+
+                              final totalPayoutSum = summaryBalances
+                                  .fold<double>(0.0, (sum, item) {
+                                    final rate =
+                                        accountExchangeRateMap[item
+                                            .accountId] ??
+                                        1.0;
+                                    return sum + (item.totalPayout * rate);
+                                  });
+
                               final totalBalance =
                                   (stockBalanceSum + totalCashBalance)
                                       .roundToDouble();
                               final totalPrincipal =
                                   accountPrincipalSum.roundToDouble();
-      
+
                               final totalProfitOrLoss =
                                   (totalBalance +
                                       totalPayoutSum +
                                       totalAccountWithdrawalSum) -
                                   totalPrincipal;
-      
+
                               final totalReturnRate =
                                   totalPrincipal > 0
-                                      ? (totalProfitOrLoss / totalPrincipal) * 100
+                                      ? (totalProfitOrLoss / totalPrincipal) *
+                                          100
                                       : 0.0;
-      
+
                               // 전월 총 자산 계산
                               double lastTotalCashBalance = 0;
                               for (var lab in lastSummaryAccountBalances) {
@@ -285,7 +313,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                               final lastTotalBalance =
                                   (lastStockSum + lastTotalCashBalance)
                                       .roundToDouble();
-      
+
                               return InkWell(
                                 onTap: () {
                                   ref
@@ -293,7 +321,7 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                         selectedStockAccountFilterProvider
                                             .notifier,
                                       )
-                                      .state = null;
+                                      .clear();
                                   context.push(
                                     AppRoutePath.monthlyStockSummary,
                                     extra: activeCurrentMonth,
@@ -309,13 +337,15 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        totalProfitOrLoss.round().toSignedPriceText(
-                                          isDarkCard: true,
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                                        totalProfitOrLoss
+                                            .round()
+                                            .toSignedPriceText(
+                                              isDarkCard: true,
+                                              style: const TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                         const SizedBox(width: 4),
                                         totalReturnRate.toSignedPercentText(
                                           isDarkCard: true,
@@ -360,11 +390,11 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                               );
                             },
                           ),
-      
+
                           // 2. 주식 계좌 목록 그리드 ("지니" 계좌 맨 마지막 배치)
                           const SizedBox(height: 12),
                           const SectionTitle('계좌 목록'),
-      
+
                           StockAccountGrid(
                             currentMonth: activeCurrentMonth,
                             lastMonth: lastMonth,
@@ -379,20 +409,20 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                               );
                             },
                           ),
-      
+
                           // 3. 계좌별 평가 비중
                           const SizedBox(height: 12),
                           const SectionTitle('계좌별 평가 비중'),
-      
+
                           StockPortionSection(
                             currentMonth: activeCurrentMonth,
                             chartColors: _chartColors,
                           ),
-      
+
                           // 4. 계좌별 월말 수익률 추이
                           const SizedBox(height: 12),
                           const SectionTitle('계좌별 월말 수익률 추이 (%)'),
-      
+
                           StockReturnRateChart(
                             currentMonth: activeCurrentMonth,
                             months: months,

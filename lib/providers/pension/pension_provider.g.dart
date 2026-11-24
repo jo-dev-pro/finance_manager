@@ -6,179 +6,154 @@ part of 'pension_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pensionScreenDataHash() => r'2d49d9a31f91cf5454404deb8b34026de927d219';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
-
-/// See also [pensionScreenData].
 @ProviderFor(pensionScreenData)
-const pensionScreenDataProvider = PensionScreenDataFamily();
+const pensionScreenDataProvider = PensionScreenDataFamily._();
 
-/// See also [pensionScreenData].
-class PensionScreenDataFamily
-    extends Family<AsyncValue<List<PensionAccountItem>>> {
-  /// See also [pensionScreenData].
-  const PensionScreenDataFamily();
-
-  /// See also [pensionScreenData].
-  PensionScreenDataProvider call({
-    required String currentYearMonth,
-    required String lastYearMonth,
-  }) {
-    return PensionScreenDataProvider(
-      currentYearMonth: currentYearMonth,
-      lastYearMonth: lastYearMonth,
-    );
-  }
-
-  @override
-  PensionScreenDataProvider getProviderOverride(
-    covariant PensionScreenDataProvider provider,
-  ) {
-    return call(
-      currentYearMonth: provider.currentYearMonth,
-      lastYearMonth: provider.lastYearMonth,
-    );
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'pensionScreenDataProvider';
-}
-
-/// See also [pensionScreenData].
-class PensionScreenDataProvider
-    extends FutureProvider<List<PensionAccountItem>> {
-  /// See also [pensionScreenData].
-  PensionScreenDataProvider({
-    required String currentYearMonth,
-    required String lastYearMonth,
-  }) : this._internal(
-         (ref) => pensionScreenData(
-           ref as PensionScreenDataRef,
-           currentYearMonth: currentYearMonth,
-           lastYearMonth: lastYearMonth,
-         ),
-         from: pensionScreenDataProvider,
+final class PensionScreenDataProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<PensionAccountItem>>,
+          List<PensionAccountItem>,
+          FutureOr<List<PensionAccountItem>>
+        >
+    with
+        $FutureModifier<List<PensionAccountItem>>,
+        $FutureProvider<List<PensionAccountItem>> {
+  const PensionScreenDataProvider._({
+    required PensionScreenDataFamily super.from,
+    required ({String currentYearMonth, String lastYearMonth}) super.argument,
+  }) : super(
+         retry: null,
          name: r'pensionScreenDataProvider',
-         debugGetCreateSourceHash:
-             const bool.fromEnvironment('dart.vm.product')
-                 ? null
-                 : _$pensionScreenDataHash,
-         dependencies: PensionScreenDataFamily._dependencies,
-         allTransitiveDependencies:
-             PensionScreenDataFamily._allTransitiveDependencies,
-         currentYearMonth: currentYearMonth,
-         lastYearMonth: lastYearMonth,
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
        );
 
-  PensionScreenDataProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.currentYearMonth,
-    required this.lastYearMonth,
-  }) : super.internal();
-
-  final String currentYearMonth;
-  final String lastYearMonth;
+  @override
+  String debugGetCreateSourceHash() => _$pensionScreenDataHash();
 
   @override
-  Override overrideWith(
-    FutureOr<List<PensionAccountItem>> Function(PensionScreenDataRef provider)
-    create,
-  ) {
-    return ProviderOverride(
-      origin: this,
-      override: PensionScreenDataProvider._internal(
-        (ref) => create(ref as PensionScreenDataRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        currentYearMonth: currentYearMonth,
-        lastYearMonth: lastYearMonth,
-      ),
-    );
+  String toString() {
+    return r'pensionScreenDataProvider'
+        ''
+        '$argument';
   }
 
+  @$internal
   @override
-  FutureProviderElement<List<PensionAccountItem>> createElement() {
-    return _PensionScreenDataProviderElement(this);
+  $FutureProviderElement<List<PensionAccountItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<PensionAccountItem>> create(Ref ref) {
+    final argument =
+        this.argument as ({String currentYearMonth, String lastYearMonth});
+    return pensionScreenData(
+      ref,
+      currentYearMonth: argument.currentYearMonth,
+      lastYearMonth: argument.lastYearMonth,
+    );
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PensionScreenDataProvider &&
-        other.currentYearMonth == currentYearMonth &&
-        other.lastYearMonth == lastYearMonth;
+    return other is PensionScreenDataProvider && other.argument == argument;
   }
 
   @override
   int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, currentYearMonth.hashCode);
-    hash = _SystemHash.combine(hash, lastYearMonth.hashCode);
-
-    return _SystemHash.finish(hash);
+    return argument.hashCode;
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin PensionScreenDataRef on FutureProviderRef<List<PensionAccountItem>> {
-  /// The parameter `currentYearMonth` of this provider.
-  String get currentYearMonth;
+String _$pensionScreenDataHash() => r'd5392d3e961a3b8a32ba2abe6f5b119813bc2d09';
 
-  /// The parameter `lastYearMonth` of this provider.
-  String get lastYearMonth;
-}
+final class PensionScreenDataFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<PensionAccountItem>>,
+          ({String currentYearMonth, String lastYearMonth})
+        > {
+  const PensionScreenDataFamily._()
+    : super(
+        retry: null,
+        name: r'pensionScreenDataProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
 
-class _PensionScreenDataProviderElement
-    extends FutureProviderElement<List<PensionAccountItem>>
-    with PensionScreenDataRef {
-  _PensionScreenDataProviderElement(super.provider);
+  PensionScreenDataProvider call({
+    required String currentYearMonth,
+    required String lastYearMonth,
+  }) => PensionScreenDataProvider._(
+    argument: (
+      currentYearMonth: currentYearMonth,
+      lastYearMonth: lastYearMonth,
+    ),
+    from: this,
+  );
 
   @override
-  String get currentYearMonth =>
-      (origin as PensionScreenDataProvider).currentYearMonth;
-  @override
-  String get lastYearMonth =>
-      (origin as PensionScreenDataProvider).lastYearMonth;
+  String toString() => r'pensionScreenDataProvider';
 }
 
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+@ProviderFor(SelectedPensionAccountFilter)
+const selectedPensionAccountFilterProvider =
+    SelectedPensionAccountFilterProvider._();
+
+final class SelectedPensionAccountFilterProvider
+    extends $NotifierProvider<SelectedPensionAccountFilter, String?> {
+  const SelectedPensionAccountFilterProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'selectedPensionAccountFilterProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$selectedPensionAccountFilterHash();
+
+  @$internal
+  @override
+  SelectedPensionAccountFilter create() => SelectedPensionAccountFilter();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$selectedPensionAccountFilterHash() =>
+    r'f2601570323d79249a61e4abfb2bf51247f2bc96';
+
+abstract class _$SelectedPensionAccountFilter extends $Notifier<String?> {
+  String? build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<String?, String?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String?, String?>,
+              String?,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

@@ -28,22 +28,15 @@ class StockAccountGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final balances =
-        ref.watch(monthlyStockBalanceNotifierProvider(currentMonth)).value ??
-            [];
+        ref.watch(monthlyStockBalanceProvider(currentMonth)).value ?? [];
     final lastBalances =
-        ref.watch(monthlyStockBalanceNotifierProvider(lastMonth)).value ?? [];
+        ref.watch(monthlyStockBalanceProvider(lastMonth)).value ?? [];
     final accountBalances =
-        ref
-            .watch(monthlyStockAccountBalanceNotifierProvider(currentMonth))
-            .value ??
-        [];
+        ref.watch(monthlyStockAccountBalanceProvider(currentMonth)).value ?? [];
     final lastAccountBalances =
-        ref
-            .watch(monthlyStockAccountBalanceNotifierProvider(lastMonth))
-            .value ??
-        [];
-    final accounts = ref.watch(accountNotifierProvider).value ?? [];
-    final accountNames = ref.watch(accountNameNotifierProvider).value ?? [];
+        ref.watch(monthlyStockAccountBalanceProvider(lastMonth)).value ?? [];
+    final accounts = ref.watch(accountProvider).value ?? [];
+    final accountNames = ref.watch(accountNameProvider).value ?? [];
 
     final accountNameMap = {for (var an in accountNames) an.id: an};
     final accountMap = {for (var a in accounts) a.id!: a};
@@ -165,8 +158,7 @@ class StockAccountGrid extends ConsumerWidget {
         final lastTotalAccountBalance =
             ((lastRawBalance * lastExchangeRate) + lastCashBalance)
                 .roundToDouble();
-        final diffFromLastMonth =
-            totalAccountBalance - lastTotalAccountBalance;
+        final diffFromLastMonth = totalAccountBalance - lastTotalAccountBalance;
 
         final matchedAccountName =
             matchedAcc != null
