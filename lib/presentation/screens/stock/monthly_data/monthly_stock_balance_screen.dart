@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../core/widgets/edit_delete_button.dart';
 import '../../../../core/widgets/jtext.dart';
 import '../../../../core/widgets/main_appbar.dart';
@@ -43,11 +44,17 @@ class MonthlyStockBalanceScreen extends ConsumerWidget {
       appBar: MainAppBar(
         titleText: '월말주식',
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showDialog(context, yearMonth: targetMonth),
-            icon: const Icon(Icons.playlist_add, size: 18),
-            label: const Text('일괄 입력'),
-          ),
+          context.isMobile
+              ? IconButton(
+                onPressed: () => _showDialog(context, yearMonth: targetMonth),
+                icon: const Icon(Icons.playlist_add),
+                color: context.primaryColor,
+              )
+              : ElevatedButton.icon(
+                onPressed: () => _showDialog(context, yearMonth: targetMonth),
+                icon: const Icon(Icons.playlist_add),
+                label: const Text('월말입력'),
+              ),
         ],
       ),
       body: availableMonthsAsync.when(

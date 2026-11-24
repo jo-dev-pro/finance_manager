@@ -108,7 +108,7 @@ class _StockHoldingItemDialogState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      _isEditing ? '계좌별 보유종목 수정' : '계좌별 종목 등록',
+                      _isEditing ? '보유종목 수정' : '보유종목 등록',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

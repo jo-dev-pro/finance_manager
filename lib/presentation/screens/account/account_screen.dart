@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
@@ -11,7 +12,7 @@ import '../../../providers/account/account_name_provider.dart';
 import '../../../providers/account/account_provider.dart';
 import 'widgets/account_dialog.dart';
 
-class AccountScreen extends ConsumerWidget { 
+class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
   @override
@@ -23,10 +24,17 @@ class AccountScreen extends ConsumerWidget {
       appBar: MainAppBar(
         titleText: '계좌 관리',
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showAccountDialog(context, ref, null),
-            label: const Text('등록'),
-          ),
+          context.isMobile
+              ? IconButton(
+                onPressed: () => _showDialog(context, ref, null),
+                icon: const Icon(Icons.add),
+                color: context.primaryColor,
+              )
+              : ElevatedButton.icon(
+                onPressed: () => _showDialog(context, ref, null),
+                icon: const Icon(Icons.add),
+                label: const Text('등록'),
+              ),
         ],
       ),
       body: accountsAsync.when(
@@ -39,7 +47,7 @@ class AccountScreen extends ConsumerWidget {
                 (err, stack) => Center(child: Text('계좌 명칭을 불러오지 못했습니다: $err')),
             data: (accountNames) {
               final accountNameMap = {for (var an in accountNames) an.id: an};
-              
+
               return MainConstrainedBox(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +203,7 @@ class AccountScreen extends ConsumerWidget {
                                       ),
                                       trailing: EditDeleteButtons(
                                         onEdit:
-                                            () => _showAccountDialog(
+                                            () => _showDialog(
                                               context,
                                               ref,
                                               account,
@@ -222,7 +230,7 @@ class AccountScreen extends ConsumerWidget {
     );
   }
 
-  void _showAccountDialog(
+  void _showDialog(
     BuildContext context,
     WidgetRef ref,
     Account? account,
@@ -246,9 +254,7 @@ class AccountScreen extends ConsumerWidget {
       content: '"${account.financialInstitution} 계좌"를 삭제하시겠습니까?',
       onDelete: () async {
         try {
-          await ref
-              .read(accountProvider.notifier)
-              .deleteAccount(account.id!);
+          await ref.read(accountProvider.notifier).deleteAccount(account.id!);
 
           if (!context.mounted) return;
           AppSnackBar.showInfo(context, '계좌가 삭제되었습니다.');

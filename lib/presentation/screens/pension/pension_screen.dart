@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/onpop_invoked_provider.dart';
 import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/jtext.dart';
 import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
@@ -49,16 +50,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
     }
   }
 
-  void _backToDashboard() {
-    ref.read(jOnPopInvokedProvider.notifier).reset();
-    final shell = StatefulNavigationShell.maybeOf(context);
-    if (shell != null) {
-      shell.goBranch(0, initialLocation: true);
-    } else {
-      context.go(AppRoutePath.dashboard);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
@@ -66,8 +57,14 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.pop(result);
+          return;
+        }
 
         final router = GoRouter.of(context);
         if (router.canPop()) {
@@ -75,22 +72,35 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
           return;
         }
 
-        _backToDashboard();
+        await ref
+            .read(jOnPopInvokedProvider.notifier)
+            .handlePopInvoked(context);
       },
       child: Scaffold(
         appBar: MainAppBar(
           titleText: '연금 자산 현황',
           actions: [
-            ElevatedButton.icon(
-              onPressed: () {
-                context.push(
-                  AppRoutePath.monthlyPensionBalance,
-                  extra: selectedMonth,
-                );
-              },
-              icon: const Icon(Icons.calendar_month_outlined),
-              label: const Text('월말연금'),
-            ),
+            context.isMobile
+                ? IconButton(
+                  onPressed: () {
+                    context.push(
+                      AppRoutePath.monthlyPensionBalance,
+                      extra: selectedMonth,
+                    );
+                  },
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  color: context.primaryColor,
+                )
+                : ElevatedButton.icon(
+                  onPressed: () {
+                    context.push(
+                      AppRoutePath.monthlyPensionBalance,
+                      extra: selectedMonth,
+                    );
+                  },
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  label: const Text('월말연금'),
+                ),
           ],
         ),
         body: availableMonthsAsync.when(
@@ -156,7 +166,6 @@ class _PensionScreenState extends ConsumerState<PensionScreen> {
                                 (sum, item) => sum + item.balance,
                               );
 
-                              // 월말 계좌별 누적 원금(principal) 합산
                               final accountPrincipalSum = accountBalances
                                   .fold<double>(
                                     0.0,

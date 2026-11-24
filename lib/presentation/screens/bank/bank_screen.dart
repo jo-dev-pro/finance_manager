@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/providers/onpop_invoked_provider.dart';
 import '../../../core/router/app_router_path.dart';
+import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
 import '../../../core/widgets/month_selector_header.dart';
@@ -29,16 +30,6 @@ class BankScreen extends ConsumerWidget {
     }
   }
 
-  void _backToDashboard(BuildContext context, WidgetRef ref) {
-    ref.read(jOnPopInvokedProvider.notifier).reset();
-    final shell = StatefulNavigationShell.maybeOf(context);
-    if (shell != null) {
-      shell.goBranch(0, initialLocation: true);
-    } else {
-      context.go(AppRoutePath.dashboard);
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
@@ -46,8 +37,14 @@ class BankScreen extends ConsumerWidget {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.pop(result);
+          return;
+        }
 
         final router = GoRouter.of(context);
         if (router.canPop()) {
@@ -55,42 +52,57 @@ class BankScreen extends ConsumerWidget {
           return;
         }
 
-        _backToDashboard(context, ref);
+        await ref
+            .read(jOnPopInvokedProvider.notifier)
+            .handlePopInvoked(context);
       },
       child: Scaffold(
         appBar: MainAppBar(
           titleText: '은행 자산 현황',
           actions: [
-            ElevatedButton.icon(
-              onPressed: () {
-                context.push(
-                  AppRoutePath.monthlyBankBalance,
-                  extra: selectedMonth,
-                );
-              },
-              icon: const Icon(Icons.calendar_month, size: 18),
-              label: const Text('월말은행'),
-            ),
+            context.isMobile
+                ? IconButton(
+                  onPressed: () {
+                    context.push(
+                      AppRoutePath.monthlyBankBalance,
+                      extra: selectedMonth,
+                    );
+                  },
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  color: context.primaryColor,
+                )
+                : ElevatedButton.icon(
+                  onPressed: () {
+                    context.push(
+                      AppRoutePath.monthlyBankBalance,
+                      extra: selectedMonth,
+                    );
+                  },
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  label: const Text('월말은행'),
+                ),
           ],
         ),
         body: availableMonthsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '기준월 정보를 불러오지 못했습니다:\n$err',
-                  textAlign: TextAlign.center,
+          error:
+              (err, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '기준월 정보를 불러오지 못했습니다:\n$err',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed:
+                          () => ref.invalidate(availableYearMonthsProvider),
+                      child: const Text('다시 시도'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () => ref.invalidate(availableYearMonthsProvider),
-                  child: const Text('다시 시도'),
-                ),
-              ],
-            ),
-          ),
+              ),
           data: (months) {
             if (months.isEmpty) {
               return const Center(child: Text('등록된 기준월 데이터가 없습니다.'));
@@ -130,8 +142,9 @@ class BankScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Expanded(
                     child: bankDataAsync.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
+                      loading:
+                          () =>
+                              const Center(child: CircularProgressIndicator()),
                       error: (err, _) => Center(child: Text('오류: $err')),
                       data: (rawItems) => BuildBankData(rawItems: rawItems),
                     ),

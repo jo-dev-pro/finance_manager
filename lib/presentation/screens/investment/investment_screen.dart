@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/app_dialog.dart'; // 💡 공통 삭제 다이얼로그
 import '../../../core/widgets/app_snackbar.dart'; // 💡 공통 스낵바
 import '../../../core/widgets/edit_delete_button.dart';
@@ -24,10 +25,17 @@ class InvestmentScreen extends ConsumerWidget {
       appBar: MainAppBar(
         titleText: '투자금 관리',
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showDialog(context),
-            label: const Text('등록'),
-          ),
+          context.isMobile
+              ? IconButton(
+                onPressed: () => _showDialog(context),
+                icon: const Icon(Icons.add),
+                color: context.primaryColor,
+              )
+              : ElevatedButton.icon(
+                onPressed: () => _showDialog(context),
+                icon: const Icon(Icons.add),
+                label: const Text('등록'),
+              ),
         ],
       ),
 
@@ -39,7 +47,6 @@ class InvestmentScreen extends ConsumerWidget {
             0,
             (sum, item) => sum + item.amount,
           );
-
 
           return MainConstrainedBox(
             child: Column(

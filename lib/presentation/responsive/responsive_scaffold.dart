@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/providers/onpop_invoked_provider.dart';
 import '../../core/utils/responsive_extension.dart';
 
 class ResponsiveScaffold extends ConsumerStatefulWidget {
@@ -14,14 +15,15 @@ class ResponsiveScaffold extends ConsumerStatefulWidget {
 }
 
 class _ResponsiveScaffoldState extends ConsumerState<ResponsiveScaffold> {
-  bool _initializedToDashboard = false;
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _initializedToDashboard) return;
-      _initializedToDashboard = true;
+      if (!mounted || _initialized) return;
+      _initialized = true;
+      ref.read(jOnPopInvokedProvider.notifier).reset();
       if (widget.navigationShell.currentIndex != 0) {
         widget.navigationShell.goBranch(0, initialLocation: true);
       }

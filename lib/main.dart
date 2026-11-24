@@ -1,65 +1,78 @@
-import 'package:flutter/material.dart';
 import 'package:finance_manager/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/router/app_router.dart';
+import 'core/widgets/app_snackbar.dart';
+
+bool _envLoadFailed = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // .env 파일 로드
+
   try {
-    await dotenv.load(fileName: ".env");
-  } catch (e, stackTrace) {
-    debugPrint('.env 로드 실패(무시하고 계속 진행): $e');
-    debugPrintStack(stackTrace: stackTrace);
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    _envLoadFailed = true;
   }
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  bool _notifiedEnvFailure = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _notifiedEnvFailure || !_envLoadFailed) return;
+      _notifiedEnvFailure = true;
+      AppSnackBar.showWarningGlobal(
+        '.env 파일을 불러오지 못했습니다. 일부 설정이 기본값으로 동작할 수 있습니다.',
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
+      scaffoldMessengerKey: AppSnackBar.messengerKey,
       title: '자산관리 앱',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: GoogleFonts.notoSansKr().fontFamily,
-
-        // 1. ColorScheme의 surface(표면색)를 흰색으로 지정
-        colorScheme: ColorScheme.light(
+        colorScheme: const ColorScheme.light(
           primary: Colors.indigo,
-          surface: Colors.white, // M3 기본 표면색을 순백색으로 오버라이드
+          surface: Colors.white,
         ),
-
-        // 2. Scaffold 및 NavigationRail 배경을 흰색으로 고정
-        // scaffoldBackgroundColor: Colors.white,
-        // scaffoldBackgroundColor: const Color(0xFFFAFAFA),
         scaffoldBackgroundColor: Colors.grey.shade100,
         appBarTheme: AppBarTheme(
-          // backgroundColor: Color(0xFFFAFAFA), // 바탕색과 동일하게 맞추어 일체감 부여
-          backgroundColor: Colors.grey.shade100, // 바탕색과 동일하게 맞추어 일체감 부여
-          elevation: 0, // 앱바 밑의 그림자 제거 (선택, 토스 스타일)
-          iconTheme: IconThemeData(color: Colors.black), // 앱바 아이콘 색상
-          titleTextStyle: TextStyle(
-            // 앱바 제목 텍스트 스타일
+          backgroundColor: Colors.grey.shade100,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.black),
+          titleTextStyle: const TextStyle(
             color: Colors.black,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -67,19 +80,7 @@ class MyApp extends ConsumerWidget {
       ],
       supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
       locale: const Locale('ko', 'KR'),
-
       routerConfig: router,
-      builder: (context, child) {
-        return PopScope(
-          canPop: false,
-          onPopInvokedWithResult: (didPop, result) {
-            debugPrint(
-              '[Top MaterialApp PopScope] didPop=$didPop | canPop=${GoRouter.of(context).canPop()}',
-            );
-          },
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
     );
   }
 }

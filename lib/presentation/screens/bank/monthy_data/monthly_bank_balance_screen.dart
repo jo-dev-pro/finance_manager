@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/number_formatter.dart';
+import '../../../../core/utils/responsive_extension.dart';
 import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/edit_delete_button.dart';
@@ -36,11 +37,17 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
       appBar: MainAppBar(
         titleText: '월말 잔액 관리',
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showDialog(context, yearMonth: targetMonth),
-            icon: const Icon(Icons.playlist_add, size: 18),
-            label: const Text('월말입력'),
-          ),
+          context.isMobile
+              ? IconButton(
+                onPressed: () => _showDialog(context, yearMonth: targetMonth),
+                icon: const Icon(Icons.playlist_add),
+                color: context.primaryColor,
+              )
+              : ElevatedButton.icon(
+                onPressed: () => _showDialog(context, yearMonth: targetMonth),
+                icon: const Icon(Icons.playlist_add),
+                label: const Text('월말입력'),
+              ),
         ],
       ),
       body: availableMonthsAsync.when(
@@ -158,8 +165,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                                   fontSize: 15,
                                                 ),
                                                 maxLines: 1,
-                                                overflow:
-                                                    TextOverflow.ellipsis,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                             const SizedBox(width: 6),
@@ -204,8 +210,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       JText(
                                         balanceItem.balance.toWon(),
@@ -216,18 +221,20 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 6),
                                       EditDeleteButtons(
-                                        onEdit: () => _showDialog(
-                                          context,
-                                          yearMonth: balanceItem.yearMonth,
-                                          editItem: balanceItem,
-                                          accountNameText: accountName,
-                                        ),
-                                        onDelete: () => _confirmDelete(
-                                          context,
-                                          ref,
-                                          balanceItem,
-                                          accountName,
-                                        ),
+                                        onEdit:
+                                            () => _showDialog(
+                                              context,
+                                              yearMonth: balanceItem.yearMonth,
+                                              editItem: balanceItem,
+                                              accountNameText: accountName,
+                                            ),
+                                        onDelete:
+                                            () => _confirmDelete(
+                                              context,
+                                              ref,
+                                              balanceItem,
+                                              accountName,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -283,9 +290,7 @@ class MonthlyBankBalanceScreen extends ConsumerWidget {
         if (item.id != null) {
           try {
             await ref
-                .read(
-                  monthlyBankBalanceProvider(item.yearMonth).notifier,
-                )
+                .read(monthlyBankBalanceProvider(item.yearMonth).notifier)
                 .deleteBalance(item.id!);
 
             if (!context.mounted) return;

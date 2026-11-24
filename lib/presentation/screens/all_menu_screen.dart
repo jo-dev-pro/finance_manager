@@ -10,22 +10,18 @@ import '../../../core/widgets/main_constrainedbox.dart';
 class AllMenuScreen extends ConsumerWidget {
   const AllMenuScreen({super.key});
 
-  void _backToDashboard(BuildContext context, WidgetRef ref) {
-    ref.read(jOnPopInvokedProvider.notifier).reset();
-    final shell = StatefulNavigationShell.maybeOf(context);
-    if (shell != null) {
-      shell.goBranch(0, initialLocation: true);
-    } else {
-      context.go(AppRoutePath.dashboard);
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.pop(result);
+          return;
+        }
 
         final router = GoRouter.of(context);
         if (router.canPop()) {
@@ -33,7 +29,9 @@ class AllMenuScreen extends ConsumerWidget {
           return;
         }
 
-        _backToDashboard(context, ref);
+        await ref
+            .read(jOnPopInvokedProvider.notifier)
+            .handlePopInvoked(context);
       },
       child: Scaffold(
         appBar: const MainAppBar(titleText: '전체 메뉴'),
@@ -121,9 +119,8 @@ class AllMenuScreen extends ConsumerWidget {
                       iconColor: Colors.green.shade700,
                       title: '연금 계좌별 보유상품 관리',
                       subtitle: '연금 계좌에 보유 중인 상품 설정',
-                      onTap:
-                          () =>
-                              context.push(AppRoutePath.pensionAccountProduct),
+                      onTap: () =>
+                          context.push(AppRoutePath.pensionAccountProduct),
                     ),
                   ],
                 ),

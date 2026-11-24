@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
@@ -22,10 +23,17 @@ class AccountNameScreen extends ConsumerWidget {
       appBar: MainAppBar(
         titleText: '계좌명 관리',
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showDialog(context),
-            label: const Text('등록'),
-          ),
+          context.isMobile
+              ? IconButton(
+                onPressed: () => _showDialog(context),
+                icon: const Icon(Icons.add),
+                color: context.primaryColor,
+              )
+              : ElevatedButton.icon(
+                onPressed: () => _showDialog(context),
+                icon: const Icon(Icons.add),
+                label: const Text('등록'),
+              ),
         ],
       ),
       body: accountNameAsync.when(
@@ -39,7 +47,8 @@ class AccountNameScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
 
                 Expanded(
-                  child: accountNames.isEmpty
+                  child:
+                      accountNames.isEmpty
                           ? const Center(
                             child: Text(
                               '등록된 계좌가 없습니다.\n상단의 등록 버튼을 눌러 추가해 보세요.',

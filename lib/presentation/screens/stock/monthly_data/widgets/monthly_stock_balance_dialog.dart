@@ -259,7 +259,7 @@ class _MonthlyStockBalanceDialogState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _isEditing ? '월말 주식 내역 수정' : '월말 주식 평가액/수량 일괄 입력',
+                    _isEditing ? '월말내용 수정' : '월말내용 등록',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

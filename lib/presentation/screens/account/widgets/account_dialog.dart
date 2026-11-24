@@ -166,7 +166,7 @@ class _AccountDialogState extends ConsumerState<AccountDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _isEditing ? '계좌 정보 수정' : '신규 계좌 등록',
+                    _isEditing ? '계좌 수정' : '계좌 등록',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

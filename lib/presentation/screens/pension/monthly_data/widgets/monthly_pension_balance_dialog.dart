@@ -99,9 +99,7 @@ class _MonthlyPensionBalanceDialogState
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountProvider);
     final accountNamesAsync = ref.watch(accountNameProvider);
-    final holdingProductsAsync = ref.watch(
-      pensionHoldingProductProvider,
-    );
+    final holdingProductsAsync = ref.watch(pensionHoldingProductProvider);
     final pensionProductsAsync = ref.watch(pensionProductProvider);
 
     final existingCurrentBalancesAsync = ref.watch(
@@ -133,7 +131,7 @@ class _MonthlyPensionBalanceDialogState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _isEditing ? '연금 월말 내역 수정' : '연금 월말 평가액/입금액 일괄 입력',
+                    _isEditing ? '월말내용 수정' : '월말내용 등록',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -284,8 +282,7 @@ class _MonthlyPensionBalanceDialogState
                                     _selectedAccountId = val;
                                     _accountCashBalanceController.clear();
                                     _accountMonthlyPrincipalController.clear();
-                                    _accountMonthlyWithdrawalController
-                                        .clear();
+                                    _accountMonthlyWithdrawalController.clear();
                                   });
                                 },
                       ),
@@ -444,7 +441,8 @@ class _MonthlyPensionBalanceDialogState
                                     hp.isActive;
                                 if (_isEditing) {
                                   return matchesAccount &&
-                                      hp.productId == widget.editItem!.productId;
+                                      hp.productId ==
+                                          widget.editItem!.productId;
                                 }
                                 return matchesAccount;
                               }).toList();
@@ -481,9 +479,9 @@ class _MonthlyPensionBalanceDialogState
                                     isTargetEdit
                                         ? widget.editItem!.balance
                                         : (currentData != null &&
-                                                currentData.balance > 0)
-                                            ? currentData.balance
-                                            : (prevData?.balance ?? 0.0);
+                                            currentData.balance > 0)
+                                        ? currentData.balance
+                                        : (prevData?.balance ?? 0.0);
 
                                 final currentMonthlyPrin =
                                     isTargetEdit
@@ -541,8 +539,7 @@ class _MonthlyPensionBalanceDialogState
                                           .isNotEmpty ??
                                       false) &&
                                   (double.tryParse(
-                                            _monthlySaleControllers[key]!
-                                                .text
+                                            _monthlySaleControllers[key]!.text
                                                 .replaceAll(
                                                   RegExp(r'[^0-9]'),
                                                   '',
@@ -799,9 +796,7 @@ class _MonthlyPensionBalanceDialogState
     try {
       final prevYearMonth = _getPreviousYearMonth(_selectedYearMonth);
       final prevAccountBalances =
-          ref
-              .read(monthlyPensionAccountBalanceProvider(prevYearMonth))
-              .value ??
+          ref.read(monthlyPensionAccountBalanceProvider(prevYearMonth)).value ??
           [];
 
       final prevAccountBalance = prevAccountBalances.firstWhereOrNull(
@@ -812,7 +807,10 @@ class _MonthlyPensionBalanceDialogState
 
       final accountCashBalance =
           double.tryParse(
-            _accountCashBalanceController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+            _accountCashBalanceController.text.replaceAll(
+              RegExp(r'[^0-9]'),
+              '',
+            ),
           ) ??
           0.0;
       final currentMonthlyPrincipal =
@@ -852,8 +850,7 @@ class _MonthlyPensionBalanceDialogState
           ref.read(pensionHoldingProductProvider).value ?? [];
 
       final prevBalances =
-          ref.read(monthlyPensionBalanceProvider(prevYearMonth)).value ??
-          [];
+          ref.read(monthlyPensionBalanceProvider(prevYearMonth)).value ?? [];
       final prevBalanceMap = {
         for (var b in prevBalances) '${b.accountId}_${b.productId}': b,
       };
@@ -863,7 +860,8 @@ class _MonthlyPensionBalanceDialogState
             final matchesAccount =
                 hp.accountId == _selectedAccountId && hp.isActive;
             if (_isEditing) {
-              return matchesAccount && hp.productId == widget.editItem!.productId;
+              return matchesAccount &&
+                  hp.productId == widget.editItem!.productId;
             }
             return matchesAccount;
           }).toList();
@@ -874,8 +872,7 @@ class _MonthlyPensionBalanceDialogState
         final prodId = hp.productId;
         final key = '${_selectedAccountId}_$prodId';
         final prevData = prevBalanceMap[key];
-        final isTargetEdit =
-            _isEditing && widget.editItem!.productId == prodId;
+        final isTargetEdit = _isEditing && widget.editItem!.productId == prodId;
 
         final qtyCtrl = _quantityControllers[key];
         final basePriceCtrl = _basePriceControllers[key];

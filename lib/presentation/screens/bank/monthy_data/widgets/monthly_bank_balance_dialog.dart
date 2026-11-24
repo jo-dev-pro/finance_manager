@@ -93,8 +93,8 @@ class _MonthlyBankBalanceDialogState
                 children: [
                   Text(
                     _isEditing
-                        ? '${widget.accountNameText ?? '은행 계좌'} 월말 잔액 수정'
-                        : '월말 잔액 일괄 입력',
+                        ? '${widget.accountNameText ?? '은행계좌'} 월말내용 수정'
+                        : '월말내용 등록',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

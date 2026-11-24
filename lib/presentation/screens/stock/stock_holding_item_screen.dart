@@ -36,12 +36,19 @@ class _StockHoldingItemScreenState
 
     return Scaffold(
       appBar: MainAppBar(
-        titleText: '계좌별 보유 주식 관리',
+        titleText: '보유주식 관리',
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showDialog(context),
-            label: const Text('등록'),
-          ),
+          context.isMobile
+              ? IconButton(
+                onPressed: () => _showDialog(context),
+                icon: const Icon(Icons.add),
+                color: context.primaryColor,
+              )
+              : ElevatedButton.icon(
+                onPressed: () => _showDialog(context),
+                icon: const Icon(Icons.add),
+                label: const Text('등록'),
+              ),
         ],
       ),
 

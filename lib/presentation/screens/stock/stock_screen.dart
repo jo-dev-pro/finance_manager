@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/onpop_invoked_provider.dart';
 import '../../../core/router/app_router_path.dart';
 import '../../../core/utils/number_formatter.dart';
+import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/jtext.dart';
 import '../../../core/widgets/main_appbar.dart';
 import '../../../core/widgets/main_constrainedbox.dart';
@@ -53,16 +54,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
     }
   }
 
-  void _backToDashboard() {
-    ref.read(jOnPopInvokedProvider.notifier).reset();
-    final shell = StatefulNavigationShell.maybeOf(context);
-    if (shell != null) {
-      shell.goBranch(0, initialLocation: true);
-    } else {
-      context.go(AppRoutePath.dashboard);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final availableMonthsAsync = ref.watch(availableYearMonthsProvider);
@@ -72,8 +63,14 @@ class _StockScreenState extends ConsumerState<StockScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.pop(result);
+          return;
+        }
 
         final router = GoRouter.of(context);
         if (router.canPop()) {
@@ -81,33 +78,41 @@ class _StockScreenState extends ConsumerState<StockScreen> {
           return;
         }
 
-        _backToDashboard();
+        await ref
+            .read(jOnPopInvokedProvider.notifier)
+            .handlePopInvoked(context);
       },
       child: Scaffold(
         appBar: MainAppBar(
           titleText: '주식 자산 현황',
           actions: [
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    context.push(AppRoutePath.realtimeStock);
-                  },
-                  icon: const Icon(Icons.candlestick_chart),
-                  color: Colors.red,
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    context.push(
-                      AppRoutePath.monthlyStockBalance,
-                      extra: selectedMonth,
-                    );
-                  },
-                  icon: const Icon(Icons.calendar_month_outlined),
-                  label: const Text('월말주식'),
-                ),
-              ],
+            IconButton(
+              onPressed: () {
+                context.push(AppRoutePath.realtimeStock);
+              },
+              icon: const Icon(Icons.candlestick_chart),
+              color: Colors.red,
+            ),
+            context.isMobile
+              ? IconButton(
+              onPressed: () {
+                context.push(
+                  AppRoutePath.monthlyStockBalance,
+                  extra: selectedMonth,
+                );
+              },
+              icon: const Icon(Icons.calendar_month_outlined),
+              color: context.primaryColor,
+            )
+            : ElevatedButton.icon(
+              onPressed: () {
+                context.push(
+                  AppRoutePath.monthlyStockBalance,
+                  extra: selectedMonth,
+                );
+              },
+              icon: const Icon(Icons.calendar_month_outlined),
+              label: const Text('월말주식'),
             ),
           ],
         ),
@@ -243,7 +248,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                           : 1.0,
                               };
 
-                              // 계좌별 현금성 잔액(예수금), 누적 원금(principal), 누적 인출액 합산 (환율 적용)
                               double totalCashBalance = 0;
                               double accountPrincipalSum = 0;
                               double totalAccountWithdrawalSum = 0;
@@ -257,7 +261,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                     ab.totalWithdrawal * rate;
                               }
 
-                              // 종목별 평가액 및 누적 배당금 합산 (환율 적용)
                               final stockBalanceSum = summaryBalances
                                   .fold<double>(0.0, (sum, item) {
                                     final rate =
@@ -294,7 +297,6 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                                           100
                                       : 0.0;
 
-                              // 전월 총 자산 계산
                               double lastTotalCashBalance = 0;
                               for (var lab in lastSummaryAccountBalances) {
                                 final rate =

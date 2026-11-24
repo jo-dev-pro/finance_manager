@@ -135,7 +135,7 @@ class _InvestmentDialogState extends ConsumerState<InvestmentDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _isEditing ? '투자 내역 수정' : '투자 내역 등록',
+                    _isEditing ? '투자금 수정' : '투자금 등록',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

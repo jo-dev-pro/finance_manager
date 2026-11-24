@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/responsive_extension.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/edit_delete_button.dart';
@@ -19,12 +20,19 @@ class PensionProductScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: MainAppBar(
-        titleText: '연금상품 관리',
+        titleText: '상품명 관리',
         actions: [
-          ElevatedButton.icon(
-            onPressed: () => _showDialog(context),
-            label: const Text('등록'),
-          ),
+          context.isMobile
+              ? IconButton(
+                onPressed: () => _showDialog(context),
+                icon: const Icon(Icons.add),
+                color: context.primaryColor,
+              )
+              : ElevatedButton.icon(
+                onPressed: () => _showDialog(context),
+                icon: const Icon(Icons.add),
+                label: const Text('등록'),
+              ),
         ],
       ),
 
